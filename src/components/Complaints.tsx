@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { List, Map as MapIcon, Download, Plus, Search, Filter, AlertCircle, Clock, CheckCircle, ChevronDown, Trash2, UserPlus, Edit, X } from 'lucide-react';
+import { List, Map as MapIcon, Download, Plus, Search, Filter, AlertCircle, Clock, ChevronDown, Trash2, UserPlus, Edit, X } from 'lucide-react';
 import Modal from './Modal';
 
 const Complaints = () => {

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, UserPlus, Mail, Phone, Shield, Lock, Trash2, X, ChevronDown, Check } from 'lucide-react';
+import { useState } from 'react';
+import { Search, X, ChevronDown } from 'lucide-react';
 
 const Users = () => {
   const [selectedUser, setSelectedUser] = useState<any>(null);

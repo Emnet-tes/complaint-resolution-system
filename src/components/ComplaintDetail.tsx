@@ -1,5 +1,4 @@
-import React from 'react';
-import { CheckCircle, ArrowRight, Share2, AlertTriangle, FileText, Map as MapIcon, Calendar, User, Info, MoreHorizontal, MessageSquare, ArrowLeft } from 'lucide-react';
+import { CheckCircle, ArrowRight, AlertTriangle, Map as MapIcon, User, Info, MessageSquare, ArrowLeft } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 const ComplaintDetail = () => {

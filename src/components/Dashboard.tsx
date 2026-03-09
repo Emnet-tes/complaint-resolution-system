@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { MoreHorizontal, FileText, Users, Clock, AlertTriangle, CheckCircle, TrendingUp, TrendingDown, Map as MapIcon, BarChart2, Share2, FilePieChart } from 'lucide-react';
+import { useState } from 'react';
+import { MoreHorizontal, FileText, Users, Clock, AlertTriangle, CheckCircle, TrendingUp, TrendingDown, Map as MapIcon, Share2, FilePieChart } from 'lucide-react';
 import Modal from './Modal';
 
 const Dashboard = () => {
