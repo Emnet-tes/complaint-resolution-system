@@ -1,3 +1,1 @@
-// Placeholder for components
-
-export {};
+export { default as Sidebar } from './Sidebar';

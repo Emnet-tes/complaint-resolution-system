@@ -1,3 +1,1 @@
-// Placeholder for layout
-
-export {};
+export { default as MainLayout } from './MainLayout';
