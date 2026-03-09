@@ -1,12 +1,7 @@
-import { MainLayout } from './layout';
-import OrganizationsPage from './pages/OrganizationsPage';
+import AppRouter from './router/AppRouter';
 
 function App() {
-  return (
-    <MainLayout>
-      <OrganizationsPage />
-    </MainLayout>
-  );
+  return <AppRouter />;
 }
 
 export default App;

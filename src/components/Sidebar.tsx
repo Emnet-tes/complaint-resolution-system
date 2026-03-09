@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, X } from 'lucide-react';
 
 interface SidebarItem {
@@ -12,8 +13,21 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
-  const [activeItem, setActiveItem] = useState('organizations');
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const getActiveItem = () => {
+    const path = location.pathname;
+    if (path === '/' || path === '/dashboard') return 'dashboard';
+    if (path.startsWith('/organizations')) return 'organizations';
+    if (path.startsWith('/complaints')) return 'complaints';
+    if (path.startsWith('/users')) return 'users';
+    if (path.startsWith('/settings')) return 'settings';
+    return 'dashboard';
+  };
+
+  const activeItem = getActiveItem();
 
   const sidebarItems: SidebarItem[] = [
     { id: 'dashboard', label: 'Dashboard' },
@@ -95,7 +109,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
               <button
                 key={item.id}
                 onClick={() => {
-                  setActiveItem(item.id);
+                  navigate(`/${item.id}`);
                   if (window.innerWidth < 768) setIsMobileOpen(false);
                 }}
                 className={`w-full flex items-center py-3.5 transition-all relative group ${

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bell, Search, Settings, X, Menu } from 'lucide-react';
 
 interface NavbarProps {
@@ -7,6 +8,7 @@ interface NavbarProps {
 
 const Navbar = ({ onMenuClick }: NavbarProps) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <nav className="h-20 bg-white border-b border-gray-200 px-4 md:px-8 flex items-center justify-between sticky top-0 z-30">
@@ -79,7 +81,7 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
               <Bell className="w-5 h-5 text-slate-600" />
               <span className="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" />
             </button>
-            <button className="hidden sm:block p-2.5 bg-white border border-gray-100 rounded-full shadow-sm hover:bg-gray-50 cursor-pointer">
+            <button className="hidden sm:block p-2.5 bg-white border border-gray-100 rounded-full shadow-sm hover:bg-gray-50 cursor-pointer" onClick={() => navigate('/settings')}>
               <Settings className="w-5 h-5 text-slate-600" />
             </button>
           </div>
