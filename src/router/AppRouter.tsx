@@ -8,6 +8,12 @@ import Settings from '../components/Settings';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import { useState } from 'react';
+import Login from '../auth/Login';
+import ForgotPassword from '../auth/ForgotPassword';
+import Verification from '../auth/Verification';
+import ResetPassword from '../auth/ResetPassword';
+import { LanguageProvider } from '../context/LanguageContext';
+
 
 const MainLayout = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -32,8 +38,13 @@ const MainLayout = () => {
 
 const AppRouter = () => {
   return (
+    <LanguageProvider>
     <BrowserRouter>
       <Routes>
+        <Route path="login" element={<Login />} />
+        <Route path="forgot-password" element={<ForgotPassword />} />
+        <Route path="verify-code" element={<Verification />} />
+        <Route path="reset-password" element={<ResetPassword />} />
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="dashboard" element={<Dashboard />} />
@@ -42,9 +53,12 @@ const AppRouter = () => {
           <Route path="complaints/:id" element={<ComplaintDetail />} />
           <Route path="users" element={<Users />} />
           <Route path="settings" element={<Settings />} />
+          
         </Route>
       </Routes>
     </BrowserRouter>
+    </LanguageProvider>
+
   );
 };
 
