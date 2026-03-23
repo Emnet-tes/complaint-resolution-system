@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, X } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface SidebarItem {
   id: string;
   label: string;
+  roles: ('SYSTEM_ADMIN' | 'ORG_ADMIN' | 'EMPLOYEE')[];
 }
 
 interface SidebarProps {
@@ -16,6 +18,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { user, logout } = useAuth();
 
   const getActiveItem = () => {
     const path = location.pathname;
@@ -29,13 +32,17 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
 
   const activeItem = getActiveItem();
 
-  const sidebarItems: SidebarItem[] = [
-    { id: 'dashboard', label: 'Dashboard' },
-    { id: 'organizations', label: 'Organizations' },
-    { id: 'complaints', label: 'Complaints' },
-    { id: 'users', label: 'Users' },
-    { id: 'settings', label: 'Settings' },
+  const allItems: SidebarItem[] = [
+    { id: 'dashboard', label: 'Dashboard', roles: ['SYSTEM_ADMIN'] },
+    { id: 'organizations', label: 'Organizations', roles: ['SYSTEM_ADMIN'] },
+    { id: 'complaints', label: 'Complaints', roles: ['ORG_ADMIN', 'EMPLOYEE'] },
+    { id: 'users', label: 'Employee Mgmt', roles: ['ORG_ADMIN'] },
+    { id: 'settings', label: 'Profile', roles: ['SYSTEM_ADMIN', 'ORG_ADMIN', 'EMPLOYEE'] },
   ];
+
+  const filteredItems = allItems.filter(item =>
+    user?.role ? item.roles.includes(user.role) : false
+  );
 
   const getIcon = (id: string) => {
     switch (id) {
@@ -85,7 +92,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
         {/* Header Profile Section */}
         <div className={`p-6 mb-4 flex items-center justify-between`}>
           <div className="flex items-center overflow-hidden">
-            <div className="text-emerald-800 flex-shrink-0">
+            <div className="text-emerald-800 shrink-0">
                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M2 22h20V10h-4V4h-4v4h-4v6H2v8zM7 16h2v2H7v-2zm0 3h2v2H7v-2zm5-11h2v2h-2V8zm0 3h2v2h-2v-2zm0 3h2v2h-2v-2zm0 3h2v2h-2v-2zm5-7h2v2h-2v-2zm0 3h2v2h-2v-2zm0 3h2v2h-2v-2z"/>
                </svg>
@@ -103,7 +110,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
 
         {/* Navigation Items */}
         <nav className="flex-1 space-y-1">
-          {sidebarItems.map((item) => {
+          {filteredItems.map((item) => {
             const isActive = activeItem === item.id;
             return (
               <button
@@ -117,10 +124,10 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
                 } ${isCollapsed ? 'md:justify-center' : 'px-6'}`}
               >
                 {isActive && (
-                  <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-[#006B5D]" />
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#006B5D]" />
                 )}
                 
-                <div className={`w-5 h-5 flex-shrink-0 flex items-center justify-center ${isActive ? 'text-[#006B5D]' : 'text-slate-400'} ${!isCollapsed && 'mr-4'}`}>
+                <div className={`w-5 h-5 shrink-0 flex items-center justify-center ${isActive ? 'text-[#006B5D]' : 'text-slate-400'} ${!isCollapsed && 'mr-4'}`}>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     {getIcon(item.id)}
                   </svg>
@@ -135,12 +142,17 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
         </nav>
 
         {/* Logout Button */}
-        <div className="p-4 mt-auto border-t border-gray-100">
-          <button className={`w-full flex items-center py-3 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ${isCollapsed ? 'md:justify-center' : 'px-4'}`}>
-            <LogOut size={20} className={!isCollapsed ? "mr-4" : ""} />
-            <span className={`text-sm font-medium ${isCollapsed ? 'md:hidden' : 'block'}`}>Log Out</span>
-          </button>
-        </div>
+        {user && (
+          <div className="p-4 mt-auto border-t border-gray-100">
+            <button
+              onClick={logout}
+              className={`w-full flex items-center py-3 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ${isCollapsed ? 'md:justify-center' : 'px-4'}`}
+            >
+              <LogOut size={20} className={!isCollapsed ? "mr-4" : ""} />
+              <span className={`text-sm font-medium ${isCollapsed ? 'md:hidden' : 'block'}`}>Log Out</span>
+            </button>
+          </div>
+        )}
       </aside>
     </>
   );
