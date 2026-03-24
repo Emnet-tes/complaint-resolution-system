@@ -3,9 +3,10 @@ import type { ReactNode } from 'react';
 import Cookies from 'js-cookie';
 import { authApi } from '../api/api';
 
-export type Role = 'SYSTEM_ADMIN' | 'ORG_ADMIN' | 'EMPLOYEE' | null;
+// Roles as returned by backend: SysAdmin, OrgAdmin, DeptAdmin
+export type Role = 'SysAdmin' | 'OrgAdmin' | 'DeptAdmin' | null;
 
-interface User {
+export interface User {
   fullname: string;
   email: string;
   role: Role;
@@ -14,7 +15,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (credentials: any) => Promise<void>;
+  login: (credentials: any) => Promise<User>;
   logout: () => void;
 }
 
@@ -33,15 +34,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(false);
   }, []);
 
-  const login = async (credentials: any) => {
+  const login = async (credentials: any): Promise<User> => {
     const response = await authApi.login(credentials);
-    const { token, user } = response.data; // Assuming API returns { token, user: {fullname, role, ...} }
+    const data = response.data as any;
 
-    // Store token in cookie (Expires in 7 days, Secure, SameSite)
-    Cookies.set('token', token, { expires: 7, secure: true, sameSite: 'strict' });
+    // Support both `token` and `access_token` just in case
+    const token: string | undefined = data.token ?? data.access_token;
+
+    // Backend sample response:
+    // { message: string, _id: string, role: 'SysAdmin' | 'OrgAdmin' | 'DeptAdmin', token: string }
+    const user: User = {
+      fullname: data.fullname ?? '',
+      email: data.email ?? credentials.email ?? '',
+      role: (data.role as Role) ?? null,
+    };
+
+    if (token) {
+      // Store token in cookie (Expires in 7 days, Secure, SameSite)
+      Cookies.set('token', token, { expires: 7, secure: true, sameSite: 'strict' });
+    }
+
     Cookies.set('user', JSON.stringify(user), { expires: 7 });
-    
     setUser(user);
+
+    return user;
   };
 
   const logout = () => {

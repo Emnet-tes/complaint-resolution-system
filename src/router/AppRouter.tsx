@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import Dashboard from '../components/Dashboard';
 import Organizations from '../components/Organizations';
-import Complaints from '../components/Complaints';
+import RoleBasedComplaints from '../components/RoleBasedComplaints';
 import ComplaintDetail from '../components/ComplaintDetail';
 import Users from '../components/Users';
 import Settings from '../components/Settings';
@@ -48,7 +48,7 @@ const AppRouter = () => {
             <Route
               path="dashboard"
               element={
-                <ProtectedRoute allowedRoles={['SYSTEM_ADMIN']}>
+                <ProtectedRoute allowedRoles={['SysAdmin']}>
                   <Dashboard />
                 </ProtectedRoute>
               }
@@ -56,7 +56,7 @@ const AppRouter = () => {
             <Route
               path="organizations"
               element={
-                <ProtectedRoute allowedRoles={['SYSTEM_ADMIN']}>
+                <ProtectedRoute allowedRoles={['SysAdmin']}>
                   <Organizations />
                 </ProtectedRoute>
               }
@@ -66,15 +66,15 @@ const AppRouter = () => {
             <Route
               path="complaints"
               element={
-                <ProtectedRoute allowedRoles={['ORG_ADMIN', 'EMPLOYEE']}>
-                  <Complaints />
+                <ProtectedRoute allowedRoles={['OrgAdmin', 'DeptAdmin']}>
+                  <RoleBasedComplaints />
                 </ProtectedRoute>
               }
             />
             <Route
               path="complaints/:id"
               element={
-                <ProtectedRoute allowedRoles={['ORG_ADMIN', 'EMPLOYEE']}>
+                <ProtectedRoute allowedRoles={['OrgAdmin', 'DeptAdmin']}>
                   <ComplaintDetail />
                 </ProtectedRoute>
               }
@@ -82,7 +82,7 @@ const AppRouter = () => {
             <Route
               path="users"
               element={
-                <ProtectedRoute allowedRoles={['ORG_ADMIN']}>
+                <ProtectedRoute allowedRoles={['OrgAdmin']}>
                   <Users />
                 </ProtectedRoute>
               }
@@ -90,7 +90,7 @@ const AppRouter = () => {
             <Route
               path="settings"
               element={
-                <ProtectedRoute allowedRoles={['SYSTEM_ADMIN', 'ORG_ADMIN', 'EMPLOYEE']}>
+                <ProtectedRoute allowedRoles={['SysAdmin', 'OrgAdmin', 'DeptAdmin']}>
                   <Settings />
                 </ProtectedRoute>
               }

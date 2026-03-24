@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, X } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, type Role } from '../context/AuthContext';
 
 interface SidebarItem {
   id: string;
   label: string;
-  roles: ('SYSTEM_ADMIN' | 'ORG_ADMIN' | 'EMPLOYEE')[];
+  roles: Role[];
 }
 
 interface SidebarProps {
@@ -33,11 +33,11 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
   const activeItem = getActiveItem();
 
   const allItems: SidebarItem[] = [
-    { id: 'dashboard', label: 'Dashboard', roles: ['SYSTEM_ADMIN'] },
-    { id: 'organizations', label: 'Organizations', roles: ['SYSTEM_ADMIN'] },
-    { id: 'complaints', label: 'Complaints', roles: ['ORG_ADMIN', 'EMPLOYEE'] },
-    { id: 'users', label: 'Employee Mgmt', roles: ['ORG_ADMIN'] },
-    { id: 'settings', label: 'Profile', roles: ['SYSTEM_ADMIN', 'ORG_ADMIN', 'EMPLOYEE'] },
+    { id: 'dashboard', label: 'Dashboard', roles: ['SysAdmin'] },
+    { id: 'organizations', label: 'Organizations', roles: ['SysAdmin'] },
+    { id: 'complaints', label: 'Complaints', roles: ['OrgAdmin', 'DeptAdmin'] },
+    { id: 'users', label: 'Employee Mgmt', roles: ['OrgAdmin'] },
+    { id: 'settings', label: 'Profile', roles: ['SysAdmin', 'OrgAdmin', 'DeptAdmin'] },
   ];
 
   const filteredItems = allItems.filter(item =>

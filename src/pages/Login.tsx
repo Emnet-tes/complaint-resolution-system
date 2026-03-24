@@ -12,9 +12,17 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login({ email, password });
-      // Redirect happens based on role after successful login
-      navigate('/'); 
+      const user = await login({ email, password });
+
+      // Redirect based on role
+      if (user.role === 'SysAdmin') {
+        navigate('/dashboard');
+      } else if (user.role === 'OrgAdmin' || user.role === 'DeptAdmin') {
+        navigate('/complaints');
+      } else {
+        // Fallback
+        navigate('/login');
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
     }
