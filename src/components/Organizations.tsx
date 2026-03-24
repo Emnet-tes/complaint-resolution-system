@@ -1,17 +1,98 @@
-import React, { useState } from 'react';
-import { Search, Plus, Edit, Trash2, X, ExternalLink, Users, BarChart } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, Edit, Trash2, X, ExternalLink, Users, BarChart, Loader2 } from 'lucide-react';
 import Modal from './Modal';
+import { sysAdminApi } from '../api/sysadmin';
 
 const Organizations = () => {
   const [selectedOrg, setSelectedOrg] = useState<any>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAdminsModalOpen, setIsAdminsModalOpen] = useState(false);
 
-  const [orgs, setOrgs] = useState([
-    { id: 'ORG-001', name: 'Water Department', category: 'Utilities', complaints: 1240, rate: '88%', status: 'Active', icon: '💧', bg: 'bg-blue-50' },
-    { id: 'ORG-002', name: 'Road Maintenance', category: 'Infrastructure', complaints: 2305, rate: '45%', status: 'Warning', icon: '🛣️', bg: 'bg-orange-50' },
-    { id: 'ORG-005', name: 'Waste Management', category: 'Sanitation', complaints: 3120, rate: '91%', status: 'Active', icon: '♻️', bg: 'bg-emerald-50' },
-    { id: 'ORG-009', name: 'Electricity Authority', category: 'Utilities', complaints: 890, rate: '72%', status: 'Active', icon: '⚡', bg: 'bg-yellow-50' },
-  ]);
+  // Data States
+  const [admins, setAdmins] = useState<any[]>([]);
+  const [orgs, setOrgs] = useState<any[]>([]);
+  
+  // Logic States
+  const [isInitialLoading, setIsInitialLoading] = useState(false); // For list fetching
+  const [isSubmitting, setIsSubmitting] = useState(false);       // For form posting
+  const [error, setError] = useState('');
+
+  const [adminForm, setAdminForm] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+    organization: '',
+  });
+
+  // 1. Fetch data on page load
+  const fetchData = async () => {
+    setIsInitialLoading(true);
+    setError('');
+    try {
+      // listUsers returns all users; filter for OrgAdmins
+      const res = await sysAdminApi.listUsers();
+      const data = res.data as any[];
+      const orgAdmins = data.filter((u) => u.role === 'OrgAdmin');
+      setAdmins(orgAdmins);
+
+      const derivedOrgs = orgAdmins.map((admin) => ({
+        id: admin.organization,
+        name: admin.organization,
+        fullName: admin.fullName || admin.organization ,
+        complaints: 0,
+        rate: '—',
+        icon: admin.organization === 'EEP' ? '⚡' : '🏛️',
+        bg: admin.organization === 'EEP' ? 'bg-yellow-50' : 'bg-blue-50',
+      }));
+
+      setOrgs(derivedOrgs);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to load data.');
+    } finally {
+      setIsInitialLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // 2. Clear errors when modals open/close
+  useEffect(() => {
+    if (!isAddModalOpen && !isAdminsModalOpen) {
+      setError('');
+      setIsSubmitting(false);
+    }
+  }, [isAddModalOpen, isAdminsModalOpen]);
+
+  const handleCreateOrgAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError('');
+    try {
+      const payload = {
+        fullName: adminForm.fullName,
+        email: adminForm.email,
+        password: adminForm.password,
+        organization: adminForm.organization,
+      };
+      const res = await sysAdminApi.createOrgAdmin(payload);
+      const createdUser = res.data;
+      
+      // Update local state immediately for a smooth UI
+      setAdmins((prev) => [createdUser, ...prev]);
+      
+      // Reset form and close
+      setAdminForm({ fullName: '', email: '', password: '', organization: '' });
+      setIsAddModalOpen(false);
+      setIsAdminsModalOpen(false);
+      alert("Org Admin added successfully!");
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to create organization admin.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -40,164 +121,109 @@ const Organizations = () => {
 
         <div className="bg-white px-5 py-3 rounded-2xl border border-gray-100 shadow-sm flex items-center">
           <Search size={18} className="text-slate-400 mr-3" />
-          <input placeholder="Search organizations by name, ID or category..." className="w-full text-sm outline-none" />
+          <input placeholder="Search organizations..." className="w-full text-sm outline-none" />
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-slate-400 font-bold border-b border-gray-100">
               <tr>
-                <th className="px-6 py-4 uppercase text-[10px] tracking-widest">Organization</th>
-                <th className="px-6 py-4 uppercase text-[10px] tracking-widest">Category</th>
-                <th className="px-6 py-4 uppercase text-[10px] tracking-widest text-center">Complaints</th>
-                <th className="px-6 py-4 uppercase text-[10px] tracking-widest">Performance</th>
-                <th className="px-6 py-4 uppercase text-[10px] tracking-widest text-right">Actions</th>
+                <th className="px-6 py-4 uppercase text-[10px]">Organization</th>
+                <th className="px-6 py-4 uppercase text-[10px]">Full Name</th>
+                <th className="px-6 py-4 uppercase text-[10px] text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {orgs.map((org) => (
-                <tr 
-                  key={org.id} 
-                  onClick={() => setSelectedOrg(org)}
-                  className={`group cursor-pointer transition-all ${selectedOrg?.id === org.id ? 'bg-teal-50/50' : 'hover:bg-slate-50'}`}
-                >
-                  <td className="px-6 py-5">
-                    <div className="flex items-center">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg mr-4 shadow-sm border border-white ${org.bg}`}>{org.icon}</div>
-                      <div>
-                        <p className="font-bold text-slate-800">{org.name}</p>
-                        <p className="text-[10px] text-slate-400 font-bold tracking-tight uppercase">{org.id}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5">
-                    <span className="bg-white border border-slate-200 px-3 py-1 rounded-full text-[10px] font-bold text-slate-600 uppercase">
-                      {org.category}
-                    </span>
-                  </td>
-                  <td className="px-6 py-5 text-center font-bold text-slate-700">{org.complaints.toLocaleString()}</td>
-                  <td className="px-6 py-5">
-                    <div className="flex items-center gap-3">
-                      <span className={`text-[11px] font-bold ${org.status === 'Warning' ? 'text-orange-500' : 'text-emerald-500'}`}>{org.rate}</span>
-                      <div className="h-1.5 w-20 bg-slate-100 rounded-full overflow-hidden">
-                        <div className={`h-full ${org.status === 'Warning' ? 'bg-orange-400' : 'bg-emerald-500'}`} style={{ width: org.rate }}></div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5 text-right">
-                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"><Edit size={16}/></button>
-                      <button 
-                        onClick={(e) => handleDelete(org.id, e)}
-                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                      >
-                        <Trash2 size={16}/>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {isInitialLoading ? (
+                <tr><td colSpan={5} className="p-10 text-center"><Loader2 className="animate-spin inline mr-2"/> Loading...</td></tr>
+              ) : orgs.length === 0 ? (
+                <tr><td colSpan={5} className="px-6 py-10 text-center text-slate-400">No organizations registered yet.</td></tr>
+              ) : (
+                orgs.map((org) => (
+                  <tr key={org.id} onClick={() => setSelectedOrg(org)} className={`group cursor-pointer transition-all ${selectedOrg?.id === org.id ? 'bg-teal-50/50' : 'hover:bg-slate-50'}`}>
+                    <td className="px-6 py-5 font-bold text-slate-800">{org.name}</td>
+                    <td className="px-6 py-5">{org.fullName}</td>
+                    <td className="px-6 py-5 text-right">
+                       <button onClick={(e) => handleDelete(org.id, e)} className="p-2 text-slate-400 hover:text-red-600"><Trash2 size={16}/></button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Slide-out Detail Panel */}
+      {/* Slide-out Detail Panel (Simplified for brevity, keep your existing logic) */}
       {selectedOrg && (
-        <div className="w-100 bg-white border-l border-gray-200 h-full fixed right-0 top-20 bottom-0 animate-in slide-in-from-right duration-300 shadow-2xl z-40 flex flex-col">
-          <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-slate-50/50">
-             <h3 className="font-bold text-slate-800 uppercase text-xs tracking-widest">Organization Detail</h3>
-             <button onClick={() => setSelectedOrg(null)} className="p-1.5 bg-white border border-gray-200 rounded-lg text-slate-400 hover:text-slate-600"><X size={18}/></button>
-          </div>
-          
-          <div className="p-8 overflow-y-auto flex-1 space-y-8">
-            <div className="flex items-center gap-5">
-              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center text-4xl shadow-md border-4 border-white ${selectedOrg.bg}`}>
-                {selectedOrg.icon}
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-slate-800">{selectedOrg.name}</h2>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{selectedOrg.id}</span>
-                  <div className={`w-2 h-2 rounded-full ${selectedOrg.status === 'Active' ? 'bg-emerald-500' : 'bg-orange-500'}`}></div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase">{selectedOrg.status}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <button className="flex items-center justify-center py-3 px-4 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-bold text-slate-600 hover:bg-white transition-all">
+        <div className="w-100 bg-white border-l border-gray-200 h-full fixed right-0 top-20 z-40 flex flex-col shadow-2xl">
+           {/* ... Header and Info ... */}
+           <div className="p-8 space-y-4">
+              <button 
+                onClick={() => setIsAdminsModalOpen(true)}
+                className="w-full flex items-center justify-center py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-600"
+              >
                 <Users size={14} className="mr-2 text-[#006B5D]"/> Manage Admins
               </button>
-              <button className="flex items-center justify-center py-3 px-4 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-bold text-slate-600 hover:bg-white transition-all">
-                <ExternalLink size={14} className="mr-2 text-[#006B5D]"/> Full Profile
-              </button>
-            </div>
-
-            <section className="space-y-4">
-               <h4 className="text-[10px] font-bold uppercase text-slate-400 tracking-widest border-b pb-2">Compliance Metrics</h4>
-               <div className="grid grid-cols-2 gap-4">
-                 <div className="p-4 bg-teal-50/30 rounded-2xl border border-teal-100">
-                    <p className="text-[10px] font-bold text-teal-600 uppercase">Response Rate</p>
-                    <h3 className="text-2xl font-black text-[#006B5D] mt-1">{selectedOrg.rate}</h3>
-                 </div>
-                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">Total Tickets</p>
-                    <h3 className="text-2xl font-black text-slate-800 mt-1">{selectedOrg.complaints}</h3>
-                 </div>
-               </div>
-            </section>
-
-            <section className="space-y-4">
-               <h4 className="text-[10px] font-bold uppercase text-slate-400 tracking-widest border-b pb-2">Active Configuration</h4>
-               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                  <div className="flex items-center">
-                    <div className="p-2 bg-white rounded-lg shadow-sm mr-3"><BarChart size={16} className="text-[#006B5D]"/></div>
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-800">Auto-Escalation</p>
-                      <p className="text-[9px] text-slate-400">Triggered after 48h idle</p>
-                    </div>
-                  </div>
-                  <div className="w-8 h-4 bg-[#006B5D] rounded-full relative"><div className="absolute right-1 top-1 w-2 h-2 bg-white rounded-full"></div></div>
-               </div>
-            </section>
-          </div>
-
-          <div className="p-6 border-t bg-slate-50 flex gap-4">
-             <button className="flex-1 py-3 bg-red-50 text-red-600 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors flex items-center justify-center">
-               <Trash2 size={14} className="mr-2"/> Deactivate Org
-             </button>
-             <button className="flex-1 py-3 bg-[#006B5D] text-white rounded-xl text-xs font-bold shadow-lg shadow-teal-900/10 hover:bg-[#005a4e] transition-colors">
-               Save Settings
-             </button>
-          </div>
+           </div>
         </div>
       )}
 
-      {/* Create Modal */}
-      <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Register New Organization">
-        <form className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Organization Name</label>
-              <input className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#006B5D]/10 outline-none" placeholder="Enter name..." />
-            </div>
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">ID Code</label>
-              <input className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#006B5D]/10 outline-none" placeholder="ORG-XXX" />
-            </div>
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Category</label>
-              <select className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
-                <option>Utilities</option>
-                <option>Security</option>
-                <option>Infrastructure</option>
-              </select>
-            </div>
+      {/* Register / Create Admin Modal */}
+      <Modal 
+        isOpen={isAddModalOpen || isAdminsModalOpen} 
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setIsAdminsModalOpen(false);
+        }} 
+        title={isAdminsModalOpen ? `Manage Admins • ${selectedOrg?.name}` : "Register New Org Admin"}
+      >
+        <form className="space-y-4" onSubmit={handleCreateOrgAdmin}>
+          {error && <div className="p-3 bg-red-50 text-red-600 text-xs font-bold rounded-lg border border-red-100">{error}</div>}
+          
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-slate-500 uppercase">Full Name</label>
+            <input required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-[#006B5D]/10 outline-none" value={adminForm.fullName} onChange={(e) => setAdminForm({ ...adminForm, fullName: e.target.value })} />
           </div>
-          <button className="w-full bg-[#006B5D] text-white py-4 rounded-xl font-bold text-sm shadow-xl shadow-teal-900/20 mt-4 hover:bg-[#005a4e] transition-all transform active:scale-[0.98]">
-            Complete Registration
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-slate-500 uppercase">Email</label>
+            <input type="email" required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-[#006B5D]/10 outline-none" value={adminForm.email} onChange={(e) => setAdminForm({ ...adminForm, email: e.target.value })} />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-slate-500 uppercase">Password</label>
+            <input type="password" required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-[#006B5D]/10 outline-none" value={adminForm.password} onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })} />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-slate-500 uppercase">Organization Name</label>
+            <input required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-[#006B5D]/10 outline-none" placeholder="e.g. EEP" value={adminForm.organization} onChange={(e) => setAdminForm({ ...adminForm, organization: e.target.value })} />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-[#006B5D] text-white py-3 rounded-xl font-bold text-sm shadow-xl mt-2 hover:bg-[#005a4e] disabled:opacity-60 flex items-center justify-center transition-all"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="animate-spin mr-2" size={18}/>
+                Saving...
+              </>
+            ) : 'Register Org Admin'}
           </button>
+
+          {/* List existing admins for that org if needed (optional) */}
+          {isAdminsModalOpen && (
+            <div className="mt-6 pt-4 border-t">
+               <h4 className="text-[10px] font-bold text-slate-400 uppercase mb-2">Existing Admins</h4>
+               <ul className="space-y-2 max-h-32 overflow-y-auto">
+                  {admins.filter(a => a.organization === selectedOrg?.name).map(a => (
+                    <li key={a._id} className="text-xs p-2 bg-slate-50 rounded flex justify-between">
+                      <span className="font-bold">{a.fullName}</span>
+                      <span className="text-slate-400">{a.email}</span>
+                    </li>
+                  ))}
+               </ul>
+            </div>
+          )}
         </form>
       </Modal>
     </div>
