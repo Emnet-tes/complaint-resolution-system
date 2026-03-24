@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Search, X, ChevronDown, UserPlus, Shield, Loader2, Trash2 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, type Role } from '../context/AuthContext';
 import { authApi } from '../api/api';
 
 // Reusable Modal for Registration
@@ -29,9 +29,9 @@ const Users = () => {
 
   // Local state for the user list (to simulate CRUD updates locally)
   const [users, setUsers] = useState([
-    { name: 'Almaz Bekele', email: 'almaz.bekele@addiscity.gov.et', role: 'Org Admin', org: 'Water & Sewage Authority', status: 'Active' },
-    { name: 'Solomon Tefera', email: 'solomon.t@tech.gov.et', role: 'System Admin', org: 'City Admin HQ', status: 'Active' },
-    { name: 'Bruk Alemu', email: 'bruk.a@addisroads.gov.et', role: 'Employee', org: 'Road Authority', status: 'Active' },
+    { name: 'Almaz Bekele', email: 'almaz.bekele@addiscity.gov.et', role: 'OrgAdmin' as Role, org: 'Water & Sewage Authority', status: 'Active' },
+    { name: 'Solomon Tefera', email: 'solomon.t@tech.gov.et', role: 'SysAdmin' as Role, org: 'City Admin HQ', status: 'Active' },
+    { name: 'Bruk Alemu', email: 'bruk.a@addisroads.gov.et', role: 'DeptAdmin' as Role, org: 'Road Authority', status: 'Active' },
   ]);
 
   // Form State for POST /auth/register
@@ -39,10 +39,10 @@ const Users = () => {
     fullname: '',
     email: '',
     password: '',
-    role: currentUser?.role === 'SYSTEM_ADMIN' ? 'ORG_ADMIN' : 'EMPLOYEE'
+    role: (currentUser?.role === 'SysAdmin' ? 'OrgAdmin' : 'DeptAdmin') as Role,
   });
 
-  const isSystemAdmin = currentUser?.role === 'SYSTEM_ADMIN';
+  const isSystemAdmin = currentUser?.role === 'SysAdmin';
 
   // HANDLE POST (Register)
   const handleRegister = async (e: React.FormEvent) => {
@@ -57,7 +57,7 @@ const Users = () => {
       const newUser = {
         name: formData.fullname,
         email: formData.email,
-        role: isSystemAdmin ? 'Org Admin' : 'Employee',
+        role: (isSystemAdmin ? 'OrgAdmin' : 'DeptAdmin') as Role,
         org: isSystemAdmin ? 'Pending Assignment' : '-',
         status: 'Active'
       };
@@ -142,10 +142,12 @@ const Users = () => {
                       </td>
                       <td className="px-6 py-4">
                          <span className={`px-2 py-1 rounded-lg text-[10px] font-bold border uppercase ${
-                           user.role === 'System Admin' ? 'text-emerald-700 bg-emerald-50 border-emerald-100' :
-                           user.role === 'Org Admin' ? 'text-blue-600 bg-blue-50 border-blue-100' :
+                           user.role === 'SysAdmin' ? 'text-emerald-700 bg-emerald-50 border-emerald-100' :
+                           user.role === 'OrgAdmin' ? 'text-blue-600 bg-blue-50 border-blue-100' :
                            'text-slate-500 bg-gray-50 border-gray-100'
-                         }`}>{user.role}</span>
+                         }`}>
+                           {user.role === 'SysAdmin' ? 'System Admin' : user.role === 'OrgAdmin' ? 'Org Admin' : 'Employee'}
+                         </span>
                       </td>
                       <td className="px-6 py-4 text-slate-500 font-medium">{user.org}</td>
                    </tr>
