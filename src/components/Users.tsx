@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { Search, X, ChevronDown, UserPlus, Shield, Loader2, Trash2 } from 'lucide-react';
-import { useAuth, type Role } from '../context/AuthContext';
-import { authApi } from '../api/api';
+import { useEffect, useState } from 'react';
+import { Search, X, UserPlus, Shield, Loader2, Trash2, ChevronDown } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { orgAdminApi, type Department } from '../api/orgadmin';
 
-// Reusable Modal for Registration
+// Reusable Modal
 const Modal = ({ isOpen, onClose, title, children }: any) => {
   if (!isOpen) return null;
   return (
@@ -22,85 +22,88 @@ const Modal = ({ isOpen, onClose, title, children }: any) => {
 
 const Users = () => {
   const { user: currentUser } = useAuth();
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
 
-  // Local state for the user list (to simulate CRUD updates locally)
-  const [users, setUsers] = useState([
-    { name: 'Almaz Bekele', email: 'almaz.bekele@addiscity.gov.et', role: 'OrgAdmin' as Role, org: 'Water & Sewage Authority', status: 'Active' },
-    { name: 'Solomon Tefera', email: 'solomon.t@tech.gov.et', role: 'SysAdmin' as Role, org: 'City Admin HQ', status: 'Active' },
-    { name: 'Bruk Alemu', email: 'bruk.a@addisroads.gov.et', role: 'DeptAdmin' as Role, org: 'Road Authority', status: 'Active' },
-  ]);
-
-  // Form State for POST /auth/register
-  const [formData, setFormData] = useState({
-    fullname: '',
-    email: '',
-    password: '',
-    role: (currentUser?.role === 'SysAdmin' ? 'OrgAdmin' : 'DeptAdmin') as Role,
+  // Departments
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [isDeptLoading, setIsDeptLoading] = useState(false);
+  const [deptError, setDeptError] = useState('');
+  const [deptForm, setDeptForm] = useState({
+    name: '',
+    code: '',
+    description: '',
+    head: '',
   });
 
-  const isSystemAdmin = currentUser?.role === 'SysAdmin';
+  const isOrgAdmin = currentUser?.role === 'OrgAdmin';
 
-  // HANDLE POST (Register)
-  const handleRegister = async (e: React.FormEvent) => {
+  // Fetch departments when OrgAdmin opens page
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      if (!currentUser || !isOrgAdmin) return;
+      setIsDeptLoading(true);
+      setDeptError('');
+      try {
+        const res = await orgAdminApi.listDepartments();
+        setDepartments(res.data as Department[]);
+      } catch (err: any) {
+        const msg = err.response?.data?.message;
+        setDeptError(typeof msg === 'string' ? msg : 'Failed to load departments.');
+      } finally {
+        setIsDeptLoading(false);
+      }
+    };
+
+    fetchDepartments();
+  }, [currentUser, isOrgAdmin]);
+
+  // HANDLE DEPARTMENT CREATE (OrgAdmin)
+  const handleCreateDepartment = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError('');
+    setIsDeptLoading(true);
+    setDeptError('');
     try {
-      // API call to register endpoint
-      await authApi.register(formData);
-      
-      // Update local state for UI feedback
-      const newUser = {
-        name: formData.fullname,
-        email: formData.email,
-        role: (isSystemAdmin ? 'OrgAdmin' : 'DeptAdmin') as Role,
-        org: isSystemAdmin ? 'Pending Assignment' : '-',
-        status: 'Active'
-      };
-      setUsers([newUser, ...users]);
-      
-      setIsAddModalOpen(false);
-      setFormData({ ...formData, fullname: '', email: '', password: '' });
-      alert('User registered successfully!');
+      const res = await orgAdminApi.createDepartment(deptForm);
+      const created = res.data as Department;
+      setDepartments([created, ...departments]);
+      setDeptForm({ name: '', code: '', description: '', head: '' });
+      alert('Department created successfully!');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to register user. Please try again.');
+      const msg = err.response?.data?.message;
+      setDeptError(typeof msg === 'string' ? msg : 'Failed to create department. Please try again.');
     } finally {
-      setIsLoading(false);
+      setIsDeptLoading(false);
     }
   };
 
-  // HANDLE DELETE
-  const handleDelete = (email: string) => {
-    if (window.confirm("Are you sure you want to deactivate this user?")) {
-        setUsers(users.filter(u => u.email !== email));
-        setSelectedUser(null);
+  const handleDeactivateDepartment = async (id: string) => {
+    if (!window.confirm('Are you sure you want to deactivate this department?')) return;
+    try {
+      await orgAdminApi.deactivateDepartment(id);
+      setDepartments(departments.map((d) => (d._id === id ? { ...d, isActive: false } : d)));
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to deactivate department.');
     }
   };
 
   return (
     <div className="flex h-full relative overflow-hidden">
-      <div className={`flex-1 transition-all duration-300 ${selectedUser ? 'mr-112.5' : 'mr-0'} p-6`}>
+      <div className="flex-1 p-6">
          <div className="flex justify-between items-end">
             <div>
-              <nav className="text-xs text-slate-400 mb-1">
-                {isSystemAdmin ? 'Administration / Users' : 'Organization / Employees'}
-              </nav>
-              <h1 className="text-2xl font-bold text-slate-800">
-                {isSystemAdmin ? 'User Management' : 'Employee Management'}
-              </h1>
+              <nav className="text-xs text-slate-400 mb-1">Organization / Departments</nav>
+              <h1 className="text-2xl font-bold text-slate-800">Department Management</h1>
             </div>
             
-            <button 
-              onClick={() => setIsAddModalOpen(true)}
-              className="bg-[#006B5D] text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center shadow-lg shadow-teal-900/10 hover:bg-[#005a4e] transition-all"
-            >
-              <UserPlus size={18} className="mr-2" />
-              {isSystemAdmin ? 'Add Org Admin' : 'Add Employee'}
-            </button>
+            {isOrgAdmin && (
+              <button
+                onClick={() => setIsDeptModalOpen(true)}
+                className="bg-[#006B5D] text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center shadow-lg shadow-teal-900/10 hover:bg-[#005a4e] transition-all"
+              >
+                <UserPlus size={18} className="mr-2" />
+                Add Department
+              </button>
+            )}
          </div>
 
         <div className="flex gap-4 mt-6">
@@ -117,146 +120,120 @@ const Users = () => {
             <table className="w-full text-left text-sm">
                <thead className="bg-gray-50 text-slate-400 font-medium border-b border-gray-100">
                   <tr>
-                     <th className="px-6 py-4 uppercase text-[10px] tracking-wider">Details</th>
-                     <th className="px-6 py-4 uppercase text-[10px] tracking-wider">Role</th>
-                     <th className="px-6 py-4 uppercase text-[10px] tracking-wider">Organization</th>
+                     <th className="px-6 py-4 uppercase text-[10px] tracking-wider">Name</th>
+                     <th className="px-6 py-4 uppercase text-[10px] tracking-wider">Code</th>
+                     <th className="px-6 py-4 uppercase text-[10px] tracking-wider">Head</th>
+                     <th className="px-6 py-4 uppercase text-[10px] tracking-wider">Status</th>
                   </tr>
                </thead>
                <tbody className="divide-y divide-gray-50">
-                  {users.map((user, i) => (
-                    <tr 
-                      key={i} 
-                      onClick={() => setSelectedUser(user)}
-                      className={`cursor-pointer transition-colors ${selectedUser?.email === user.email ? 'bg-teal-50' : 'hover:bg-gray-50'}`}
-                    >
-                       <td className="px-6 py-4">
-                         <div className="flex items-center">
-                            <div className="w-9 h-9 rounded-full bg-teal-50 flex items-center justify-center text-[#006B5D] font-bold border border-teal-100 mr-3">
-                              {user.name.charAt(0)}
-                            </div>
-                            <div>
-                               <p className="font-bold text-slate-800">{user.name}</p>
-                               <p className="text-[11px] text-slate-400">{user.email}</p>
-                            </div>
-                         </div>
+                  {departments.map((dept) => (
+                    <tr key={dept._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 font-bold text-slate-800">{dept.name}</td>
+                      <td className="px-6 py-4 text-slate-500">{dept.code}</td>
+                      <td className="px-6 py-4 text-slate-500">
+                        {typeof dept.head === 'string'
+                          ? dept.head || '—'
+                          : dept.head?.fullName || '—'}
                       </td>
-                      <td className="px-6 py-4">
-                         <span className={`px-2 py-1 rounded-lg text-[10px] font-bold border uppercase ${
-                           user.role === 'SysAdmin' ? 'text-emerald-700 bg-emerald-50 border-emerald-100' :
-                           user.role === 'OrgAdmin' ? 'text-blue-600 bg-blue-50 border-blue-100' :
-                           'text-slate-500 bg-gray-50 border-gray-100'
-                         }`}>
-                           {user.role === 'SysAdmin' ? 'System Admin' : user.role === 'OrgAdmin' ? 'Org Admin' : 'Employee'}
-                         </span>
+                      <td className="px-6 py-4 text-slate-500 flex items-center gap-2">
+                        <span className={`px-2 py-1 rounded-lg text-[10px] font-bold border uppercase ${
+                          dept.isActive ? 'text-emerald-700 bg-emerald-50 border-emerald-100' : 'text-slate-500 bg-gray-50 border-gray-100'
+                        }`}>
+                          {dept.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                        {dept.isActive && (
+                          <button
+                            onClick={() => handleDeactivateDepartment(dept._id)}
+                            className="ml-2 text-[10px] flex items-center gap-1 px-2 py-1 rounded-lg border border-red-100 text-red-500 bg-red-50 hover:bg-red-100"
+                          >
+                            <Trash2 size={12} /> Deactivate
+                          </button>
+                        )}
                       </td>
-                      <td className="px-6 py-4 text-slate-500 font-medium">{user.org}</td>
-                   </tr>
+                    </tr>
                   ))}
                </tbody>
             </table>
          </div>
       </div>
 
-      {/* READ / UPDATE Drawer */}
-      {selectedUser && (
-        <div className="w-112.5 bg-white border-l border-gray-200 fixed right-0 top-20 bottom-0 z-50 animate-in slide-in-from-right duration-300 shadow-2xl flex flex-col">
-           <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <h2 className="text-lg font-bold text-slate-800">User Details</h2>
-              <button onClick={() => setSelectedUser(null)} className="p-1 hover:bg-gray-100 rounded text-slate-400 hover:text-slate-600"><X size={20}/></button>
-           </div>
-           
-           <div className="p-8 overflow-y-auto flex-1">
-              <div className="flex items-center gap-4 mb-8">
-                 <div className="w-16 h-16 rounded-2xl bg-teal-50 flex items-center justify-center text-3xl font-bold text-[#006B5D]">
-                   {selectedUser.name.charAt(0)}
-                 </div>
-                 <div>
-                    <h3 className="font-bold text-lg text-slate-800">{selectedUser.name}</h3>
-                    <p className="text-xs text-slate-400">{selectedUser.email}</p>
-                 </div>
-              </div>
-
-              {/* Editable Fields for UPDATE */}
-              <section className="space-y-4">
-                 <h4 className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Account Control</h4>
-                 <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-600">Full Name</label>
-                    <input className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm" defaultValue={selectedUser.name} />
-                 </div>
-                 <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-600">Email Address</label>
-                    <input className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm" defaultValue={selectedUser.email} />
-                 </div>
-              </section>
-
-              <button 
-                onClick={() => handleDelete(selectedUser.email)}
-                className="mt-10 w-full flex items-center justify-center gap-2 py-3 text-red-500 border border-red-100 bg-red-50 rounded-xl text-sm font-bold hover:bg-red-100 transition-colors"
-              >
-                <Trash2 size={16} /> Deactivate Account
-              </button>
-           </div>
-           
-           <div className="p-6 border-t bg-gray-50 flex gap-4">
-              <button onClick={() => setSelectedUser(null)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-gray-100">Cancel</button>
-              <button className="flex-1 py-2.5 bg-[#006B5D] text-white rounded-xl text-sm font-bold hover:bg-[#005a4e] shadow-lg shadow-teal-900/10">Save Changes</button>
-           </div>
-        </div>
-      )}
-
-      {/* CREATE Modal (uses auth/register) */}
-      <Modal 
-        isOpen={isAddModalOpen} 
-        onClose={() => setIsAddModalOpen(false)} 
-        title={isSystemAdmin ? "Register Org Admin" : "Register Employee"}
+      {/* DEPARTMENTS MODAL (OrgAdmin) */}
+      <Modal
+        isOpen={isDeptModalOpen}
+        onClose={() => setIsDeptModalOpen(false)}
+        title="create new department"
       >
-        <form onSubmit={handleRegister} className="space-y-4">
-          {error && <div className="p-3 bg-red-50 text-red-600 text-[11px] font-bold rounded-lg border border-red-100">{error}</div>}
-          
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-600 uppercase">Full Name</label>
-            <input 
-              required
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#006B5D]/10" 
-              placeholder="e.g. Abebe Bikila"
-              value={formData.fullname}
-              onChange={e => setFormData({...formData, fullname: e.target.value})}
-            />
-          </div>
+        <div className="space-y-6">
+          {deptError && (
+            <div className="p-3 bg-red-50 text-red-600 text-[11px] font-bold rounded-lg border border-red-100">
+              {typeof deptError === 'string' ? deptError : JSON.stringify(deptError)}
+            </div>
+          )}  
 
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-600 uppercase">Email Address</label>
-            <input 
-              type="email" required
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#006B5D]/10" 
-              placeholder="name@city.gov.et"
-              value={formData.email}
-              onChange={e => setFormData({...formData, email: e.target.value})}
-            />
-          </div>
+          <form onSubmit={handleCreateDepartment} className="space-y-3 ">
 
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-600 uppercase">Temp Password</label>
-            <input 
-              type="password" required
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#006B5D]/10" 
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={e => setFormData({...formData, password: e.target.value})}
-            />
-          </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-600 uppercase">Name</label>
+              <input
+                required
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#006B5D]/10"
+                placeholder="EEP - Customer Service"
+                value={deptForm.name}
+                onChange={(e) => setDeptForm({ ...deptForm, name: e.target.value })}
+              />
+            </div>
 
-          <div className="pt-2">
-            <button 
-              type="submit" 
-              disabled={isLoading}
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-600 uppercase">Code</label>
+              <input
+                required
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#006B5D]/10"
+                placeholder="CS_EEP"
+                value={deptForm.code}
+                onChange={(e) => setDeptForm({ ...deptForm, code: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-600 uppercase">Description</label>
+              <textarea
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#006B5D]/10 min-h-[70px]"
+                placeholder="Handles billing, outages, meter issues, and general complaints."
+                value={deptForm.description}
+                onChange={(e) => setDeptForm({ ...deptForm, description: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-600 uppercase">Head</label>
+              <input
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#006B5D]/10"
+                placeholder="Full name of department head"
+                value={deptForm.head}
+                onChange={(e) => setDeptForm({ ...deptForm, head: e.target.value })}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isDeptLoading}
               className="w-full bg-[#006B5D] text-white py-3.5 rounded-xl font-bold flex items-center justify-center shadow-lg shadow-teal-900/10 hover:bg-[#005a4e] transition-all disabled:opacity-50"
             >
-              {isLoading ? <Loader2 className="animate-spin mr-2" size={18} /> : <Shield className="mr-2" size={18} />}
-              Confirm & Register
+              {isDeptLoading ? (
+                <>
+                  <Loader2 className="animate-spin mr-2" size={18} />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Shield className="mr-2" size={18} />
+                  Create Department
+                </>
+              )}
             </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </Modal>
     </div>
   );
