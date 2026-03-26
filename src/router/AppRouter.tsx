@@ -3,11 +3,11 @@ import Dashboard from '../pages/Dashboard';
 import Organizations from '../pages/Organizations';
 import RoleBasedComplaints from '../components/RoleBasedComplaints';
 import ComplaintDetail from '../components/ComplaintDetail';
-import Users from '../components/Users';
 import Settings from '../components/Settings';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
-import { useState } from 'react';
+
+// Auth
 import { AuthProvider } from '../context/AuthContext';
 import ProtectedRoute from '../components/ProtectedRoute';
 import Login from '../pages/Login';
@@ -17,16 +17,14 @@ const MainLayout = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50/50">
       <Sidebar 
         isMobileOpen={isMobileSidebarOpen} 
         setIsMobileOpen={setIsMobileSidebarOpen} 
       />
-      
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar onMenuClick={() => setIsMobileSidebarOpen(true)} />
-        
-        <main className="p-4 md:p-8 flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto">
           <Outlet />
         </main>
       </div>
@@ -62,10 +60,9 @@ const AppRouter = () => {
           <Route path="/login" element={<Login />} />
 
           <Route path="/" element={<MainLayout />}>
-            {/* Redirect root to login; home component can refine role-based landing later */}
             <Route index element={<Navigate to="/login" />} />
 
-            {/* System Admin Routes */}
+            {/* --- SYSTEM ADMIN ROUTES --- */}
             <Route
               path="dashboard"
               element={
@@ -83,7 +80,25 @@ const AppRouter = () => {
               }
             />
 
-            {/* Org Admin / Employee Routes */}
+            {/* --- ORG ADMIN ROUTES --- */}
+            <Route
+              path="org-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['OrgAdmin']}>
+                  <OrgDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="departments"
+              element={
+                <ProtectedRoute allowedRoles={['OrgAdmin']}>
+                  <DepartmentManagement />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* --- SHARED COMPLAINT ROUTES --- */}
             <Route
               path="complaints"
               element={
@@ -100,14 +115,8 @@ const AppRouter = () => {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="users"
-              element={
-                <ProtectedRoute allowedRoles={['OrgAdmin']}>
-                  <Users />
-                </ProtectedRoute>
-              }
-            />
+
+            {/* --- COMMON ROUTES --- */}
             <Route
               path="settings"
               element={
@@ -120,8 +129,9 @@ const AppRouter = () => {
 
           <Route
             path="/unauthorized"
-            element={<div className="p-20 text-center font-bold">403 - Unauthorized Access</div>}
+            element={<div className="flex items-center justify-center h-screen font-black text-slate-400 uppercase tracking-widest">403 | Unauthorized</div>}
           />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
