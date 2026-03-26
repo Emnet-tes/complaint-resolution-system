@@ -12,6 +12,9 @@ import { AuthProvider } from '../context/AuthContext';
 import ProtectedRoute from '../components/ProtectedRoute';
 import Login from '../pages/Login';
 import { Toaster } from 'react-hot-toast';
+import OrgDashboard from '../pages/OrgDashboard';
+import DepartmentManagement from '../pages/DepartmentManagement';
+import { useState } from 'react';
 
 const MainLayout = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
