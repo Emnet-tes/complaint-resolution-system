@@ -58,17 +58,15 @@ export interface UpdateDepartmentPayload {
 // --- Types for Analytics ---
 
 export interface OrgAdminAnalytics {
+  summary: {
+    totalDepartments: number;
+    totalAdmins: number;
+    totalResolved: number;
+    totalPending: number;
+  };
   departments: {
     departmentId: string;
     name: string;
-    total: number;
-    resolved: number;
-    pending: number;
-    resolvedPercentage: number;
-  }[];
-  deptAdmins: {
-    deptAdminId: string;
-    fullName: string;
     total: number;
     resolved: number;
     pending: number;
