@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from 'react-router-dom';
-import Dashboard from '../components/Dashboard';
-import Organizations from '../components/Organizations';
+import Dashboard from '../pages/Dashboard';
+import Organizations from '../pages/Organizations';
 import RoleBasedComplaints from '../components/RoleBasedComplaints';
 import ComplaintDetail from '../components/ComplaintDetail';
 import Users from '../components/Users';
@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { AuthProvider } from '../context/AuthContext';
 import ProtectedRoute from '../components/ProtectedRoute';
 import Login from '../pages/Login';
+import { Toaster } from 'react-hot-toast';
 
 const MainLayout = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -36,6 +37,26 @@ const MainLayout = () => {
 const AppRouter = () => {
   return (
     <AuthProvider>
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#333',
+            color: '#fff',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            borderRadius: '12px',
+          },
+          success: {
+            iconTheme: {
+              primary: '#006B5D',
+              secondary: '#fff',
+            },
+          },
+        }} 
+      />
+      
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
