@@ -1,5 +1,4 @@
-import React from 'react';
-import { X, TrendingUp, Users as UsersIcon, Building2, CheckCircle2 } from 'lucide-react';
+import { X, TrendingUp } from 'lucide-react';
 
 export const Modal = ({ isOpen, onClose, title, children }: any) => {
   if (!isOpen) return null;

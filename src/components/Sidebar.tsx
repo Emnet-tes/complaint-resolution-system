@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, X, LayoutDashboard, Building2, ShieldCheck, ClipboardList, Settings as SettingsIcon, Users } from 'lucide-react';
+import { LogOut, X, LayoutDashboard, Building2, ShieldCheck, ClipboardList, Settings as SettingsIcon } from 'lucide-react';
 import { useAuth, type Role } from '../context/AuthContext';
 
 interface SidebarItem {

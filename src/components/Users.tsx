@@ -134,7 +134,9 @@ const Users = () => {
                       <td className="px-6 py-4 text-slate-500">
                         {typeof dept.head === 'string'
                           ? dept.head || '—'
-                          : dept.head?.fullName || '—'}
+                          : (typeof dept.head === 'object' && dept.head && 'fullName' in dept.head)
+                            ? (dept.head as { fullName?: string }).fullName || '—'
+                            : '—'}
                       </td>
                       <td className="px-6 py-4 text-slate-500 flex items-center gap-2">
                         <span className={`px-2 py-1 rounded-lg text-[10px] font-bold border uppercase ${

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, UserPlus, Shield, Loader2, Trash2, ChevronDown, User } from 'lucide-react';
+import { UserPlus, Shield, Loader2, User } from 'lucide-react';
 import { orgAdminApi, type Department, type DeptAdmin } from '../api/orgadmin';
 import Modal from '../components/Modal';
 
