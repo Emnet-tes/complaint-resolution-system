@@ -17,8 +17,8 @@ const Login = () => {
       // Redirect based on role
       if (user.role === 'SysAdmin') {
         navigate('/dashboard');
-      } else if (user.role === 'OrgAdmin' || user.role === 'DeptAdmin') {
-        navigate('/complaints');
+      } else if (user.role === 'OrgAdmin') {
+        navigate('/org-dashboard');
       } else {
         // Fallback
         navigate('/login');

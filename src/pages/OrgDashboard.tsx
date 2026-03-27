@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Building2, Users as UsersIcon, Clock, CheckCircle2, BarChart3, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next'; // 1. Import i18n
 import { orgAdminApi } from '../api/orgadmin';
 import { StatCard } from '../components/OrgComponents';
+import { Table, type Column } from '../components/Table'; // 2. Import Table
 
-// Update interface to match the backend response
 interface OrgAdminAnalytics {
   summary: {
     totalDepartments: number;
@@ -22,6 +23,7 @@ interface OrgAdminAnalytics {
 }
 
 const OrgDashboard = () => {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<OrgAdminAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -47,90 +49,105 @@ const OrgDashboard = () => {
     );
   }
 
-  // Fallback to 0 if stats is null
   const summary = stats?.summary || { totalDepartments: 0, totalAdmins: 0, totalResolved: 0, totalPending: 0 };
   const totalTickets = summary.totalResolved + summary.totalPending;
   const successRate = totalTickets > 0 ? ((summary.totalResolved / totalTickets) * 100).toFixed(1) : "0";
 
+  // 3. Define Table Columns using t()
+  const columns: Column<OrgAdminAnalytics['departments'][0]>[] = [
+    { 
+      header: t('org_dashboard.table.col_dept'), 
+      key: 'name', 
+      className: 'font-bold text-slate-700' 
+    },
+    { 
+      header: t('org_dashboard.table.col_total'), 
+      key: 'total', 
+      className: 'text-center font-mono text-slate-500', 
+      headerClassName: 'text-center' 
+    },
+    { 
+      header: t('org_dashboard.table.col_resolved'), 
+      key: 'resolved', 
+      className: 'text-center font-mono font-bold text-emerald-600', 
+      headerClassName: 'text-center' 
+    },
+    { 
+      header: t('org_dashboard.table.col_pending'), 
+      key: 'pending', 
+      className: 'text-center font-mono font-bold text-amber-600', 
+      headerClassName: 'text-center' 
+    },
+    { 
+      header: t('org_dashboard.table.col_success'), 
+      key: 'resolvedPercentage', 
+      className: 'text-right', 
+      headerClassName: 'text-right',
+      render: (dept) => (
+        <span className='text-[10px] font-black bg-emerald-50 text-emerald-700 px-2 py-1 rounded-lg border border-emerald-100'>
+          {dept.resolvedPercentage}%
+        </span>
+      )
+    },
+  ];
+
   return (
     <div className="p-8 space-y-8 bg-gray-50/50 min-h-screen">
       <div>
-        <nav className="text-xs text-slate-400 mb-1 font-bold uppercase tracking-tighter">Organization / Overview</nav>
-        <h1 className="text-3xl font-black text-slate-800">Dashboard Metrics</h1>
+        <nav className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+          {t('org_dashboard.nav_path')}
+        </nav>
+        <h1 className="text-3xl font-black text-slate-800 tracking-tight">
+          {t('org_dashboard.title')}
+        </h1>
       </div>
 
-      {/* Overview Cards - Now using summary data directly */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatCard 
-          title="Total Departments" 
+          title={t('org_dashboard.stats.total_depts')} 
           value={summary.totalDepartments} 
-          subValue="Active Units" 
+          subValue={t('org_dashboard.stats.sub_active')} 
           icon={Building2} 
           color="bg-indigo-500" 
         />
         <StatCard 
-          title="Dept Admins" 
+          title={t('org_dashboard.stats.dept_admins')} 
           value={summary.totalAdmins} 
-          subValue="Staff Members" 
+          subValue={t('org_dashboard.stats.sub_staff')} 
           icon={UsersIcon} 
           color="bg-[#006B5D]" 
         />
         <StatCard 
-          title="Total Resolved" 
+          title={t('org_dashboard.stats.total_resolved')} 
           value={summary.totalResolved} 
-          subValue={`${successRate}% Success Rate`} 
+          subValue={`${successRate}% ${t('org_dashboard.stats.success_rate')}`} 
           icon={CheckCircle2} 
           color="bg-emerald-500" 
         />
         <StatCard 
-          title="Total Pending" 
+          title={t('org_dashboard.stats.total_pending')} 
           value={summary.totalPending} 
-          subValue="Awaiting Action" 
+          subValue={t('org_dashboard.stats.sub_awaiting')} 
           icon={Clock} 
           color="bg-amber-500" 
         />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Department Performance Table */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-gray-50 flex items-center gap-2">
+      <div className="grid grid-cols-1 xl:grid-cols-1 gap-6">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
             <BarChart3 size={18} className="text-[#006B5D]" />
-            <h3 className="font-bold text-slate-800 uppercase text-xs tracking-widest">Department Breakdown</h3>
+            <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">
+              {t('org_dashboard.table.title')}
+            </h3>
           </div>
-          <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 text-[10px] uppercase font-bold text-slate-400 border-b border-gray-100">
-              <tr>
-                <th className="px-6 py-4">Department</th>
-                <th className="px-6 py-4 text-center">Total</th>
-                <th className="px-6 py-4 text-center text-emerald-600">Resolved</th>
-                <th className="px-6 py-4 text-center text-amber-600">Pending</th>
-                <th className="px-6 py-4 text-right">Success</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {stats?.departments.map((dept) => (
-                <tr key={dept.departmentId} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-4 font-bold text-slate-700">{dept.name}</td>
-                  <td className="px-6 py-4 text-center font-mono text-slate-500">{dept.total}</td>
-                  <td className="px-6 py-4 text-center font-mono font-bold text-emerald-600">{dept.resolved}</td>
-                  <td className="px-6 py-4 text-center font-mono font-bold text-amber-500">{dept.pending}</td>
-                  <td className="px-6 py-4 text-right">
-                     <span className='text-[10px] font-black bg-emerald-50 text-emerald-700 px-2 py-1 rounded-lg border border-emerald-100'>
-                       {dept.resolvedPercentage}%
-                     </span>
-                  </td>
-                </tr>
-              ))}
-              {stats?.departments.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="p-10 text-center text-slate-400 font-bold uppercase text-xs">
-                    No department data available
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          
+          {/* 4. Use the Reusable Table Component */}
+          <Table 
+            data={stats?.departments || []} 
+            columns={columns} 
+            noDataMessage={t('org_dashboard.table.no_data')}
+          />
         </div>
       </div>
     </div>

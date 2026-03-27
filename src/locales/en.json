@@ -1,0 +1,229 @@
+{
+  "nav": {
+    "dashboard_title": "Welcome to the Dashboard",
+    "global_search": "Global search..."
+  },
+  "sidebar": {
+    "sys_overview": "System Overview",
+    "organizations": "Organizations",
+    "dashboard": "Dashboard",
+    "departments": "Departments",
+    "complaints": "Complaints",
+    "profile": "Profile",
+    "logout": "Log Out",
+    "sys_portal": "System Portal",
+    "org_portal": "Org Portal",
+    "dept_portal": "Dept Portal"
+  },
+  "org_dashboard": {
+    "nav_path": "Organization / Overview",
+    "title": "Dashboard Metrics",
+    "stats": {
+      "total_depts": "Total Departments",
+      "dept_admins": "Dept Admins",
+      "total_resolved": "Total Resolved",
+      "total_pending": "Total Pending",
+      "sub_active": "Active Units",
+      "sub_staff": "Staff Members",
+      "sub_awaiting": "Awaiting Action",
+      "success_rate": "Success Rate"
+    },
+    "table": {
+      "title": "Department Breakdown",
+      "col_dept": "Department",
+      "col_total": "Total",
+      "col_resolved": "Resolved",
+      "col_pending": "Pending",
+      "col_success": "Success",
+      "no_data": "No department data available"
+    }
+},
+  "dept_mgmt": {
+    "nav": "Organization / Management",
+    "title": "Infrastructure",
+    "tabs": {
+      "depts": "Departments",
+      "admins": "Staff Admins"
+    },
+    "table": {
+      "dept": "Department",
+      "code": "Code",
+      "head": "Head of Dept",
+      "status": "Status",
+      "name": "Full Name",
+      "email": "Email Address",
+      "unit": "Assigned Unit",
+      "role": "Role",
+      "active": "Active",
+      "inactive": "Deactivated"
+    },
+    "modals": {
+      "new_dept": "New Department",
+      "new_admin": "New Dept Admin",
+      "labels": {
+        "name": "Department Name",
+        "code": "Network Code",
+        "head": "Assigned Head Name",
+        "desc": "Overview",
+        "full_name": "Full Name",
+        "email": "Email Address",
+        "password": "System Password",
+        "unit": "Assigned Unit"
+      },
+      "placeholders": {
+        "name": "e.g. Finance",
+        "code": "e.g. FIN_01",
+        "head": "e.g. John Doe",
+        "desc": "Responsibilities...",
+        "holder": "Account Holder",
+        "choose": "Choose Unit"
+      }
+    },
+    "buttons": {
+      "add_dept": "Add Department",
+      "add_admin": "Add Admin",
+      "submit_dept": "Finalize Department",
+      "submit_admin": "Confirm Access"
+    },
+    "toasts": {
+      "fetch_error": "Failed to sync system data",
+      "creating_dept": "Creating department...",
+      "dept_success": "Department created successfully!",
+      "registering_admin": "Registering admin...",
+      "admin_success": "Admin registered successfully!"
+    }
+  },
+  "complaints": {
+    "nav": "Dashboard / Org Complaints",
+    "title": "Organization Complaints",
+    "subtitle": "Manage complaints at the organization level.",
+    "list_view": "List",
+    "map_view": "Map",
+    "export": "Export",
+    "new_btn": "New Complaint",
+    "search_placeholder": "Search by ID, Title, or Keyword...",
+    "assignee": "Assignee...",
+    "bulk_actions": "Bulk Actions",
+    "filters": "Filters",
+    "clear_all": "Clear All",
+    "table": {
+      "id": "ID",
+      "title_desc": "Title / Description",
+      "type": "Type",
+      "org": "Org",
+      "status": "Status",
+      "priority": "Priority",
+      "date": "Date",
+      "action": "Action",
+      "view_details": "View Details"
+    },
+    "modal": {
+      "title": "File New Organization Complaint",
+      "subject": "Subject",
+      "subject_placeholder": "Brief description of the issue",
+      "desc": "Detailed Description",
+      "desc_placeholder": "Provide detailed information...",
+      "category": "Category",
+      "select_cat": "Select category...",
+      "submit": "Post Complaint"
+    }
+  },
+  "sys_dashboard": {
+    "breadcrumb": "System Administration / Overview",
+    "title": "Global Analytics",
+    "loading": "Syncing Global Data...",
+    "stats": {
+      "complaints": "Global Complaints",
+      "sub_orgs": "All Organizations",
+      "pending": "Pending Resolution",
+      "sub_rate": "{{rate}}% Global Rate",
+      "resolved": "System Resolved",
+      "sub_cases": "Completed Cases"
+    },
+    "chart": {
+      "title": "Organization Distribution",
+      "subtitle": "Volume vs Resolution Breakdown",
+      "total": "Total",
+      "resolved": "Resolved"
+    },
+    "insights": {
+      "title": "System Insights",
+      "desc": "The current system resolution rate is <1>{{rate}}%</1>. Keep track of individual organization performance via the distribution chart.",
+      "export": "Export Report"
+    },
+    "summary": {
+      "title": "Monitoring Summary",
+      "connected": "Connected Orgs"
+    }
+  },
+  "orgs": {
+    "title": "Organizations",
+    "subtitle": "Global Entity Control",
+    "btn_new": "New Organization",
+    "table": {
+      "name": "Organization",
+      "code": "Code",
+      "status": "Status",
+      "actions": "Actions",
+      "details": "Details",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "side": {
+      "admins": "Admin Accounts",
+      "create": "Create",
+      "edit": "Edit",
+      "suspend": "Suspend"
+    },
+    "modals": {
+      "org_new": "New Organization",
+      "org_edit": "Edit Organization",
+      "admin_new": "New Admin",
+      "admin_edit": "Edit Admin",
+      "deactivate_title": "Confirm Suspension",
+      "warning": "Warning: Deactivating this {{type}} will restrict access immediately. Please provide a reason below.",
+      "type_org": "Organization",
+      "type_admin": "Admin"
+    },
+    "labels": {
+      "name": "Name",
+      "code": "Code",
+      "status_active": "Organization is Active",
+      "full_name": "Full Name",
+      "email": "Email",
+      "password": "Password",
+      "reason": "Reason for Deactivation",
+      "reason_placeholder": "Optional context..."
+    },
+    "btns": {
+      "save": "Save Changes",
+      "confirm": "Confirm",
+      "deactivate": "Confirm Deactivate"
+    }
+  },
+  "settings": {
+    "title": "Account Settings",
+    "subtitle": "Manage your personal information and security preferences.",
+    "profile": {
+      "title": "Profile Photo",
+      "subtitle": "Update your photo and personal brand.",
+      "change": "Change",
+      "first_name": "First Name",
+      "last_name": "Last Name",
+      "email": "Email Address"
+    },
+    "security": {
+      "title": "Password Security",
+      "subtitle": "Keep your account secure by using a strong password.",
+      "current_password": "Current Password",
+      "new_password": "New Password",
+      "confirm_password": "Confirm New Password",
+      "placeholder_new": "Enter new password",
+      "placeholder_confirm": "Confirm new password"
+    },
+    "actions": {
+      "discard": "Discard Changes",
+      "update": "Update Account"
+    }
+  }
+}
