@@ -2,7 +2,7 @@ import React from 'react';
 import { Loader2 } from 'lucide-react';
 
 export interface Column<T> {
-  header: string;
+  header: React.ReactNode;
   // Use string for nested paths or logic-based keys
   key: string; 
   render?: (row: T) => React.ReactNode;

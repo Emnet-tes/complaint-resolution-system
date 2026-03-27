@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
   List, Map as MapIcon, Download, Plus, Search, 
-  AlertCircle, Clock, ChevronDown, Trash2, 
-  UserPlus, Edit, X 
+  AlertCircle, Clock, Trash2, 
+  UserPlus, Edit
 } from 'lucide-react';
 import Modal from './Modal';
-import { Table, type Column } from '../components/Table'; // Import reusable table
+import { Table, type Column } from '../components/Table';
 
 const OrgComplaints = () => {
   const { t } = useTranslation();
@@ -22,6 +22,10 @@ const OrgComplaints = () => {
     { id: '#ORG-1002', title: 'Policy Violation', desc: 'Non-compliance with new HR policy.', type: 'HR', org: 'HR Department', status: 'In Progress', priority: 'High', date: '30 mins ago', sColor: 'text-blue-600 border-blue-200 bg-blue-50', pColor: 'text-orange-600' },
   ];
 
+  // --- Selection Logic ---
+  const isAllSelected = complaintData.length > 0 && selectedComplaints.length === complaintData.length;
+  const isIndeterminate = selectedComplaints.length > 0 && selectedComplaints.length < complaintData.length;
+
   const handleSelectAll = (checked: boolean) => {
     setSelectedComplaints(checked ? complaintData.map(c => c.id) : []);
   };
@@ -33,7 +37,18 @@ const OrgComplaints = () => {
   // --- Table Column Definitions ---
   const columns: Column<typeof complaintData[0]>[] = [
     {
-      header: "",
+      // Master Checkbox in the Header
+      header: (
+        <input 
+          type="checkbox" 
+          className="rounded accent-[#006B5D] cursor-pointer" 
+          checked={isAllSelected}
+          ref={(el) => {
+            if (el) el.indeterminate = isIndeterminate;
+          }}
+          onChange={(e) => handleSelectAll(e.target.checked)}
+        />
+      ),
       key: "checkbox",
       headerClassName: "w-10",
       render: (row) => (
@@ -147,7 +162,7 @@ const OrgComplaints = () => {
         <Table 
           data={complaintData} 
           columns={columns} 
-          noDataMessage={t('complaints.table.no_data', 'No complaints found')}
+          noDataMessage={t('complaints.table.no_data')}
         />
       ) : (
         <div className="bg-slate-100 h-96 rounded-3xl flex flex-col items-center justify-center border-2 border-dashed border-slate-200">
