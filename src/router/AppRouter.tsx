@@ -9,6 +9,7 @@ import Navbar from '../components/Navbar';
 
 // Auth
 import { AuthProvider } from '../context/AuthContext';
+import { NotificationProvider } from '../context/NotificationContext';
 import ProtectedRoute from '../components/ProtectedRoute';
 import Login from '../pages/Login';
 import { Toaster } from 'react-hot-toast';
@@ -38,29 +39,30 @@ const MainLayout = () => {
 const AppRouter = () => {
   return (
     <AuthProvider>
-      <Toaster 
-        position="top-right"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: '#333',
-            color: '#fff',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            borderRadius: '12px',
-          },
-          success: {
-            iconTheme: {
-              primary: '#006B5D',
-              secondary: '#fff',
+      <NotificationProvider>
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#333',
+              color: '#fff',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              borderRadius: '12px',
             },
-          },
-        }} 
-      />
-      
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
+            success: {
+              iconTheme: {
+                primary: '#006B5D',
+                secondary: '#fff',
+              },
+            },
+          }} 
+        />
+        
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
 
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Navigate to="/login" />} />
@@ -130,13 +132,14 @@ const AppRouter = () => {
             />
           </Route>
 
-          <Route
-            path="/unauthorized"
-            element={<div className="flex items-center justify-center h-screen font-black text-slate-400 uppercase tracking-widest">403 | Unauthorized</div>}
-          />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </BrowserRouter>
+            <Route
+              path="/unauthorized"
+              element={<div className="flex items-center justify-center h-screen font-black text-slate-400 uppercase tracking-widest">403 | Unauthorized</div>}
+            />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </BrowserRouter>
+      </NotificationProvider>
     </AuthProvider>
   );
 };
