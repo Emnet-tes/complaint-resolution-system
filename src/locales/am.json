@@ -1,0 +1,229 @@
+{
+  "nav": {
+    "dashboard_title": "ወደ ዳሽቦርድ እንኳን በደህና መጡ",
+    "global_search": "አጠቃላይ ፍለጋ..."
+  },
+  "sidebar": {
+    "sys_overview": "የስርዓት አጠቃላይ እይታ",
+    "organizations": "ድርጅቶች",
+    "dashboard": "ዳሽቦርድ",
+    "departments": "ክፍሎች",
+    "complaints": "ቅሬታዎች",
+    "profile": "የግል መገለጫ",
+    "logout": "ውጣ",
+    "sys_portal": "የስርዓት ፖርታል",
+    "org_portal": "የድርጅት ፖርታል",
+    "dept_portal": "የክፍል ፖርታል"
+  },
+  "org_dashboard": {
+    "nav_path": "ድርጅት / አጠቃላይ እይታ",
+    "title": "የዳሽቦርድ መለኪያዎች",
+    "stats": {
+      "total_depts": "ጠቅላላ ክፍሎች",
+      "dept_admins": "የክፍል አስተዳዳሪዎች",
+      "total_resolved": "ተፈትተዋል",
+      "total_pending": "በሂደት ላይ",
+      "sub_active": "ንቁ ክፍሎች",
+      "sub_staff": "ሰራተኞች",
+      "sub_awaiting": "ምላሽ የሚጠባበቁ",
+      "success_rate": "ውጤታማነት"
+    },
+    "table": {
+      "title": "የክፍሎች ዝርዝር",
+      "col_dept": "ክፍል",
+      "col_total": "ጠቅላላ",
+      "col_resolved": "ተፈትተዋል",
+      "col_pending": "በሂደት ላይ",
+      "col_success": "ውጤታማነት",
+      "no_data": "ምንም የክፍል መረጃ የለም"
+    }
+  },
+  "dept_mgmt": {
+    "nav": "ድርጅት / አስተዳደር",
+    "title": "መዋቅር",
+    "tabs": {
+      "depts": "ክፍሎች",
+      "admins": "የክፍል አስተዳዳሪዎች"
+    },
+    "table": {
+      "dept": "ክፍል",
+      "code": "ኮድ",
+      "head": "የክፍል ኃላፊ",
+      "status": "ሁኔታ",
+      "name": "ሙሉ ስም",
+      "email": "ኢሜይል",
+      "unit": "የተመደበበት ክፍል",
+      "role": "ሚና",
+      "active": "ንቁ",
+      "inactive": "የተዘጋ"
+    },
+    "modals": {
+      "new_dept": "አዲስ ክፍል",
+      "new_admin": "አዲስ የክፍል አስተዳዳሪ",
+      "labels": {
+        "name": "የክፍል ስም",
+        "code": "የክፍል ኮድ",
+        "head": "የተመደበው ኃላፊ ስም",
+        "desc": "ማብራሪያ",
+        "full_name": "ሙሉ ስም",
+        "email": "ኢሜይል አድራሻ",
+        "password": "የይለፍ ቃል",
+        "unit": "የሚመደብበት ክፍል"
+      },
+      "placeholders": {
+        "name": "ምሳሌ፡ ፋይናንስ",
+        "code": "ምሳሌ፡ FIN_01",
+        "head": "ምሳሌ፡ ዮሐንስ አበበ",
+        "desc": "የክፍሉ ኃላፊነቶች...",
+        "holder": "የመለያ ባለቤት",
+        "choose": "ክፍል ይምረጡ"
+      }
+    },
+    "buttons": {
+      "add_dept": "ክፍል ጨምር",
+      "add_admin": "አስተዳዳሪ ጨምር",
+      "submit_dept": "ክፍሉን አጽድቅ",
+      "submit_admin": "መለያውን ፍጠር"
+    },
+    "toasts": {
+      "fetch_error": "የስርዓት መረጃዎችን ማምጣት አልተቻለም",
+      "creating_dept": "ክፍሉ እየተፈጠረ ነው...",
+      "dept_success": "ክፍሉ በተሳካ ሁኔታ ተፈጥሯል!",
+      "registering_admin": "አስተዳዳሪው እየተመዘገበ ነው...",
+      "admin_success": "አስተዳዳሪው በተሳካ ሁኔታ ተመዝግቧል!"
+    }
+  },
+  "complaints": {
+    "nav": "ዳሽቦርድ / የድርጅት ቅሬታዎች",
+    "title": "የድርጅት ቅሬታዎች",
+    "subtitle": "በድርጅት ደረጃ ያሉ ቅሬታዎችን ያስተዳድሩ።",
+    "list_view": "ዝርዝር",
+    "map_view": "ካርታ",
+    "export": "ላክ (Export)",
+    "new_btn": "አዲስ ቅሬታ",
+    "search_placeholder": "በመለያ፣ በርዕስ ወይም በቁልፍ ቃል ይፈልጉ...",
+    "assignee": "ተረካቢ...",
+    "bulk_actions": "የጅምላ እርምጃዎች",
+    "filters": "ማጣሪያዎች",
+    "clear_all": "ሁሉንም አጽዳ",
+    "table": {
+      "id": "መለያ",
+      "title_desc": "ርዕስ / መግለጫ",
+      "type": "ዓይነት",
+      "org": "ድርጅት",
+      "status": "ሁኔታ",
+      "priority": "ቅድሚያ የሚሰጠው",
+      "date": "ቀን",
+      "action": "እርምጃ",
+      "view_details": "ዝርዝር ይመልከቱ"
+    },
+    "modal": {
+      "title": "አዲስ የድርጅት ቅሬታ ያስገቡ",
+      "subject": "ርዕሰ ጉዳይ",
+      "subject_placeholder": "የችግሩ አጭር መግለጫ",
+      "desc": "ዝርዝር መግለጫ",
+      "desc_placeholder": "ስለ ቅሬታው ዝርዝር መረጃ ይስጡ...",
+      "category": "ምድብ",
+      "select_cat": "ምድብ ይምረጡ...",
+      "submit": "ቅሬታውን ላክ"
+    }
+  },
+  "sys_dashboard": {
+    "breadcrumb": "የስርዓት አስተዳደር / አጠቃላይ እይታ",
+    "title": "አጠቃላይ ትንታኔ",
+    "loading": "መረጃ በመሰብሰብ ላይ...",
+    "stats": {
+      "complaints": "አጠቃላይ ቅሬታዎች",
+      "sub_orgs": "ሁሉም ድርጅቶች",
+      "pending": "ምላሽ የሚጠባበቁ",
+      "sub_rate": "{{rate}}% አጠቃላይ ፍጥነት",
+      "resolved": "የተፈቱ ቅሬታዎች",
+      "sub_cases": "የተጠናቀቁ ጉዳዮች"
+    },
+    "chart": {
+      "title": "የድርጅቶች ስርጭት",
+      "subtitle": "የቅሬታ መጠን እና የመፍትሄ ክፍፍል",
+      "total": "ጠቅላላ",
+      "resolved": "የተፈታ"
+    },
+    "insights": {
+      "title": "የስርዓት ግንዛቤዎች",
+      "desc": "የአሁኑ የስርዓቱ መፍትሄ ፍጥነት <1>{{rate}}%</1> ነው። በስርጭት ሰንጠረዥ በኩል የእያንዳንዱን ድርጅት አፈፃፀም ይከታተሉ።",
+      "export": "ሪፖርት አውጣ"
+    },
+    "summary": {
+      "title": "የክትትል ማጠቃለያ",
+      "connected": "የተገናኙ ድርጅቶች"
+    }
+  },
+  "orgs": {
+    "title": "ድርጅቶች",
+    "subtitle": "አጠቃላይ የተቋማት መቆጣጠሪያ",
+    "btn_new": "አዲስ ድርጅት",
+    "table": {
+      "name": "ድርጅት",
+      "code": "ኮድ",
+      "status": "ሁኔታ",
+      "actions": "እርምጃዎች",
+      "details": "ዝርዝር",
+      "active": "ንቁ",
+      "inactive": "ዝግ"
+    },
+    "side": {
+      "admins": "የአስተዳዳሪ መለያዎች",
+      "create": "ፍጠር",
+      "edit": "አስተካክል",
+      "suspend": "አግድ"
+    },
+    "modals": {
+      "org_new": "አዲስ ድርጅት",
+      "org_edit": "ድርጅት ያስተካክሉ",
+      "admin_new": "አዲስ አስተዳዳሪ",
+      "admin_edit": "አስተዳዳሪ ያስተካክሉ",
+      "deactivate_title": "እግዱን ያረጋግጡ",
+      "warning": "ማስጠንቀቂያ፡ ይህንን {{type}} ማገድ መዳረሻን ወዲያውኑ ይገድባል። እባክዎ ምክንያቱን ከታች ይጥቀሱ።",
+      "type_org": "ድርጅት",
+      "type_admin": "አስተዳዳሪ"
+    },
+    "labels": {
+      "name": "ስም",
+      "code": "ኮድ",
+      "status_active": "ድርጅቱ ንቁ ነው",
+      "full_name": "ሙሉ ስም",
+      "email": "ኢሜይል",
+      "password": "የይለፍ ቃል",
+      "reason": "የማገጃ ምክንያት",
+      "reason_placeholder": "ተጨማሪ ማብራሪያ..."
+    },
+    "btns": {
+      "save": "ለውጦችን አስቀምጥ",
+      "confirm": "አረጋግጥ",
+      "deactivate": "ማገጃውን አረጋግጥ"
+    }
+  },
+  "settings": {
+    "title": "የመለያ ቅንብሮች",
+    "subtitle": "የግል መረጃዎን እና የደህንነት ምርጫዎችዎን ያስተዳድሩ።",
+    "profile": {
+      "title": "የመገለጫ ፎቶ",
+      "subtitle": "ፎቶዎን እና የግል መለያዎን ያዘምኑ።",
+      "change": "ቀይር",
+      "first_name": "ስም",
+      "last_name": "የአባት ስም",
+      "email": "የኢሜይል አድራሻ"
+    },
+    "security": {
+      "title": "የይለፍ ቃል ደህንነት",
+      "subtitle": "ጠንካራ የይለፍ ቃል በመጠቀም መለያዎን ደህንነቱ የተጠበቀ ያድርጉ።",
+      "current_password": "የአሁኑ የይለፍ ቃል",
+      "new_password": "አዲስ የይለፍ ቃል",
+      "confirm_password": "አዲሱን የይለፍ ቃል ያረጋግጡ",
+      "placeholder_new": "አዲስ የይለፍ ቃል ያስገቡ",
+      "placeholder_confirm": "አዲሱን የይለፍ ቃል ደግመው ያስገቡ"
+    },
+    "actions": {
+      "discard": "ለውጦቹን ሰርዝ",
+      "update": "መለያውን አዘምን"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Plus, Loader2, X, Edit3, Power, ChevronRight, AlertTriangle
 } from 'lucide-react';
@@ -7,10 +8,10 @@ import { sysAdminApi, type Organization, type OrgAdmin } from '../api/sysadmin';
 import toast from 'react-hot-toast';
 
 const Organizations = () => {
+  const { t } = useTranslation();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [allAdmins, setAllAdmins] = useState<OrgAdmin[]>([]);
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
-
   const [submitting, setSubmitting] = useState(false);
 
   // Modal Control
@@ -36,60 +37,35 @@ const Organizations = () => {
       ]);
       setOrganizations(orgRes.data);
       setAllAdmins(adminRes.data);
-    } catch (err) { toast.error('Failed to sync system data.'); }    
+    } catch (err) { toast.error(t('toasts.fetch_error', 'Failed to sync system data.')); }    
   };
 
   useEffect(() => { fetchData(); }, []);
 
   const selectedOrgAdmins = allAdmins.filter(a => a.organization?._id === selectedOrg?._id);
 
- // --- ADMIN HANDLERS ---
-
+  // --- HANDLERS ---
   const handleAdminSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedOrg) return;
     setSubmitting(true);
     try {
       if (editingAdminId) {
-        // Payload: { fullName, email }
-        const res = await sysAdminApi.updateOrgAdmin(editingAdminId, { 
-          fullName: adminForm.fullName, 
-          email: adminForm.email 
-        });
-
-        // FIX: Re-attach the selectedOrg object because the backend 
-        // might return organization as a string name instead of an ID object.
-        const updatedAdmin = {
-          ...res.data,
-          organization: typeof res.data.organization === 'string' 
-            ? selectedOrg 
-            : res.data.organization
-        };
-
+        const res = await sysAdminApi.updateOrgAdmin(editingAdminId, { fullName: adminForm.fullName, email: adminForm.email });
+        const updatedAdmin = { ...res.data, organization: typeof res.data.organization === 'string' ? selectedOrg : res.data.organization };
         setAllAdmins(allAdmins.map(a => a._id === editingAdminId ? updatedAdmin : a));
-        toast.success('Admin updated successfully!');
+        toast.success(t('toasts.admin_updated', 'Admin updated successfully!'));
       } else {
         const res = await sysAdminApi.createOrgAdmin({ ...adminForm, organizationId: selectedOrg._id });
-        
-        // Apply same normalization for creation if needed
-        const newAdmin = {
-          ...res.data,
-          organization: typeof res.data.organization === 'string' 
-            ? selectedOrg 
-            : res.data.organization
-        };
-
+        const newAdmin = { ...res.data, organization: typeof res.data.organization === 'string' ? selectedOrg : res.data.organization };
         setAllAdmins([newAdmin, ...allAdmins]);
-        toast.success('Admin created successfully!');
+        toast.success(t('toasts.admin_created', 'Admin created successfully!'));
       }
       setIsAdminModalOpen(false);
       setEditingAdminId(null);
-    } catch (err: any) { 
-      toast.error(err.response?.data?.message || 'Action failed.');
-    } finally { setSubmitting(false); }
+    } catch (err: any) { toast.error(err.response?.data?.message || t('toasts.error', 'Action failed.')); }
+    finally { setSubmitting(false); }
   };
-
-  // --- ORGANIZATION HANDLERS ---
 
   const handleOrgSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,21 +74,16 @@ const Organizations = () => {
       if (editingOrgId) {
         const res = await sysAdminApi.updateOrganization(editingOrgId, orgForm);
         setOrganizations(organizations.map(o => o._id === editingOrgId ? res.data : o));
-        
-        // FIX: If the edited organization is currently selected in the side panel,
-        // update the selectedOrg state so the titles and IDs remain in sync.
-        if (selectedOrg?._id === editingOrgId) {
-          setSelectedOrg(res.data);
-        }
-        toast.success('Organization updated successfully!');
+        if (selectedOrg?._id === editingOrgId) setSelectedOrg(res.data);
+        toast.success(t('toasts.org_updated', 'Organization updated successfully!'));
       } else {
         const res = await sysAdminApi.createOrganization({ name: orgForm.name, code: orgForm.code });
         setOrganizations([res.data, ...organizations]);
-        toast.success('Organization created successfully!');
+        toast.success(t('toasts.org_created', 'Organization created successfully!'));
       }
       setIsOrgModalOpen(false);
       setEditingOrgId(null);
-    } catch (err: any) { toast.error(err.response?.data?.message || 'Action failed.'); }
+    } catch (err: any) { toast.error(err.response?.data?.message || t('toasts.error', 'Action failed.')); }
     finally { setSubmitting(false); }
   };
 
@@ -120,26 +91,19 @@ const Organizations = () => {
     e.preventDefault();
     if (!deactivateTarget) return;
     setSubmitting(true);
-    const payload = { message: deactivateReason };
-
     try {
       if (deactivateTarget.type === 'org') {
-        await sysAdminApi.deactivateOrganization(deactivateTarget.id, payload);
-        const updatedOrgs = organizations.map(o => o._id === deactivateTarget.id ? { ...o, isActive: false } : o);
-        setOrganizations(updatedOrgs);
-        
-        // Update selectedOrg if it was deactivated
-        if (selectedOrg?._id === deactivateTarget.id) {
-            setSelectedOrg({ ...selectedOrg, isActive: false });
-        }
+        await sysAdminApi.deactivateOrganization(deactivateTarget.id, { message: deactivateReason });
+        setOrganizations(organizations.map(o => o._id === deactivateTarget.id ? { ...o, isActive: false } : o));
+        if (selectedOrg?._id === deactivateTarget.id) setSelectedOrg({ ...selectedOrg, isActive: false });
       } else {
-        await sysAdminApi.deactivateOrgAdmin(deactivateTarget.id, payload);
-        // We update manually to preserve the organization object structure
+        await sysAdminApi.deactivateOrgAdmin(deactivateTarget.id, { message: deactivateReason });
         setAllAdmins(allAdmins.map(a => a._id === deactivateTarget.id ? { ...a, isActive: false } : a));
       }
       setIsDeactivateModalOpen(false);
       setDeactivateReason('');
-    } catch (err) { alert("Action failed."); }
+      toast.success(t('toasts.deactivated', 'Deactivated successfully'));
+    } catch (err) { toast.error(t('toasts.error', 'Action failed.')); }
     finally { setSubmitting(false); }
   };
 
@@ -148,11 +112,11 @@ const Organizations = () => {
       <div className={`flex-1 transition-all duration-500 ${selectedOrg ? 'mr-[400px]' : 'mr-0'} p-8`}>
         <div className="flex justify-between items-end mb-8">
           <div>
-            <h1 className="text-3xl font-black text-slate-800 tracking-tight">Organizations</h1>
-            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Global Entity Control</p>
+            <h1 className="text-3xl font-black text-slate-800 tracking-tight">{t('orgs.title')}</h1>
+            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{t('orgs.subtitle')}</p>
           </div>
           <button onClick={() => { setEditingOrgId(null); setOrgForm({name:'', code:'', isActive: true}); setIsOrgModalOpen(true); }} className="bg-[#006B5D] text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center shadow-lg shadow-teal-900/20 hover:bg-[#005a4e] transition-all cursor-pointer">
-            <Plus size={18} className="mr-2"/> New Organization
+            <Plus size={18} className="mr-2"/> {t('orgs.btn_new')}
           </button>
         </div>
 
@@ -160,10 +124,10 @@ const Organizations = () => {
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-50 text-[10px] font-black text-slate-400 uppercase tracking-tighter border-b border-gray-100">
               <tr>
-                <th className="px-8 py-5">Organization</th>
-                <th className="px-8 py-5">Code</th>
-                <th className="px-8 py-5">Status</th>
-                <th className="px-8 py-5 text-right">Actions</th>
+                <th className="px-8 py-5">{t('orgs.table.name')}</th>
+                <th className="px-8 py-5">{t('orgs.table.code')}</th>
+                <th className="px-8 py-5">{t('orgs.table.status')}</th>
+                <th className="px-8 py-5 text-right">{t('orgs.table.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -173,12 +137,12 @@ const Organizations = () => {
                   <td className="px-8 py-5 font-mono text-xs text-slate-500">{org.code}</td>
                   <td className="px-8 py-5">
                     <span className={`px-2 py-1 rounded-md text-[9px] font-black uppercase ${org.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                      {org.isActive ? 'Active' : 'Inactive'}
+                      {org.isActive ? t('orgs.table.active') : t('orgs.table.inactive')}
                     </span>
                   </td>
                   <td className="px-8 py-5 text-right flex justify-end gap-2">
                     <button onClick={() => setSelectedOrg(org)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[10px] font-bold text-[#006B5D] hover:bg-[#006B5D] hover:text-white transition-all shadow-sm cursor-pointer">
-                       Details <ChevronRight size={12}/>
+                       {t('orgs.table.details')} <ChevronRight size={12}/>
                     </button>
                     <button onClick={() => { setEditingOrgId(org._id); setOrgForm({name: org.name, code: org.code, isActive: org.isActive}); setIsOrgModalOpen(true); }} className="p-2 text-slate-300 hover:text-slate-600 cursor-pointer"><Edit3 size={16}/></button>
                     {org.isActive && (
@@ -202,20 +166,20 @@ const Organizations = () => {
             </div>
             <div className="flex-1 overflow-y-auto p-8 space-y-6">
               <div className="flex justify-between items-center">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Admin Accounts</h3>
-                <button onClick={() => { setEditingAdminId(null); setAdminForm({fullName:'', email:'', password:''}); setIsAdminModalOpen(true); }} className="text-[10px] font-black text-[#006B5D] uppercase cursor-pointer">+ Create</button>
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('orgs.side.admins')}</h3>
+                <button onClick={() => { setEditingAdminId(null); setAdminForm({fullName:'', email:'', password:''}); setIsAdminModalOpen(true); }} className="text-[10px] font-black text-[#006B5D] uppercase cursor-pointer">+ {t('orgs.side.create')}</button>
               </div>
               <div className="space-y-3">
                 {selectedOrgAdmins.map(admin => (
                   <div key={admin._id} className="p-5 bg-gray-50 rounded-2xl border border-gray-100 group">
                     <div className="flex justify-between items-start mb-4">
                       <div><p className="text-sm font-bold text-slate-800">{admin.fullName}</p><p className="text-[10px] text-slate-400">{admin.email}</p></div>
-                      <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase ${admin.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>{admin.isActive ? 'Active' : 'Inactive'}</span>
+                      <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase ${admin.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>{admin.isActive ? t('orgs.table.active') : t('orgs.table.inactive')}</span>
                     </div>
                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                       <button onClick={() => { setEditingAdminId(admin._id); setAdminForm({fullName: admin.fullName, email: admin.email, password: ''}); setIsAdminModalOpen(true); }} className="flex-1 bg-white border border-gray-100 py-1.5 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-gray-100 flex items-center justify-center gap-1 cursor-pointer"><Edit3 size={12}/> Edit</button>
+                       <button onClick={() => { setEditingAdminId(admin._id); setAdminForm({fullName: admin.fullName, email: admin.email, password: ''}); setIsAdminModalOpen(true); }} className="flex-1 bg-white border border-gray-100 py-1.5 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-gray-100 flex items-center justify-center gap-1 cursor-pointer"><Edit3 size={12}/> {t('orgs.side.edit')}</button>
                        {admin.isActive && (
-                         <button onClick={() => { setDeactivateTarget({id: admin._id, type:'admin'}); setIsDeactivateModalOpen(true); }} className="flex-1 bg-white border border-red-50 py-1.5 rounded-lg text-[10px] font-bold text-red-500 hover:bg-red-50 flex items-center justify-center gap-1 cursor-pointer"><Power size={12}/> Suspend</button>
+                         <button onClick={() => { setDeactivateTarget({id: admin._id, type:'admin'}); setIsDeactivateModalOpen(true); }} className="flex-1 bg-white border border-red-50 py-1.5 rounded-lg text-[10px] font-bold text-red-500 hover:bg-red-50 flex items-center justify-center gap-1 cursor-pointer"><Power size={12}/> {t('orgs.side.suspend')}</button>
                        )}
                     </div>
                   </div>
@@ -227,64 +191,60 @@ const Organizations = () => {
       </div>
 
       {/* MODALS */}
-
-      {/* Organization Edit/Create */}
-      <Modal isOpen={isOrgModalOpen} onClose={() => setIsOrgModalOpen(false)} title={editingOrgId ? "Edit Organization" : "New Organization"}>
+      <Modal isOpen={isOrgModalOpen} onClose={() => setIsOrgModalOpen(false)} title={editingOrgId ? t('orgs.modals.org_edit') : t('orgs.modals.org_new')}>
         <form onSubmit={handleOrgSubmit} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Name</label>
-            <input required className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-bold" value={orgForm.name} onChange={e => setOrgForm({ ...orgForm, name: e.target.value })} />
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('orgs.labels.name')}</label>
+            <input required className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-bold outline-none" value={orgForm.name} onChange={e => setOrgForm({ ...orgForm, name: e.target.value })} />
           </div>
           <div className="space-y-1">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Code</label>
-            <input required className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-mono uppercase" value={orgForm.code} onChange={e => setOrgForm({ ...orgForm, code: e.target.value })} />
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('orgs.labels.code')}</label>
+            <input required className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-mono uppercase outline-none" value={orgForm.code} onChange={e => setOrgForm({ ...orgForm, code: e.target.value })} />
           </div>
           {editingOrgId && (
             <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
                <input type="checkbox" checked={orgForm.isActive} onChange={e => setOrgForm({...orgForm, isActive: e.target.checked})} className="w-4 h-4 accent-[#006B5D]"/>
-               <label className="text-xs font-bold text-slate-600">Organization is Active</label>
+               <label className="text-xs font-bold text-slate-600">{t('orgs.labels.status_active')}</label>
             </div>
           )}
-          <button type="submit" disabled={submitting} className="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest">{submitting ? <Loader2 className="animate-spin mx-auto"/> : 'Save Changes'}</button>
+          <button type="submit" disabled={submitting} className="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest cursor-pointer">{submitting ? <Loader2 className="animate-spin mx-auto"/> : t('orgs.btns.save')}</button>
         </form>
       </Modal>
 
-      {/* Org Admin Edit/Create */}
-      <Modal isOpen={isAdminModalOpen} onClose={() => setIsAdminModalOpen(false)} title={editingAdminId ? "Edit Admin" : "New Admin"}>
+      <Modal isOpen={isAdminModalOpen} onClose={() => setIsAdminModalOpen(false)} title={editingAdminId ? t('orgs.modals.admin_edit') : t('orgs.modals.admin_new')}>
         <form onSubmit={handleAdminSubmit} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Full Name</label>
-            <input required className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-bold" value={adminForm.fullName} onChange={e => setAdminForm({...adminForm, fullName: e.target.value})} />
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('orgs.labels.full_name')}</label>
+            <input required className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-bold outline-none" value={adminForm.fullName} onChange={e => setAdminForm({...adminForm, fullName: e.target.value})} />
           </div>
           <div className="space-y-1">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email</label>
-            <input required type="email" className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm" value={adminForm.email} onChange={e => setAdminForm({...adminForm, email: e.target.value})} />
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('orgs.labels.email')}</label>
+            <input required type="email" className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm outline-none" value={adminForm.email} onChange={e => setAdminForm({...adminForm, email: e.target.value})} />
           </div>
           {!editingAdminId && (
             <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Password</label>
-              <input required type="password" className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm" value={adminForm.password} onChange={e => setAdminForm({...adminForm, password: e.target.value})} />
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('orgs.labels.password')}</label>
+              <input required type="password" className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm outline-none" value={adminForm.password} onChange={e => setAdminForm({...adminForm, password: e.target.value})} />
             </div>
           )}
-          <button type="submit" disabled={submitting} className="w-full bg-[#006B5D] text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest cursor-pointer">{submitting ? <Loader2 className="animate-spin mx-auto"/> : 'Confirm'}</button>
+          <button type="submit" disabled={submitting} className="w-full bg-[#006B5D] text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest cursor-pointer">{submitting ? <Loader2 className="animate-spin mx-auto"/> : t('orgs.btns.confirm')}</button>
         </form>
       </Modal>
 
-      {/* Deactivate Modal (Shared) */}
-      <Modal isOpen={isDeactivateModalOpen} onClose={() => setIsDeactivateModalOpen(false)} title="Confirm Suspension">
+      <Modal isOpen={isDeactivateModalOpen} onClose={() => setIsDeactivateModalOpen(false)} title={t('orgs.modals.deactivate_title')}>
         <form onSubmit={handleDeactivateConfirm} className="space-y-5">
           <div className="flex items-start gap-4 p-4 bg-amber-50 rounded-2xl border border-amber-100">
              <AlertTriangle className="text-amber-600 shrink-0" size={24}/>
              <p className="text-xs font-bold text-amber-800 leading-relaxed">
-               Warning: Deactivating this {deactivateTarget?.type === 'org' ? 'Organization' : 'Admin'} will restrict access immediately. Please provide a reason below.
+               {t('orgs.modals.warning', { type: deactivateTarget?.type === 'org' ? t('orgs.modals.type_org') : t('orgs.modals.type_admin') })}
              </p>
           </div>
           <div className="space-y-1">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Reason for Deactivation</label>
-            <textarea className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm min-h-[100px] outline-none" placeholder="Optional context..." value={deactivateReason} onChange={e => setDeactivateReason(e.target.value)} />
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('orgs.labels.reason')}</label>
+            <textarea className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm min-h-[100px] outline-none" placeholder={t('orgs.labels.reason_placeholder')} value={deactivateReason} onChange={e => setDeactivateReason(e.target.value)} />
           </div>
-          <button type="submit" disabled={submitting} className="w-full bg-red-600 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-900/10">
-            {submitting ? <Loader2 className="animate-spin mx-auto"/> : 'Confirm Deactivate'}
+          <button type="submit" disabled={submitting} className="w-full bg-red-600 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-900/10 cursor-pointer">
+            {submitting ? <Loader2 className="animate-spin mx-auto"/> : t('orgs.btns.deactivate')}
           </button>
         </form>
       </Modal>
