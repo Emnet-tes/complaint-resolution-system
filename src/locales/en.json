@@ -225,5 +225,12 @@
       "discard": "Discard Changes",
       "update": "Update Account"
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "mark_all": "Mark all as read",
+    "empty": "No notifications yet",
+    "view_all": "View All Activity",
+    "new_alert": "New Notification"
   }
 }
