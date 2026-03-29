@@ -1,252 +1,271 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { List, Map as MapIcon, Download, Plus, Search, Filter, AlertCircle, Clock, ChevronDown, Trash2, UserPlus, Edit, X } from 'lucide-react';
-import Modal from './Modal';
+import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
+import {
+  List,
+  Map as MapIcon,
+  Download,
+  Search,
+  ChevronDown,
+  Loader2,
+  Clock,
+} from 'lucide-react';
+import { Table, type Column } from '../components/Table';
+import StatCard from './StatCard';
+import { deptAdminApi, type AssignedComplaint, type ComplaintStatus } from '../api/deptadmin';
 
 const DepartmentComplaints = () => {
+  const { t } = useTranslation();
   const [viewMode, setViewMode] = useState('list');
-  const [isAddComplaintOpen, setIsAddComplaintOpen] = useState(false);
-  const [selectedComplaints, setSelectedComplaints] = useState<string[]>([]);
   const navigate = useNavigate();
+  const [statusFilter, setStatusFilter] = useState<ComplaintStatus | ''>('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [summary, setSummary] = useState({ total: 0, resolved: 0, pending: 0, resolvedPercentage: 0 });
+  const [complaints, setComplaints] = useState<AssignedComplaint[]>([]);
 
-  const complaintData = [
-    { id: '#DEPT-2001', title: 'Equipment Failure', desc: 'Printer down in Dept A.', type: 'Equipment', dept: 'Department A', status: 'Open', priority: 'High', date: '10 mins ago', sColor: 'text-blue-600 border-blue-200 bg-blue-50', pColor: 'text-orange-600' },
-    { id: '#DEPT-2002', title: 'Shift Scheduling', desc: 'Conflict reported in team schedule.', type: 'Scheduling', dept: 'Department B', status: 'Pending', priority: 'Low', date: '1 hour ago', sColor: 'text-slate-500 border-slate-200 bg-slate-50', pColor: 'text-slate-500' },
-  ];
+  const knownIdsRef = useRef<Set<string>>(new Set());
+  const firstLoadRef = useRef(true);
+
+  const fetchAssigned = async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) {
+      setLoading(true);
+      setError('');
+    }
+    try {
+      const res = await deptAdminApi.getAssignedComplaints(statusFilter || undefined);
+      setSummary(res.data.summary);
+      setComplaints(res.data.data || []);
+
+      // New assignment notification
+      const incoming = res.data.data || [];
+      const incomingIds = new Set(incoming.map((c) => c._id));
+      if (!firstLoadRef.current) {
+        for (const c of incoming) {
+          if (!knownIdsRef.current.has(c._id)) {
+            toast(t('dept_complaints.notifications.assigned_title'), {
+              position: 'bottom-right',
+            });
+            toast(c.title, { position: 'bottom-right' });
+            break;
+          }
+        }
+      }
+      knownIdsRef.current = incomingIds;
+      firstLoadRef.current = false;
+    } catch (err: any) {
+      setError(err.response?.data?.message || t('dept_mgmt.toasts.fetch_error'));
+    } finally {
+      if (!opts?.silent) setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAssigned();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => fetchAssigned({ silent: true }), 15000);
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter]);
+
+  const columns: Column<AssignedComplaint>[] = useMemo(() => {
+    return [
+      {
+        header: t('dept_complaints.table.id'),
+        key: '_id',
+        className: 'font-bold text-[#006B5D]',
+        render: (row) => `#${row._id.slice(-6).toUpperCase()}`,
+      },
+      {
+        header: t('dept_complaints.table.title_desc'),
+        key: 'title',
+        render: (row) => (
+          <div>
+            <p className="font-bold text-slate-800">{row.title}</p>
+            <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1 font-medium">{row.description}</p>
+          </div>
+        ),
+      },
+      {
+        header: t('dept_complaints.table.department'),
+        key: 'department',
+        className: 'text-slate-500 font-medium',
+        render: (row) => row.department?.name || '-',
+      },
+      {
+        header: t('dept_complaints.table.status'),
+        key: 'status',
+        render: (row) => (
+          <span className="px-2 py-1 rounded-md text-[9px] font-black uppercase border w-fit inline-block bg-slate-50 text-slate-600 border-slate-200">
+            {t(`dept_complaints.status.${row.status}`)}
+          </span>
+        ),
+      },
+      {
+        header: t('dept_complaints.table.priority'),
+        key: 'priority',
+        className: 'text-slate-500 font-medium',
+        render: (row) => row.priority || '-',
+      },
+      {
+        header: t('dept_complaints.table.date'),
+        key: 'createdAt',
+        className: 'text-slate-400 italic text-[11px]',
+        render: (row) => new Date(row.createdAt).toLocaleDateString(),
+      },
+      {
+        header: t('dept_complaints.table.action'),
+        key: 'action',
+        className: 'text-right',
+        headerClassName: 'text-right',
+        render: (row) => (
+          <button
+            onClick={() => navigate(`/complaints/${row._id}`, { state: { complaint: row } })}
+            className="text-[#006B5D] font-black text-[10px] uppercase tracking-widest hover:underline cursor-pointer"
+          >
+            {t('dept_complaints.table.view_details')}
+          </button>
+        ),
+      },
+    ];
+  }, [navigate, t]);
 
   const handleExport = () => {
-    alert('Exporting department complaints as CSV...');
+    if (!complaints.length) return;
+    const headers = ['id', 'title', 'status', 'priority', 'createdAt'];
+    const rows = complaints.map((c) => [
+      c._id,
+      (c.title || '').replaceAll(',', ' '),
+      c.status,
+      c.priority || '',
+      c.createdAt,
+    ]);
+    const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dept_complaints_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
   };
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedComplaints(complaintData.map((complaint) => complaint.id));
-    } else {
-      setSelectedComplaints([]);
-    }
-  };
-
-  const handleSelectComplaint = (complaintId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedComplaints((prev) => [...prev, complaintId]);
-    } else {
-      setSelectedComplaints((prev) => prev.filter((id) => id !== complaintId));
-    }
-  };
-
-  const isAllSelected = complaintData.length > 0 && selectedComplaints.length === complaintData.length;
-  const isIndeterminate = selectedComplaints.length > 0 && selectedComplaints.length < complaintData.length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 md:p-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <nav className="text-xs text-slate-400 mb-1">Dashboard / Department Complaints</nav>
-          <h1 className="text-2xl font-bold text-slate-800">Department Complaints</h1>
-          <p className="text-sm text-slate-500">Track complaints within your department.</p>
+          <nav className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+            {t('dept_complaints.nav')}
+          </nav>
+          <h1 className="text-3xl font-black text-slate-800 tracking-tight">
+            {t('dept_complaints.title')}
+          </h1>
+          <p className="text-sm text-slate-500 font-medium">{t('dept_complaints.subtitle')}</p>
         </div>
+
         <div className="flex items-center gap-2">
-          <div className="flex bg-white rounded-lg border border-gray-200 p-1">
+          <div className="flex bg-white rounded-xl border border-gray-200 p-1 shadow-sm">
             <button
               onClick={() => setViewMode('list')}
-              className={`px-4 py-1.5 rounded-md text-sm font-bold flex items-center transition-all ${viewMode === 'list' ? 'bg-[#006B5D] text-white' : 'text-slate-500'}`}
+              className={`px-4 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest flex items-center transition-all cursor-pointer ${
+                viewMode === 'list' ? 'bg-[#006B5D] text-white shadow-md' : 'text-slate-400'
+              }`}
             >
-              <List size={16} className="mr-2" /> List
+              <List size={14} className="mr-2" /> {t('dept_complaints.list_view')}
             </button>
             <button
               onClick={() => setViewMode('map')}
-              className={`px-4 py-1.5 rounded-md text-sm font-bold flex items-center transition-all ${viewMode === 'map' ? 'bg-[#006B5D] text-white' : 'text-slate-500'}`}
+              className={`px-4 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest flex items-center transition-all cursor-pointer ${
+                viewMode === 'map' ? 'bg-[#006B5D] text-white shadow-md' : 'text-slate-400'
+              }`}
             >
-              <MapIcon size={16} className="mr-2" /> Map
+              <MapIcon size={14} className="mr-2" /> {t('dept_complaints.map_view')}
             </button>
           </div>
-
-          <button onClick={handleExport} className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-bold hover:bg-gray-50 flex items-center">
-            <Download size={16} className="mr-2" /> Export
-          </button>
-
           <button
-            onClick={() => setIsAddComplaintOpen(true)}
-            className="px-4 py-2 bg-[#006B5D] text-white rounded-lg text-sm font-bold flex items-center shadow-md hover:bg-[#005a4e]"
+            onClick={handleExport}
+            className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-black uppercase tracking-widest text-slate-600 hover:bg-gray-50 flex items-center cursor-pointer shadow-sm"
           >
-            <Plus size={16} className="mr-2" /> New Complaint
+            <Download size={14} className="mr-2" /> {t('dept_complaints.export')}
           </button>
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-4">
-        <div className="flex-1 bg-white p-2 rounded-xl border border-gray-100 flex items-center">
-          <div className="flex-1 flex items-center border-r border-gray-100 px-4">
-            <Search size={18} className="text-slate-400 mr-2" />
-            <input placeholder="Search by ID, Title, or Keyword..." className="w-full text-sm outline-none bg-transparent" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <StatCard
+          title={t('dept_complaints.stats.total')}
+          value={summary.total.toLocaleString()}
+          subValue={t('dept_complaints.stats.sub_assigned')}
+          icon={List}
+          color="bg-blue-600"
+        />
+        <StatCard
+          title={t('dept_complaints.stats.pending')}
+          value={summary.pending.toLocaleString()}
+          subValue={t('dept_complaints.stats.sub_rate', { rate: String(summary.resolvedPercentage) })}
+          icon={Clock}
+          color="bg-amber-500"
+        />
+        <StatCard
+          title={t('dept_complaints.stats.resolved')}
+          value={summary.resolved.toLocaleString()}
+          subValue={t('dept_complaints.stats.sub_cases')}
+          icon={Download}
+          color="bg-[#006B5D]"
+        />
+      </div>
+
+      <div className="flex-1 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm flex items-center">
+        <div className="flex-1 flex items-center border-r border-gray-100 px-4">
+          <Search size={18} className="text-slate-400 mr-2" />
+          <input
+            placeholder={t('dept_complaints.search_placeholder')}
+            className="w-full text-sm outline-none bg-transparent font-medium"
+            disabled
+          />
+        </div>
+        <div className="flex items-center gap-3 px-4">
+          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            {t('dept_complaints.filters.status')}
           </div>
-          <div className="flex-1 flex items-center px-4">
-            <input placeholder="Assignee..." className="w-full text-sm outline-none bg-transparent" />
-          </div>
-          <div className="flex items-center gap-4 px-4 border-l border-gray-100">
-            <span className="text-[10px] uppercase font-bold text-slate-400">Bulk Actions:</span>
-            <div className="flex gap-2">
-              <button className="p-1.5 text-slate-400 hover:text-slate-800">
-                <Edit size={16} />
-              </button>
-              <button className="p-1.5 text-slate-400 hover:text-slate-800">
-                <UserPlus size={16} />
-              </button>
-              <button className="p-1.5 text-slate-400 hover:text-red-500">
-                <Trash2 size={16} />
-              </button>
-            </div>
+          <div className="relative">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+              className="appearance-none bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 pr-8 text-xs font-bold text-slate-600 outline-none"
+            >
+              <option value="">{t('dept_complaints.filters.all')}</option>
+              <option value="Submitted">{t('dept_complaints.status.Submitted')}</option>
+              <option value="In Progress">{t('dept_complaints.status.In Progress')}</option>
+              <option value="Resolved">{t('dept_complaints.status.Resolved')}</option>
+              <option value="Rejected">{t('dept_complaints.status.Rejected')}</option>
+            </select>
+            <ChevronDown size={16} className="absolute right-2 top-2.5 text-slate-400 pointer-events-none" />
           </div>
         </div>
       </div>
 
-      <div className="bg-white p-3 rounded-xl border border-gray-100 flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-2 text-slate-500 font-bold text-xs uppercase pr-4 border-r border-gray-100">
-          <Filter size={14} /> Filters
+      {loading ? (
+        <div className="flex items-center justify-center h-[40vh]">
+          <Loader2 className="animate-spin text-slate-400" size={40} />
         </div>
-        {['Status', 'Priority', 'Type', 'Team'].map((f) => (
-          <button
-            key={f}
-            className="bg-gray-50 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 border border-gray-100 flex items-center"
-          >
-            {f} <ChevronDown size={14} className="ml-6 text-slate-400" />
-          </button>
-        ))}
-        <div className="flex-1 flex justify-end items-center gap-4">
-          <input type="date" className="bg-gray-50 px-3 py-1.5 rounded-lg text-xs border border-gray-100" />
+      ) : error ? (
+        <div className="p-4 bg-red-50 text-red-600 text-sm rounded-lg border border-red-200 font-bold">
+          {error}
         </div>
-      </div>
-
-      <div className="flex gap-3">
-        <span className="bg-teal-50 border border-teal-100 text-[#006B5D] px-3 py-1 rounded-full text-xs font-bold flex items-center">
-          Status: Open &amp; Pending <X size={14} className="ml-2 cursor-pointer" />
-        </span>
-        <span className="bg-teal-50 border border-teal-100 text-[#006B5D] px-3 py-1 rounded-full text-xs font-bold flex items-center">
-          Priority: High <X size={14} className="ml-2 cursor-pointer" />
-        </span>
-        <button className="text-xs font-bold text-slate-400 hover:text-slate-600 ml-2">Clear All</button>
-      </div>
-
-      {viewMode === 'list' ? (
-        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 text-slate-400 font-medium border-b border-gray-100">
-              <tr>
-                <th className="px-6 py-4 w-10">
-                  <input
-                    type="checkbox"
-                    className="rounded border-gray-300"
-                    checked={isAllSelected}
-                    ref={(el) => {
-                      if (el) {
-                        el.indeterminate = isIndeterminate;
-                      }
-                    }}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                  />
-                </th>
-                <th className="px-6 py-4 uppercase text-[10px] tracking-wider">ID</th>
-                <th className="px-6 py-4 uppercase text-[10px] tracking-wider">Title / Description</th>
-                <th className="px-6 py-4 uppercase text-[10px] tracking-wider">Type</th>
-                <th className="px-6 py-4 uppercase text-[10px] tracking-wider">Department</th>
-                <th className="px-6 py-4 uppercase text-[10px] tracking-wider">Status</th>
-                <th className="px-6 py-4 uppercase text-[10px] tracking-wider">Priority</th>
-                <th className="px-6 py-4 uppercase text-[10px] tracking-wider">Date</th>
-                <th className="px-6 py-4 uppercase text-[10px] tracking-wider text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {complaintData.map((row, i) => (
-                <tr key={i} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4">
-                    <input
-                      type="checkbox"
-                      className="rounded border-gray-300"
-                      checked={selectedComplaints.includes(row.id)}
-                      onChange={(e) => handleSelectComplaint(row.id, e.target.checked)}
-                    />
-                  </td>
-                  <td className="px-6 py-4 font-bold text-[#006B5D]">{row.id}</td>
-                  <td className="px-6 py-4">
-                    <p className="font-bold text-slate-800">{row.title}</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">{row.desc}</p>
-                  </td>
-                  <td className="px-6 py-4 text-slate-500">{row.type}</td>
-                  <td className="px-6 py-4 text-slate-500">{row.dept}</td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-2 py-1 rounded-full text-[10px] font-bold border flex items-center w-fit ${row.sColor}`}
-                    >
-                      <span
-                        className={`w-1 h-1 rounded-full mr-1.5 ${row.sColor.split(' ')[0].replace('text', 'bg')}`}
-                      ></span>
-                      {row.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className={`flex items-center text-[10px] font-bold uppercase ${row.pColor}`}>
-                      {row.priority === 'Critical' ? (
-                        <AlertCircle size={14} className="mr-1.5" />
-                      ) : row.priority === 'High' ? (
-                        <AlertCircle size={14} className="mr-1.5" />
-                      ) : (
-                        <Clock size={14} className="mr-1.5" />
-                      )}
-                      {row.priority}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-slate-400 italic text-[11px]">{row.date}</td>
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => navigate(`/complaints/${row.id.replace('#', '')}`)}
-                      className="text-teal-600 font-bold text-[11px] hover:underline cursor-pointer"
-                    >
-                      View Details
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      ) : viewMode === 'list' ? (
+        <Table data={complaints} columns={columns} noDataMessage={t('dept_complaints.table.no_data')} />
       ) : (
-        <div className="bg-slate-200 h-96 rounded-2xl flex items-center justify-center border-4 border-dashed border-slate-300">
-          <p className="text-slate-500 font-bold flex items-center">
-            <MapIcon className="mr-2" /> Interactive Department Map View Initializing...
+        <div className="bg-slate-100 h-96 rounded-3xl flex flex-col items-center justify-center border-2 border-dashed border-slate-200">
+          <MapIcon size={48} className="text-slate-300 mb-4" />
+          <p className="text-slate-400 font-black uppercase tracking-widest text-sm text-center">
+            {t('dept_complaints.map_view')}
           </p>
         </div>
       )}
-
-      <Modal isOpen={isAddComplaintOpen} onClose={() => setIsAddComplaintOpen(false)} title="File New Department Complaint">
-        <div className="space-y-4">
-          <div>
-            <label className="text-xs font-bold text-slate-600 block mb-1">Subject</label>
-            <input
-              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm"
-              placeholder="Brief description of the issue"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-bold text-slate-600 block mb-1">Detailed Description</label>
-            <textarea
-              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm h-32 resize-none"
-              placeholder="Provide detailed information about the complaint..."
-            ></textarea>
-          </div>
-          <div>
-            <label className="text-xs font-bold text-slate-600 block mb-1">Category</label>
-            <select className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm">
-              <option>Select category...</option>
-              <option>Equipment</option>
-              <option>Scheduling</option>
-              <option>HR</option>
-            </select>
-          </div>
-          <button className="w-full bg-[#006B5D] text-white py-2.5 rounded-xl font-bold hover:bg-[#005a4e] transition-colors">
-            Post Complaint
-          </button>
-        </div>
-      </Modal>
     </div>
   );
 };

@@ -1,15 +1,126 @@
-import { CheckCircle, ArrowRight, AlertTriangle, Map as MapIcon, User, Info, MessageSquare, ArrowLeft } from 'lucide-react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
+import {
+  CheckCircle,
+  Map as MapIcon,
+  User,
+  Info,
+  MessageSquare,
+  ArrowLeft,
+  Loader2,
+} from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { deptAdminApi, type AssignedComplaint, type ComplaintStatus } from '../api/deptadmin';
 
 const ComplaintDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { t } = useTranslation();
+  const { user } = useAuth();
+
+  const initialFromState = (location.state as any)?.complaint as AssignedComplaint | undefined;
+  const [complaint, setComplaint] = useState<AssignedComplaint | null>(initialFromState ?? null);
+  const [loading, setLoading] = useState(!initialFromState);
+  const [saving, setSaving] = useState(false);
+  const [newStatus, setNewStatus] = useState<ComplaintStatus>('Submitted');
+  const [comment, setComment] = useState('');
 
   const handleBack = () => {
     navigate('/complaints');
   };
+
+  const isDeptAdmin = user?.role === 'DeptAdmin';
+
+  useEffect(() => {
+    if (complaint) {
+      setNewStatus(complaint.status);
+      return;
+    }
+    const fetchOne = async () => {
+      if (!id) return;
+      try {
+        setLoading(true);
+        // No dedicated "GET /complaints/:id" endpoint provided for DeptAdmin,
+        // so we fetch from assigned list and find the complaint by id.
+        const res = await deptAdminApi.getAssignedComplaints();
+        const found = res.data.data.find((c) => c._id === id) || null;
+        setComplaint(found);
+        if (found) setNewStatus(found.status);
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || t('dept_mgmt.toasts.fetch_error'));
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOne();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  const statusBadge = useMemo(() => {
+    const s = complaint?.status || 'Submitted';
+    const cls =
+      s === 'Resolved'
+        ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+        : s === 'Rejected'
+          ? 'bg-red-50 text-red-600 border-red-100'
+          : s === 'In Progress'
+            ? 'bg-blue-50 text-blue-600 border-blue-100'
+            : 'bg-slate-50 text-slate-600 border-slate-200';
+    return { label: t(`dept_complaints.status.${s}`), cls };
+  }, [complaint?.status, t]);
+
+  const handleUpdateStatus = async () => {
+    if (!id) return;
+    if (!isDeptAdmin) return;
+    if (newStatus === 'Rejected' && !comment.trim()) {
+      toast.error(t('dept_complaints.detail.comment_required'));
+      return;
+    }
+    try {
+      setSaving(true);
+      await deptAdminApi.updateComplaintStatus(id, {
+        status: newStatus,
+        comment: comment || undefined,
+      });
+      toast.success(t('dept_complaints.toasts.status_updated'));
+      setComplaint((prev) => (prev ? { ...prev, status: newStatus } : prev));
+      setComment('');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || t('dept_mgmt.toasts.fetch_error'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <Loader2 className="animate-spin text-slate-400" size={40} />
+      </div>
+    );
+  }
+
+  if (!complaint) {
+    return (
+      <div className="p-8">
+        <button
+          onClick={handleBack}
+          className="p-2 bg-white border border-gray-200 rounded-full text-slate-600 hover:text-[#006B5D] hover:border-[#006B5D] transition-all shadow-sm"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <div className="mt-6 p-4 bg-red-50 text-red-600 text-sm rounded-lg border border-red-200 font-bold">
+          {t('dept_complaints.detail.not_found')}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 md:p-8">
       <div className="flex items-center gap-4">
         <button 
           onClick={handleBack} 
@@ -17,22 +128,62 @@ const ComplaintDetail = () => {
         >
           <ArrowLeft size={20} />
         </button>
-        <nav className="text-xs text-slate-400">Dashboard / Complaints / #{id || 'CK-9281'}</nav>
+        <nav className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+          {t('dept_complaints.detail.nav')} / #{id?.slice(-6).toUpperCase()}
+        </nav>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="flex-1 space-y-6">
           <div className="flex justify-between items-start">
              <div>
-                <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">In Progress</span>
-                <h1 className="text-2xl font-bold text-slate-800 mt-3">Pothole on Main St. causing traffic hazard</h1>
-                <p className="text-sm text-slate-500 mt-1">Submitted by <span className="font-bold text-slate-700">John Doe</span> on Oct 24, 2023 at 10:30 AM via Mobile App</p>
+                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${statusBadge.cls}`}>
+                  {statusBadge.label}
+                </span>
+                <h1 className="text-2xl font-bold text-slate-800 mt-3">{complaint.title}</h1>
+                <p className="text-sm text-slate-500 mt-1">
+                  {t('dept_complaints.detail.submitted_by')}{' '}
+                  <span className="font-bold text-slate-700">{complaint.submittedBy?.fullName || '-'}</span>
+                </p>
              </div>
-             <div className="flex gap-2">
-                <button className="bg-[#006B5D] text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center hover:bg-[#005a4e]"><CheckCircle size={16} className="mr-2"/> Resolve Complaint</button>
-                <button className="bg-white border border-gray-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-bold flex items-center hover:bg-gray-50"><ArrowRight size={16} className="mr-2"/> Reassign</button>
-                <button className="p-2 border border-red-100 text-red-500 rounded-lg hover:bg-red-50"><AlertTriangle size={18}/></button>
-             </div>
+             {isDeptAdmin && (
+               <div className="flex flex-col gap-3 w-full max-w-sm">
+                 <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                     {t('dept_complaints.detail.update_status')}
+                   </p>
+                   <div className="flex gap-2">
+                     <select
+                       value={newStatus}
+                       onChange={(e) => setNewStatus(e.target.value as ComplaintStatus)}
+                       className="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 outline-none"
+                     >
+                       <option value="Submitted">{t('dept_complaints.status.Submitted')}</option>
+                       <option value="In Progress">{t('dept_complaints.status.In Progress')}</option>
+                       <option value="Resolved">{t('dept_complaints.status.Resolved')}</option>
+                       <option value="Rejected">{t('dept_complaints.status.Rejected')}</option>
+                     </select>
+                     <button
+                       onClick={handleUpdateStatus}
+                       disabled={saving}
+                       className="bg-[#006B5D] text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest flex items-center hover:bg-[#005a4e] transition-all disabled:opacity-70"
+                     >
+                       {saving ? t('sys_dashboard.loading') : (
+                         <>
+                           <CheckCircle size={14} className="mr-2" /> {t('dept_complaints.detail.save')}
+                         </>
+                       )}
+                     </button>
+                   </div>
+                   <textarea
+                     value={comment}
+                     onChange={(e) => setComment(e.target.value)}
+                     placeholder={t('dept_complaints.detail.comment_placeholder')}
+                     className="mt-3 w-full bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 outline-none min-h-[90px]"
+                   />
+                 </div>
+               </div>
+             )}
           </div>
 
           {/* Stepper */}
@@ -64,15 +215,22 @@ const ComplaintDetail = () => {
           {/* Description & Images */}
           <section className="bg-white p-6 rounded-xl border border-gray-100 space-y-6 shadow-sm">
              <div>
-                <h3 className="font-bold text-slate-800 mb-3">Description</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">There is a large pothole approximately 2 feet wide in the middle of the northbound lane on Main St., right in front of the public library. It is causing cars to swerve into the oncoming lane to avoid it, which is creating a significant safety hazard. I almost damaged my tire hitting it this morning. Please fix this as soon as possible before an accident happens.</p>
+                <h3 className="font-bold text-slate-800 mb-3">{t('dept_complaints.detail.description')}</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">{complaint.description}</p>
              </div>
              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">Attachments (3)</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">
+                  {t('dept_complaints.detail.attachments', { count: complaint.images?.length || 0 })}
+                </p>
                 <div className="grid grid-cols-3 gap-4">
-                   <div className="aspect-video bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 font-bold text-xs uppercase tracking-widest border border-gray-200">Pothole Image 1</div>
-                   <div className="aspect-video bg-slate-500 rounded-lg flex items-center justify-center text-white font-bold text-xs uppercase tracking-widest border border-gray-400">Pothole Image 2</div>
-                   <div className="aspect-video bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 border border-gray-200"><button className="p-3 bg-white rounded-full shadow-lg text-slate-600"><CheckCircle/></button></div>
+                   {(complaint.images || []).slice(0, 3).map((img, idx) => (
+                     <div
+                       key={img.path || idx}
+                       className="aspect-video bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 font-bold text-[10px] uppercase tracking-widest border border-gray-200"
+                     >
+                       {t('dept_complaints.detail.attachment')} {idx + 1}
+                     </div>
+                   ))}
                 </div>
              </div>
           </section>
@@ -80,18 +238,17 @@ const ComplaintDetail = () => {
           {/* Location */}
           <section className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-slate-800">Location</h3>
-                <div className="flex gap-4">
-                   <button className="text-[11px] font-bold text-teal-600 hover:underline">Get Directions</button>
-                   <span className="text-slate-200">|</span>
-                   <button className="text-[11px] font-bold text-teal-600 hover:underline">View on GIS</button>
-                </div>
+                <h3 className="font-bold text-slate-800">{t('dept_complaints.detail.location')}</h3>
              </div>
              <div className="flex items-center gap-4 text-slate-600 bg-gray-50 p-4 rounded-xl">
                 <div className="p-2 bg-white rounded-lg shadow-sm text-slate-400"><MapIcon size={20}/></div>
                 <div>
-                  <p className="text-xs font-bold text-slate-800">124 Main Street, Downtown District</p>
-                  <p className="text-[10px] text-slate-400 mt-1">Lat: 40.7128° N, Long: 74.0060° W</p>
+                  <p className="text-xs font-bold text-slate-800">
+                    {complaint.location?.locationName || '-'}
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    {complaint.location?.coordinates?.length ? complaint.location.coordinates.join(', ') : '-'}
+                  </p>
                 </div>
              </div>
           </section>
@@ -100,37 +257,47 @@ const ComplaintDetail = () => {
         {/* Detail Sidebar */}
         <div className="w-full lg:w-80 space-y-6">
            <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-              <h4 className="font-bold text-slate-800 mb-6">Details</h4>
+              <h4 className="font-bold text-slate-800 mb-6">{t('dept_complaints.detail.details')}</h4>
               <div className="space-y-6">
                  <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Priority</p>
-                    <div className="flex items-center text-sm font-bold text-slate-800"><span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span> High</div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">{t('dept_complaints.detail.priority')}</p>
+                    <div className="flex items-center text-sm font-bold text-slate-800">
+                      <span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span> {complaint.priority || '-'}
+                    </div>
                  </div>
                  <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Category</p>
-                    <div className="flex items-center text-sm font-bold text-slate-800"><MapIcon size={16} className="mr-2 text-slate-400"/> Roads & Infrastructure</div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">{t('dept_complaints.detail.category')}</p>
+                    <div className="flex items-center text-sm font-bold text-slate-800">
+                      <MapIcon size={16} className="mr-2 text-slate-400" /> {complaint.category || '-'}
+                    </div>
                  </div>
                  <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Assigned Org</p>
-                    <div className="flex items-center text-sm font-bold text-slate-800"><div className="w-6 h-6 bg-blue-50 text-[10px] flex items-center justify-center rounded text-blue-600 mr-2 uppercase font-bold tracking-tighter">DPW</div> Dept. of Public Works</div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">{t('dept_complaints.detail.department')}</p>
+                    <div className="flex items-center text-sm font-bold text-slate-800">
+                      <div className="w-6 h-6 bg-blue-50 text-[10px] flex items-center justify-center rounded text-blue-600 mr-2 uppercase font-bold tracking-tighter">
+                        {(complaint.department?.code || 'DP').slice(0, 3)}
+                      </div>
+                      {complaint.department?.name || '-'}
+                    </div>
                  </div>
                  <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Assignee</p>
-                    <div className="flex items-center text-sm font-bold text-slate-800"><div className="w-6 h-6 bg-blue-100 text-[10px] flex items-center justify-center rounded text-blue-600 mr-2 uppercase font-bold tracking-tighter">SJ</div> Sarah Jenkins</div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">{t('dept_complaints.detail.assignee')}</p>
+                    <div className="flex items-center text-sm font-bold text-slate-800">
+                      <div className="w-6 h-6 bg-blue-100 text-[10px] flex items-center justify-center rounded text-blue-600 mr-2 uppercase font-bold tracking-tighter">
+                        {(complaint.assignedTo?.fullName || 'NA').slice(0, 2).toUpperCase()}
+                      </div>
+                      {complaint.assignedTo?.fullName || '-'}
+                    </div>
                  </div>
               </div>
 
               <div className="mt-8 pt-8 border-t border-gray-100">
-                 <p className="text-[10px] font-bold text-slate-400 uppercase mb-4">Reporter Details</p>
+                 <p className="text-[10px] font-bold text-slate-400 uppercase mb-4">{t('dept_complaints.detail.reporter')}</p>
                  <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400"><User size={20}/></div>
                     <div>
-                       <p className="text-xs font-bold text-slate-800">John Doe</p>
-                       <p className="text-[10px] text-slate-400">Verified Resident • <span className="text-orange-500">3 prev. reports</span></p>
-                       <div className="flex gap-3 mt-2">
-                          <button className="text-[10px] font-bold text-teal-600 hover:underline">View Profile</button>
-                          <button className="text-[10px] font-bold text-teal-600 hover:underline">Contact</button>
-                       </div>
+                       <p className="text-xs font-bold text-slate-800">{complaint.submittedBy?.fullName || '-'}</p>
+                       <p className="text-[10px] text-slate-400">{complaint.submittedBy?.email || '-'}</p>
                     </div>
                  </div>
               </div>

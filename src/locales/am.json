@@ -156,6 +156,81 @@
       "connected": "የተገናኙ ድርጅቶች"
     }
   },
+  "dept_dashboard": {
+    "breadcrumb": "የክፍል አስተዳደር / አጠቃላይ እይታ",
+    "title": "የክፍል ትንታኔ",
+    "stats": {
+      "total": "የተመደቡ ቅሬታዎች",
+      "pending": "በሂደት ላይ",
+      "resolved": "ተፈትተዋል",
+      "sub_assigned": "የስራ ዝርዝር",
+      "sub_rate": "{{rate}}% የመፍትሄ ፍጥነት",
+      "sub_cases": "የተጠናቀቁ"
+    }
+  },
+  "dept_complaints": {
+    "nav": "ዳሽቦርድ / ቅሬታዎች",
+    "title": "የተመደቡ ቅሬታዎች",
+    "subtitle": "ለክፍልዎ የተመደቡ ቅሬታዎችን ይከታተሉ እና ይፍቱ።",
+    "list_view": "ዝርዝር",
+    "map_view": "ካርታ",
+    "export": "ላክ (Export)",
+    "search_placeholder": "ፍለጋ በቅርቡ...",
+    "filters": {
+      "status": "ሁኔታ",
+      "all": "ሁሉም"
+    },
+    "status": {
+      "Submitted": "ተልኳል",
+      "In Progress": "በሂደት ላይ",
+      "Resolved": "ተፈትቷል",
+      "Rejected": "ተቀባይነት አላገኘም"
+    },
+    "stats": {
+      "total": "ጠቅላላ",
+      "pending": "አዲስ / በሂደት ላይ",
+      "resolved": "ተፈትቷል",
+      "sub_assigned": "ተመድቧል",
+      "sub_rate": "{{rate}}% ፍጥነት",
+      "sub_cases": "ተጠናቋል"
+    },
+    "table": {
+      "id": "መለያ",
+      "title_desc": "ርዕስ / መግለጫ",
+      "department": "ክፍል",
+      "status": "ሁኔታ",
+      "priority": "ቅድሚያ",
+      "date": "ቀን",
+      "action": "እርምጃ",
+      "view_details": "ዝርዝር ይመልከቱ",
+      "no_data": "ምንም የተመደበ ቅሬታ የለም"
+    },
+    "detail": {
+      "nav": "ዳሽቦርድ / ቅሬታዎች",
+      "not_found": "ቅሬታው አልተገኘም ወይም ለእርስዎ አልተመደበም።",
+      "submitted_by": "የላከው",
+      "update_status": "ሁኔታ አዘምን",
+      "save": "አስቀምጥ",
+      "comment_placeholder": "አስተያየት ያክሉ (ለተቀባይነት ካላገኙ/ያልተፈቱ ጉዳዮች ያስፈልጋል)",
+      "comment_required": "ይህን ቅሬታ ከመቀበል በፊት እባክዎ አስተያየት ያክሉ።",
+      "description": "መግለጫ",
+      "attachments": "ተያያዥ ፋይሎች ({{count}})",
+      "attachment": "ፋይል",
+      "location": "ቦታ",
+      "details": "ዝርዝሮች",
+      "priority": "ቅድሚያ",
+      "category": "ምድብ",
+      "department": "ክፍል",
+      "assignee": "ተመዳቢ",
+      "reporter": "የቅሬታ አቅራቢ"
+    },
+    "toasts": {
+      "status_updated": "ሁኔታ ተዘምኗል"
+    },
+    "notifications": {
+      "assigned_title": "አዲስ ቅሬታ ተመድቧል"
+    }
+  },
   "orgs": {
     "title": "ድርጅቶች",
     "subtitle": "አጠቃላይ የተቋማት መቆጣጠሪያ",
@@ -232,5 +307,17 @@
     "empty": "ምንም ማሳወቂያ የለም",
     "view_all": "ሁሉንም እንቅስቃሴዎች ይመልከቱ",
     "new_alert": "አዲስ ማሳወቂያ"
-  }
+  },
+
+  "auth": {
+  "forgot_password_title": "የይለፍ ቃልዎን ረስተዋል?",
+  "forgot_password_subtitle": "የይለፍ ቃልዎን ከረሱ እዚህ ማስተካከል ይችላሉ!",
+  "submit": "ላክ",
+  "login": "ግባ",
+  "reset_password_title": "የይለፍ ቃል ይቀይሩ",
+  "reset_password_subtitle": "ወደ መለያዎ ለመግባት አዲስ የይለፍ ቃል ያዘጋጁ!",
+  "verify_code_title": "ኮዱን ያረጋግጡ",
+  "verify_code_subtitle": "የማረጋገጫ ኮድ ወደ ኢሜይልዎ ልከናል። እባክዎ ኢሜይልዎን ያረጋግጡ!",
+  "verify_code_label": "የማረጋገጫ ኮድ"
+}
 }

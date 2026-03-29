@@ -156,6 +156,81 @@
       "connected": "Connected Orgs"
     }
   },
+  "dept_dashboard": {
+    "breadcrumb": "Department Administration / Overview",
+    "title": "Department Analytics",
+    "stats": {
+      "total": "Assigned Complaints",
+      "pending": "Pending",
+      "resolved": "Resolved",
+      "sub_assigned": "Work Queue",
+      "sub_rate": "{{rate}}% Resolution Rate",
+      "sub_cases": "Completed Cases"
+    }
+  },
+  "dept_complaints": {
+    "nav": "Dashboard / Complaints",
+    "title": "Assigned Complaints",
+    "subtitle": "Track and resolve complaints assigned to your department.",
+    "list_view": "List",
+    "map_view": "Map",
+    "export": "Export",
+    "search_placeholder": "Search coming soon...",
+    "filters": {
+      "status": "Status",
+      "all": "All"
+    },
+    "status": {
+      "Submitted": "Submitted",
+      "In Progress": "In Progress",
+      "Resolved": "Resolved",
+      "Rejected": "Rejected"
+    },
+    "stats": {
+      "total": "Total",
+      "pending": "New / Pending",
+      "resolved": "Resolved",
+      "sub_assigned": "Assigned",
+      "sub_rate": "{{rate}}% Rate",
+      "sub_cases": "Completed"
+    },
+    "table": {
+      "id": "ID",
+      "title_desc": "Title / Description",
+      "department": "Department",
+      "status": "Status",
+      "priority": "Priority",
+      "date": "Date",
+      "action": "Action",
+      "view_details": "View Details",
+      "no_data": "No assigned complaints found"
+    },
+    "detail": {
+      "nav": "Dashboard / Complaints",
+      "not_found": "Complaint not found or not assigned to you.",
+      "submitted_by": "Submitted by",
+      "update_status": "Update status",
+      "save": "Save",
+      "comment_placeholder": "Add a comment (required for rejected/unresolved cases)",
+      "comment_required": "Please add a comment before rejecting this complaint.",
+      "description": "Description",
+      "attachments": "Attachments ({{count}})",
+      "attachment": "Attachment",
+      "location": "Location",
+      "details": "Details",
+      "priority": "Priority",
+      "category": "Category",
+      "department": "Department",
+      "assignee": "Assignee",
+      "reporter": "Reporter"
+    },
+    "toasts": {
+      "status_updated": "Status updated"
+    },
+    "notifications": {
+      "assigned_title": "New complaint assigned"
+    }
+  },
   "orgs": {
     "title": "Organizations",
     "subtitle": "Global Entity Control",
@@ -232,5 +307,17 @@
     "empty": "No notifications yet",
     "view_all": "View All Activity",
     "new_alert": "New Notification"
-  }
+  },
+
+  "auth": {
+  "forgot_password_title": "Forgot Password?",
+  "forgot_password_subtitle": "Recover your password if you have forgotten it!",
+  "submit": "Submit",
+  "login": "Login",
+  "reset_password_title": "Reset Password",
+  "reset_password_subtitle": "Set your new password to login into your account!",
+  "verify_code_title": "Verify Code",
+  "verify_code_subtitle": "We have sent an email to your email account with a verification code!",
+  "verify_code_label": "Verification Code"
+}
 }

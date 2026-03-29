@@ -1,24 +1,24 @@
 import React, { useState } from 'react';
-import { Mail, Lock, Loader2 } from 'lucide-react';
+import { Mail, Lock, Loader2, Languages } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useTranslation } from 'react-i18next';
+import { useDispatch } from 'react-redux';
+import { useAuth } from '../context/AuthContext';
+import { setCredentials } from '../store/slices/authSlice';
 
 const Login = () => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  
-  // State for form inputs
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const dispatch = useDispatch();
+  const { login } = useAuth();
 
-  // State for loading and errors
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (error) setError(''); // Clear error when user types
+    if (error) setError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,46 +27,72 @@ const Login = () => {
     setError('');
 
     try {
-      // API call to your FastAPI backend
-      const response = await axios.post('http://localhost:8000/auth/login', formData);
+      const user = await login(formData);
 
-      if (response.status === 200) {
-        // Handle successful login
-        const token = response.data.access_token; 
-        if (token) localStorage.setItem('token', token);
-        
-        // Redirect to dashboard
-        navigate('/dashboard');
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1];
+
+      if (token && user.role) {
+        dispatch(setCredentials({ token, role: user.role }));
       }
+
+      if (user.role === 'SysAdmin') navigate('/dashboard');
+      else if (user.role === 'OrgAdmin') navigate('/org-dashboard');
+      else if (user.role === 'DeptAdmin') navigate('/dept-dashboard');
+      else navigate('/login');
     } catch (err: any) {
-      // Handle errors (Invalid credentials, server down, etc.)
-      setError(err.response?.data?.detail || 'Login failed. Please try again.');
+      setError(err.response?.data?.message || t('dept_mgmt.toasts.fetch_error'));
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-white p-4 relative">
-      <div className="w-full max-w-[400px] flex flex-col">
-        {/* Header */}
-        <h1 className="text-3xl font-bold text-[#005a43] mb-10">Login</h1>
+  const toggleLanguage = () => {
+    const current = i18n.language.startsWith('en') ? 'en' : 'am';
+    const newLang = current === 'en' ? 'am' : 'en';
+    i18n.changeLanguage(newLang);
+  };
 
-        {/* Error Message Display */}
+  return (
+   <div className="w-full min-h-screen flex flex-col justify-between bg-white p-4">
+    <div className="w-full max-w-md mx-auto flex flex-col py-10">
+        {/* Language Toggle */}
+        <div className="flex justify-end mb-6">
+          <button
+            onClick={toggleLanguage}
+            className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-100 rounded-full shadow-sm hover:bg-gray-50 transition-all"
+          >
+            <Languages className="w-4 h-4 text-[#006B5D]" />
+            <span className="text-[10px] font-black uppercase">
+              {i18n.language.startsWith('en') ? 'EN' : 'አማ'}
+            </span>
+          </button>
+        </div>
+
+        {/* Title */}
+        <h1 className="text-3xl font-black text-[#005a43] mb-10 italic">
+          {t('auth.login', 'Login')}
+        </h1>
+
+        {/* Error */}
         {error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-200">
+          <div className="mb-6 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-200 font-bold">
             {error}
           </div>
         )}
 
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Email Field */}
+
+          {/* Email */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700">Email</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              {t('settings.profile.email', 'Email')}
+            </label>
             <div className="relative flex items-center">
-              <span className="absolute left-4 text-[#005a43]">
-                <Mail size={20} />
-              </span>
+              <Mail className="absolute left-4 text-[#005a43]" size={20} />
               <input
                 required
                 name="email"
@@ -74,18 +100,18 @@ const Login = () => {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="Ex: abc@example.com"
-                className="w-full py-4 pl-12 pr-4 border-2 border-[#005a43] rounded-2xl focus:outline-none placeholder-gray-300"
+                className="w-full py-4 pl-12 pr-4 border-2 border-[#005a43] rounded-2xl focus:outline-none bg-transparent"
               />
             </div>
           </div>
 
-          {/* Password Field */}
+          {/* Password */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700">Your Password</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              {t('settings.security.current_password', 'Password')}
+            </label>
             <div className="relative flex items-center">
-              <span className="absolute left-4 text-[#005a43]">
-                <Lock size={20} />
-              </span>
+              <Lock className="absolute left-4 text-[#005a43]" size={20} />
               <input
                 required
                 name="password"
@@ -93,36 +119,39 @@ const Login = () => {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="........."
-                className="w-full py-4 pl-12 pr-4 border-2 border-[#005a43] rounded-2xl focus:outline-none placeholder-gray-300"
+                className="w-full py-4 pl-12 pr-4 border-2 border-[#005a43] rounded-2xl focus:outline-none bg-transparent"
               />
-            </div>
-            <div className="pt-1">
-              <button 
-                type="button"
-                onClick={() => navigate('/forgot-password')}
-                className="text-xs font-semibold text-[#005a43] underline decoration-1 underline-offset-2"
-              >
-                Forgot Password?
-              </button>
             </div>
           </div>
 
-          {/* Login Button */}
+          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#005a43] text-white font-bold py-4 rounded-2xl hover:bg-[#004835] transition-colors mt-4 text-lg flex items-center justify-center gap-2 disabled:opacity-70"
+            className="w-full bg-[#005a43] text-white font-black py-4 rounded-2xl hover:bg-[#004835] transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-70"
           >
             {loading ? (
               <>
-                <Loader2 className="animate-spin" size={24} />
-                Logging in...
+                <Loader2 className="animate-spin" size={20} />
+                {t('sys_dashboard.loading')}
               </>
             ) : (
-              'Login'
+              t('auth.login', 'Login')
             )}
           </button>
         </form>
+
+        {/* Forgot Password */}
+        <div className="mt-10 flex justify-center">
+          <button
+            type="button"
+            onClick={() => navigate('/forgot-password')}
+            className="text-sm font-black text-[#005a43] underline underline-offset-4 uppercase tracking-widest hover:text-[#004835] transition-all"
+          >
+            {t('auth.forgot_password_title', 'Forgot Password?')}
+          </button>
+        </div>
+
       </div>
     </div>
   );
