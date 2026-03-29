@@ -137,7 +137,7 @@
   "sys_dashboard": {
     "breadcrumb": "System Administration / Overview",
     "title": "Global Analytics",
-    "loading": "Syncing Global Data...",
+    "loading": "loading...",
     "stats": {
       "complaints": "Global Complaints",
       "sub_orgs": "All Organizations",
