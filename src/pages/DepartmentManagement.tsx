@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { UserPlus, Shield, Loader2, User, LayoutGrid, Users, Search, Filter } from 'lucide-react';
+import { UserPlus, Shield, User, LayoutGrid, Users, Search, Filter } from 'lucide-react';
 import { orgAdminApi, type Department } from '../api/orgadmin';
 import { Table, type Column } from '../components/Table';
 import Modal from '../components/Modal';
