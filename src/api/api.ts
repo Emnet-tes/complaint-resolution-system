@@ -1,7 +1,7 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || "https://ai-complaint-backend-7xc5.onrender.com/api";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -35,6 +35,11 @@ api.interceptors.response.use(
 export const authApi = {
   login: (data: any) => api.post("/auth/login", data),
   register: (data: any) => api.post("/auth/register", data), // Used by Org Admin to add employees
+  forgotPassword: (email: string) => api.post("/auth/forgot-password", { email }),
+  resetPassword: (data: { token: string; email: string; password: string }) =>
+    api.post("/auth/reset-password", data),
+  changePassword: (data: { oldPassword: string; newPassword: string }) =>
+    api.post("/auth/change-password", data),
 };
 
 export default api;

@@ -11,11 +11,15 @@ import Navbar from '../components/Navbar';
 import { AuthProvider } from '../context/AuthContext';
 import { NotificationProvider } from '../context/NotificationContext';
 import ProtectedRoute from '../components/ProtectedRoute';
-import Login from '../pages/Login';
+import Login from '../auth/Login';
+import ForgotPassword from '../auth/ForgotPassword';
+import Verification from '../auth/Verification';
+import ResetPassword from '../auth/ResetPassword';
 import { Toaster } from 'react-hot-toast';
 import OrgDashboard from '../pages/OrgDashboard';
 import DepartmentManagement from '../pages/DepartmentManagement';
 import { useState } from 'react';
+import DeptDashboard from '../pages/DeptDashboard';
 
 const MainLayout = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -62,7 +66,11 @@ const AppRouter = () => {
         
         <BrowserRouter>
           <Routes>
+            {/* Public auth routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/verify-code" element={<Verification />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Navigate to="/login" />} />
@@ -91,6 +99,15 @@ const AppRouter = () => {
               element={
                 <ProtectedRoute allowedRoles={['OrgAdmin']}>
                   <OrgDashboard />
+                </ProtectedRoute>
+              }
+            />
+            {/* --- DEPT ADMIN ROUTES --- */}
+            <Route
+              path="dept-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['DeptAdmin']}>
+                  <DeptDashboard />
                 </ProtectedRoute>
               }
             />

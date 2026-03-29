@@ -29,6 +29,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
     { id: 'dashboard', label: t('sidebar.sys_overview'), path: '/dashboard', roles: ['SysAdmin'], icon: LayoutDashboard },
     { id: 'organizations', label: t('sidebar.organizations'), path: '/organizations', roles: ['SysAdmin'], icon: Building2 },
     { id: 'org-dashboard', label: t('sidebar.dashboard'), path: '/org-dashboard', roles: ['OrgAdmin'], icon: LayoutDashboard },
+    { id: 'dept-dashboard', label: t('sidebar.dashboard'), path: '/dept-dashboard', roles: ['DeptAdmin'], icon: LayoutDashboard },
     { id: 'departments', label: t('sidebar.departments'), path: '/departments', roles: ['OrgAdmin'], icon: ShieldCheck },
     { id: 'complaints', label: t('sidebar.complaints'), path: '/complaints', roles: ['OrgAdmin', 'DeptAdmin'], icon: ClipboardList },
     { id: 'settings', label: t('sidebar.profile'), path: '/settings', roles: ['SysAdmin', 'OrgAdmin', 'DeptAdmin'], icon: SettingsIcon },
