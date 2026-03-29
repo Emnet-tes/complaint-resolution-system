@@ -45,6 +45,10 @@
       "depts": "Departments",
       "admins": "Staff Admins"
     },
+    "filters": {
+      "search_name": "Search by full name...",
+      "search_unit": "Filter by assigned unit..."
+    },
     "table": {
       "dept": "Department",
       "code": "Code",
@@ -55,7 +59,9 @@
       "unit": "Assigned Unit",
       "role": "Role",
       "active": "Active",
-      "inactive": "Deactivated"
+      "inactive": "Deactivated",
+      "unassigned": "Unassigned",
+      "no_data": "No records found matching your criteria"
     },
     "modals": {
       "new_dept": "New Department",
@@ -76,7 +82,7 @@
         "head": "e.g. John Doe",
         "desc": "Responsibilities...",
         "holder": "Account Holder",
-        "choose": "Choose Unit"
+        "choose": "Select Unit"
       }
     },
     "buttons": {
