@@ -137,7 +137,7 @@
   "sys_dashboard": {
     "breadcrumb": "የስርዓት አስተዳደር / አጠቃላይ እይታ",
     "title": "አጠቃላይ ትንታኔ",
-    "loading": "መረጃ በመሰብሰብ ላይ...",
+    "loading": "በስራ ላይ...",
     "stats": {
       "complaints": "አጠቃላይ ቅሬታዎች",
       "sub_orgs": "ሁሉም ድርጅቶች",
