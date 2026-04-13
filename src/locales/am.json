@@ -1,7 +1,10 @@
 {
   "nav": {
     "dashboard_title": "ወደ ዳሽቦርድ እንኳን በደህና መጡ",
-    "global_search": "አጠቃላይ ፍለጋ..."
+    "global_search": "ፍለጋ...",
+    "good_morning": "እንደምን አደሩ",
+    "good_afternoon": "እንደምን ዋሉ",
+    "good_evening": "እንደምን አመሹ"
   },
   "sidebar": {
     "sys_overview": "የስርዓት አጠቃላይ እይታ",
