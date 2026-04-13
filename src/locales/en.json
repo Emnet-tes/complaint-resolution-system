@@ -1,7 +1,10 @@
 {
   "nav": {
     "dashboard_title": "Welcome to the Dashboard",
-    "global_search": "Global search..."
+    "global_search": "searching...",
+    "good_morning": "Good Morning",
+    "good_afternoon": "Good Afternoon",
+    "good_evening": "Good Evening"
   },
   "sidebar": {
     "sys_overview": "System Overview",
