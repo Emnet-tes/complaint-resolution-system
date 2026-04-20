@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Settings, Menu, Languages, Clock, Moon, Sun } from 'lucide-react';
+import { Bell, Settings, Menu, Languages, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNotifications } from '../context/NotificationContext';
-import { useTheme } from '../context/ThemeContext';
+
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
 
