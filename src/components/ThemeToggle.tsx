@@ -1,32 +1,19 @@
-import { useEffect, useState } from 'react';
 import { Moon, Sun } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '../context/ThemeContext';
 
 type Props = {
   className?: string;
 };
 
-const getInitialIsDark = () => {
-  const saved = localStorage.getItem('theme');
-  if (saved === 'dark') return true;
-  if (saved === 'light') return false;
-  return window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ?? false;
-};
-
 const ThemeToggle = ({ className }: Props) => {
   const { t } = useTranslation();
-  const [isDark, setIsDark] = useState(getInitialIsDark);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (isDark) root.classList.add('dark');
-    else root.classList.remove('dark');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  }, [isDark]);
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
 
   return (
     <button
-      onClick={() => setIsDark((v) => !v)}
+      onClick={toggleTheme}
       className={
         className ||
         'flex items-center gap-2 px-3 py-2 bg-white border border-gray-100 rounded-full shadow-sm hover:bg-gray-50 cursor-pointer transition-all'

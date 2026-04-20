@@ -56,10 +56,8 @@ export interface DeptAdminAnalytics {
 }
 
 export const deptAdminApi = {
-  getAssignedComplaints: (status?: ComplaintStatus) =>
-    api.get<AssignedComplaintsResponse>("/complaints/assigned", {
-      params: status ? { status } : undefined,
-    }),
+  getAssignedComplaints: () =>
+    api.get<AssignedComplaint[]>("/complaints/assigned"),
 
   updateComplaintStatus: (
     id: string,

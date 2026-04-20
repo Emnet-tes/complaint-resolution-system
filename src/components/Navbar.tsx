@@ -17,7 +17,6 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
-  const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
 
   const getGreeting = () => {
@@ -69,22 +68,6 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
               <Languages className="w-4 h-4 text-[#006B5D]" />
               <span className="text-[10px] font-black uppercase tracking-tighter">
                 {i18n.language === 'en' ? 'EN' : 'አማ'}
-              </span>
-            </button>
-
-            <button
-              onClick={toggleTheme}
-              className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-100 rounded-full shadow-sm hover:bg-gray-50 cursor-pointer transition-all"
-              aria-label={theme === 'dark' ? t('nav.switch_light', 'Switch to light mode') : t('nav.switch_dark', 'Switch to dark mode')}
-              title={theme === 'dark' ? t('nav.switch_light', 'Switch to light mode') : t('nav.switch_dark', 'Switch to dark mode')}
-            >
-              {theme === 'dark' ? (
-                <Sun className="w-4 h-4 text-amber-500" />
-              ) : (
-                <Moon className="w-4 h-4 text-slate-600" />
-              )}
-              <span className="text-[10px] font-black uppercase tracking-tighter">
-                {theme === 'dark' ? 'Light' : 'Dark'}
               </span>
             </button>
 

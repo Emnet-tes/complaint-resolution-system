@@ -34,12 +34,20 @@ const DepartmentComplaints = () => {
       setError('');
     }
     try {
-      const res = await deptAdminApi.getAssignedComplaints(statusFilter || undefined);
-      setSummary(res.data.summary);
-      setComplaints(res.data.data || []);
+      const res = await deptAdminApi.getAssignedComplaints();
+      const allData = res.data || [];
+      
+      const total = allData.length;
+      const resolved = allData.filter(c => c.status === 'Resolved').length;
+      const pending = allData.filter(c => c.status !== 'Resolved' && c.status !== 'Rejected').length;
+      const resolvedPercentage = total === 0 ? 0 : Math.round((resolved / total) * 100);
+      setSummary({ total, resolved, pending, resolvedPercentage });
+      
+      const filtered = statusFilter ? allData.filter(c => c.status === statusFilter) : allData;
+      setComplaints(filtered);
 
       // New assignment notification
-      const incoming = res.data.data || [];
+      const incoming = allData;
       const incomingIds = new Set(incoming.map((c) => c._id));
       if (!firstLoadRef.current) {
         for (const c of incoming) {
