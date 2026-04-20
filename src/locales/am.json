@@ -1,7 +1,10 @@
 {
   "nav": {
     "dashboard_title": "ወደ ዳሽቦርድ እንኳን በደህና መጡ",
-    "global_search": "አጠቃላይ ፍለጋ..."
+    "global_search": "ፍለጋ...",
+    "good_morning": "እንደምን አደሩ",
+    "good_afternoon": "እንደምን ዋሉ",
+    "good_evening": "እንደምን አመሹ"
   },
   "sidebar": {
     "sys_overview": "የስርዓት አጠቃላይ እይታ",
@@ -43,7 +46,11 @@
     "title": "መዋቅር",
     "tabs": {
       "depts": "ክፍሎች",
-      "admins": "የክፍል አስተዳዳሪዎች"
+      "admins": "አስተዳዳሪዎች"
+    },
+    "filters": {
+      "search_name": "በሙሉ ስም ይፈልጉ...",
+      "search_unit": "በተመደቡበት ክፍል ይፈልጉ..."
     },
     "table": {
       "dept": "ክፍል",
@@ -55,7 +62,9 @@
       "unit": "የተመደበበት ክፍል",
       "role": "ሚና",
       "active": "ንቁ",
-      "inactive": "የተዘጋ"
+      "inactive": "የተዘጋ",
+      "unassigned": "ያልተመደበ",
+      "no_data": "ከፍለጋዎ ጋር የሚዛመድ መረጃ አልተገኘም"
     },
     "modals": {
       "new_dept": "አዲስ ክፍል",
@@ -63,18 +72,18 @@
       "labels": {
         "name": "የክፍል ስም",
         "code": "የክፍል ኮድ",
-        "head": "የተመደበው ኃላፊ ስም",
+        "head": "የኃላፊ ስም",
         "desc": "ማብራሪያ",
         "full_name": "ሙሉ ስም",
-        "email": "ኢሜይል አድራሻ",
+        "email": "ኢሜይል",
         "password": "የይለፍ ቃል",
-        "unit": "የሚመደብበት ክፍል"
+        "unit": "ክፍል"
       },
       "placeholders": {
         "name": "ምሳሌ፡ ፋይናንስ",
         "code": "ምሳሌ፡ FIN_01",
-        "head": "ምሳሌ፡ ዮሐንስ አበበ",
-        "desc": "የክፍሉ ኃላፊነቶች...",
+        "head": "ምሳሌ፡ ዮሐንስ",
+        "desc": "ኃላፊነቶች...",
         "holder": "የመለያ ባለቤት",
         "choose": "ክፍል ይምረጡ"
       }
@@ -86,11 +95,11 @@
       "submit_admin": "መለያውን ፍጠር"
     },
     "toasts": {
-      "fetch_error": "የስርዓት መረጃዎችን ማምጣት አልተቻለም",
+      "fetch_error": "መረጃዎችን ማምጣት አልተቻለም",
       "creating_dept": "ክፍሉ እየተፈጠረ ነው...",
-      "dept_success": "ክፍሉ በተሳካ ሁኔታ ተፈጥሯል!",
+      "dept_success": "ክፍሉ ተፈጥሯል!",
       "registering_admin": "አስተዳዳሪው እየተመዘገበ ነው...",
-      "admin_success": "አስተዳዳሪው በተሳካ ሁኔታ ተመዝግቧል!"
+      "admin_success": "አስተዳዳሪው ተመዝግቧል!"
     }
   },
   "complaints": {
@@ -131,7 +140,7 @@
   "sys_dashboard": {
     "breadcrumb": "የስርዓት አስተዳደር / አጠቃላይ እይታ",
     "title": "አጠቃላይ ትንታኔ",
-    "loading": "መረጃ በመሰብሰብ ላይ...",
+    "loading": "በስራ ላይ...",
     "stats": {
       "complaints": "አጠቃላይ ቅሬታዎች",
       "sub_orgs": "ሁሉም ድርጅቶች",

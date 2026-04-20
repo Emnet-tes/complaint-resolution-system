@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Settings, Menu, Languages, Clock } from 'lucide-react';
+import { Bell, Settings, Menu, Languages, Clock, Moon, Sun } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNotifications } from '../context/NotificationContext';
 import ThemeToggle from './ThemeToggle';
@@ -15,6 +15,15 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const { theme, toggleTheme } = useTheme();
+  const { user } = useAuth();
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return t('nav.good_morning');
+    if (hour >= 12 && hour < 18) return t('nav.good_afternoon');
+    return t('nav.good_evening');
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -40,8 +49,10 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
               <Menu className="w-6 h-6" />
             </button>
             <h1 className="text-[#1E293B] text-lg md:text-xl font-black tracking-tight whitespace-nowrap">
-              <span className="hidden sm:inline uppercase text-sm tracking-widest">{t('nav.dashboard_title')}</span>
-              <span className="sm:hidden text-base">Dashboard</span>
+              <span className="hidden sm:inline uppercase text-sm tracking-widest font-black text-slate-500">
+                {getGreeting()} {user?.fullname?.split(' ')[0]}
+              </span>
+              <span className="sm:hidden text-base font-black text-slate-500">{getGreeting()}</span>
             </h1>
       </div>
 
@@ -56,6 +67,22 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
               <Languages className="w-4 h-4 text-[#006B5D]" />
               <span className="text-[10px] font-black uppercase tracking-tighter">
                 {i18n.language === 'en' ? 'EN' : 'አማ'}
+              </span>
+            </button>
+
+            <button
+              onClick={toggleTheme}
+              className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-100 rounded-full shadow-sm hover:bg-gray-50 cursor-pointer transition-all"
+              aria-label={theme === 'dark' ? t('nav.switch_light', 'Switch to light mode') : t('nav.switch_dark', 'Switch to dark mode')}
+              title={theme === 'dark' ? t('nav.switch_light', 'Switch to light mode') : t('nav.switch_dark', 'Switch to dark mode')}
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-4 h-4 text-amber-500" />
+              ) : (
+                <Moon className="w-4 h-4 text-slate-600" />
+              )}
+              <span className="text-[10px] font-black uppercase tracking-tighter">
+                {theme === 'dark' ? 'Light' : 'Dark'}
               </span>
             </button>
 
