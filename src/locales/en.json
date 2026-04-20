@@ -308,10 +308,19 @@
     "view_all": "View All Activity",
     "new_alert": "New Notification"
   },
+  "theme": {
+    "toggle": "Toggle theme",
+    "light": "Light",
+    "dark": "Dark"
+  },
 
   "auth": {
   "forgot_password_title": "Forgot Password?",
   "forgot_password_subtitle": "Recover your password if you have forgotten it!",
+  "otp_sent": "OTP has been sent to your email.",
+  "missing_email": "Missing email. Please restart the reset flow.",
+  "missing_otp": "Missing OTP. Please restart the reset flow.",
+  "reset_success": "Password reset successful. Please login.",
   "submit": "Submit",
   "login": "Login",
   "reset_password_title": "Reset Password",

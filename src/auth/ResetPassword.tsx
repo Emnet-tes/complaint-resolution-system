@@ -1,22 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Lock, Languages } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { authApi } from '../api/api';
+import ThemeToggle from '../components/ThemeToggle';
 
 const ResetPassword = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState('');
+  
+  const searchParams = new URLSearchParams(location.search);
+  const tokenFromUrl = searchParams.get('token');
+  const emailFromUrl = searchParams.get('email');
+
+  const emailFromState = (location.state as { email?: string; otp?: string } | null)?.email || '';
+  const otpFromState = (location.state as { email?: string; otp?: string } | null)?.otp || '';
+
+  const [email, setEmail] = useState(emailFromState || emailFromUrl || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
-  const tokenFromState = (location.state as { token?: string } | null)?.token || '';
 
   const toggleLanguage = () => {
     const current = i18n.language.startsWith('en') ? 'en' : 'am';
@@ -36,12 +43,31 @@ const ResetPassword = () => {
 
     try {
       setLoading(true);
-      await authApi.resetPassword({
-        token: tokenFromState,
-        email,
-        password,
-      });
-      setSuccess(t('dept_mgmt.toasts.add_success') || 'Password reset successful');
+      const finalEmail = email || emailFromState || emailFromUrl;
+      if (!finalEmail) {
+        setError(t('auth.missing_email', 'Missing email. Please restart the reset flow.'));
+        return;
+      }
+      
+      if (tokenFromUrl) {
+        await authApi.resetPassword({
+          token: tokenFromUrl,
+          email: finalEmail,
+          password,
+        });
+      } else {
+        if (!otpFromState) {
+          setError(t('auth.missing_otp', 'Missing OTP. Please restart the reset flow.'));
+          return;
+        }
+        await authApi.resetPasswordOtp({
+          email: finalEmail,
+          otp: otpFromState,
+          password,
+        });
+      }
+      
+      setSuccess(t('auth.reset_success', 'Password reset successful. Please login.'));
       setTimeout(() => navigate('/login'), 2000);
     } catch (err: any) {
       const msg = err.response?.data?.message || t('dept_mgmt.toasts.fetch_error');
@@ -54,8 +80,9 @@ const ResetPassword = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white p-4">
       <div className="w-full max-w-[400px] flex flex-col">
-        {/* Language Toggle */}
-        <div className="flex justify-end mb-6">
+        {/* Language + Theme Toggle */}
+        <div className="flex justify-end gap-2 mb-6">
+          <ThemeToggle />
           <button
             onClick={toggleLanguage}
             className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-100 rounded-full shadow-sm hover:bg-gray-50 transition-all"
@@ -69,7 +96,7 @@ const ResetPassword = () => {
         </div>
 
         <button 
-          onClick={() => navigate('/verify-code')}
+          onClick={() => navigate(tokenFromUrl ? '/login' : '/verify-code')}
           className="mb-8 w-fit p-1 hover:bg-gray-100 rounded-full transition-colors"
           type="button"
         >

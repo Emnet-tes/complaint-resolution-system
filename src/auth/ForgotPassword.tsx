@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Mail, Loader2, Languages } from 'lucide-react';
+import { ArrowLeft, Mail, Loader2, Languages, Link as LinkIcon, KeyRound } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { authApi } from '../api/api'; // Import your API
+import ThemeToggle from '../components/ThemeToggle';
 
 const ForgotPassword = () => {
   const { t, i18n } = useTranslation();
@@ -11,7 +12,7 @@ const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const toggleLanguage = () => {
     const current = i18n.language.startsWith('en') ? 'en' : 'am';
@@ -19,19 +20,27 @@ const ForgotPassword = () => {
     i18n.changeLanguage(newLang);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleRequest = async (method: 'otp' | 'link') => {
+    if (!email) {
+      setError(t('settings.profile.email_required', 'Email is required'));
+      return;
+    }
     setLoading(true);
     setError('');
+    setSuccessMessage('');
 
     try {
-      const response = await authApi.forgotPassword(email);
-      
-      if (response.status === 200) {
-        setSuccess(true);
-        // Optional: Move to verify-code after a short delay 
-        // or stay here to show success message
-        setTimeout(() => navigate('/verify-code'), 2000);
+      if (method === 'otp') {
+        const response = await authApi.forgotPasswordOtp(email);
+        if (response.status === 200) {
+          setSuccessMessage(t('auth.otp_sent', 'OTP has been sent to your email.'));
+          setTimeout(() => navigate('/verify-code', { state: { email } }), 800);
+        }
+      } else {
+        const response = await authApi.forgotPassword(email);
+        if (response.status === 200) {
+          setSuccessMessage(t('auth.link_sent', 'Reset link has been sent to your email.'));
+        }
       }
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || t('dept_mgmt.toasts.fetch_error');
@@ -45,8 +54,9 @@ const ForgotPassword = () => {
     <div className="min-h-screen flex items-center justify-center bg-white p-4">
       <div className="w-full max-w-[400px] flex flex-col">
         
-        {/* Language Toggle */}
-        <div className="flex justify-end mb-6">
+        {/* Language + Theme Toggle */}
+        <div className="flex justify-end gap-2 mb-6">
+          <ThemeToggle />
           <button
             onClick={toggleLanguage}
             className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-100 rounded-full shadow-sm hover:bg-gray-50 transition-all"
@@ -82,13 +92,13 @@ const ForgotPassword = () => {
             {error}
           </div>
         )}
-        {success && (
+        {successMessage && (
           <div className="mb-4 p-3 bg-emerald-50 text-emerald-600 text-sm rounded-lg border border-emerald-200 font-bold">
-            {t('dept_mgmt.toasts.add_success') || "Reset link sent successfully!"}
+            {successMessage}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
           {/* Email Field */}
           <div className="space-y-2">
             <label className="text-xs font-black text-slate-700 uppercase tracking-widest">
@@ -109,21 +119,27 @@ const ForgotPassword = () => {
             </div>
           </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading || success}
-            className="w-full bg-[#005a43] text-white font-black py-4 rounded-2xl hover:bg-[#004835] transition-all text-sm uppercase tracking-[0.2em] flex items-center justify-center gap-2 disabled:opacity-70"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="animate-spin" size={20} />
-                {t('sys_dashboard.loading')}
-              </>
-            ) : (
-              t('dept_mgmt.buttons.submit_admin')
-            )}
-          </button>
+          {/* Submit Buttons */}
+          <div className="flex gap-4">
+            <button
+              type="button"
+              onClick={() => handleRequest('otp')}
+              disabled={loading || !!successMessage}
+              className="flex-1 bg-white border-2 border-[#005a43] text-[#005a43] font-black py-4 rounded-2xl hover:bg-gray-50 transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-70"
+            >
+              {loading ? <Loader2 className="animate-spin" size={20} /> : <KeyRound size={18} />}
+              {t('auth.send_otp', 'OTP')}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleRequest('link')}
+              disabled={loading || !!successMessage}
+              className="flex-1 bg-[#005a43] text-white font-black py-4 rounded-2xl hover:bg-[#004835] transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-70"
+            >
+              {loading ? <Loader2 className="animate-spin" size={20} /> : <LinkIcon size={18} />}
+              {t('auth.send_link', 'Link')}
+            </button>
+          </div>
         </form>
       </div>
     </div>

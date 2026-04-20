@@ -308,10 +308,19 @@
     "view_all": "ሁሉንም እንቅስቃሴዎች ይመልከቱ",
     "new_alert": "አዲስ ማሳወቂያ"
   },
+  "theme": {
+    "toggle": "ገጽታ ቀይር",
+    "light": "ብርሃን",
+    "dark": "ጨለማ"
+  },
 
   "auth": {
   "forgot_password_title": "የይለፍ ቃልዎን ረስተዋል?",
   "forgot_password_subtitle": "የይለፍ ቃልዎን ከረሱ እዚህ ማስተካከል ይችላሉ!",
+  "otp_sent": "OTP ወደ ኢሜይልዎ ተልኳል።",
+  "missing_email": "ኢሜይል አልተገኘም። እባክዎ ሂደቱን ዳግም ይጀምሩ።",
+  "missing_otp": "OTP አልተገኘም። እባክዎ ሂደቱን ዳግም ይጀምሩ።",
+  "reset_success": "የይለፍ ቃል በተሳካ ሁኔታ ተቀይሯል። እባክዎ ይግቡ።",
   "submit": "ላክ",
   "login": "ግባ",
   "reset_password_title": "የይለፍ ቃል ይቀይሩ",

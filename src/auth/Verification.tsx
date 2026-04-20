@@ -1,14 +1,20 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ArrowLeft, Languages } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
+import ThemeToggle from '../components/ThemeToggle';
 
 const Verification = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const emailFromState = useMemo(() => {
+    return (location.state as { email?: string } | null)?.email || '';
+  }, [location.state]);
 
   const toggleLanguage = () => {
     const current = i18n.language.startsWith('en') ? 'en' : 'am';
@@ -20,11 +26,11 @@ const Verification = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      // In a typical flow, backend would validate this code and
-      // respond with a reset token. Since your backend contract
-      // doesn't specify this, we'll just pass the code along as "token"
-      // to the reset-password page.
-      navigate('/reset-password', { state: { token: code } });
+      if (!emailFromState) {
+        toast.error(t('auth.missing_email', 'Missing email. Please restart the reset flow.'));
+        return;
+      }
+      navigate('/reset-password', { state: { email: emailFromState, otp: code } });
     } catch (err: any) {
       toast.error(err.response?.data?.message || t('dept_mgmt.toasts.fetch_error'));
     } finally {
@@ -35,8 +41,9 @@ const Verification = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white p-4">
       <div className="w-full max-w-[400px] flex flex-col">
-        {/* Language Toggle */}
-        <div className="flex justify-end mb-6">
+        {/* Language + Theme Toggle */}
+        <div className="flex justify-end gap-2 mb-6">
+          <ThemeToggle />
           <button
             onClick={toggleLanguage}
             className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-100 rounded-full shadow-sm hover:bg-gray-50 transition-all"
@@ -71,7 +78,7 @@ const Verification = () => {
           {/* Verification Code Input */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">
-              {t('auth.verify_code_label')}
+              {t('auth.verify_code_label', 'OTP')}
             </label>
             <div className="relative flex items-center">
               <input
