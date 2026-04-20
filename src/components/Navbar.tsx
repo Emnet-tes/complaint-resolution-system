@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useNotifications } from '../context/NotificationContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import ThemeToggle from './ThemeToggle';
 
 interface NavbarProps { onMenuClick: () => void; }
 
@@ -62,6 +63,8 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
         
           <div className="flex items-center space-x-1.5 md:space-x-3">
             
+            <ThemeToggle />
+
             <button onClick={toggleLanguage} className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-100 rounded-full shadow-sm hover:bg-gray-50 cursor-pointer transition-all">
               <Languages className="w-4 h-4 text-[#006B5D]" />
               <span className="text-[10px] font-black uppercase tracking-tighter">

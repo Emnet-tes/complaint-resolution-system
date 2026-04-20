@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { useAuth } from '../context/AuthContext';
 import { setCredentials } from '../store/slices/authSlice';
+import ThemeToggle from '../components/ThemeToggle';
 
 const Login = () => {
   const { t, i18n } = useTranslation();
@@ -58,8 +59,9 @@ const Login = () => {
   return (
    <div className="w-full min-h-screen flex flex-col justify-between bg-white p-4">
     <div className="w-full max-w-md mx-auto flex flex-col py-10">
-        {/* Language Toggle */}
-        <div className="flex justify-end mb-6">
+        {/* Language + Theme Toggle */}
+        <div className="flex justify-end gap-2 mb-6">
+          <ThemeToggle />
           <button
             onClick={toggleLanguage}
             className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-100 rounded-full shadow-sm hover:bg-gray-50 transition-all"

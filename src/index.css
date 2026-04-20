@@ -1,107 +1,46 @@
 @import "tailwindcss";
 
-html, body, #root {
-	height: 100%;
-	width: 100%;
+/* Global dark-mode overrides (app uses many fixed light classes) */
+html.dark,
+html.dark body {
+  background-color: #0b1220;
+  color: #e2e8f0;
 }
 
-body {
-	margin: 0;
-	overflow-y: auto;
-	font-family: system-ui, sans-serif;
-	background: #f8fafc;
-	color: #0f172a;
-	transition: background-color 180ms ease, color 180ms ease;
+html.dark .bg-white {
+  background-color: #0f172a !important;
 }
-
-:root {
-	--surface-bg: #ffffff;
-	--surface-muted: #f8fafc;
-	--text-main: #0f172a;
-	--text-soft: #64748b;
-	--border-soft: #e2e8f0;
+html.dark .bg-gray-50,
+html.dark .bg-gray-50\/30,
+html.dark .bg-gray-50\/50,
+html.dark .bg-slate-100,
+html.dark .bg-slate-200 {
+  background-color: #0b1220 !important;
 }
-
-[data-theme='dark'] {
-	--surface-bg: #0b1222;
-	--surface-muted: #020617;
-	--text-main: #f1f5f9;
-	--text-soft: #94a3b8;
-	--border-soft: #1e293b;
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700,
+html.dark .text-slate-600 {
+  color: #e2e8f0 !important;
 }
-
-[data-theme='dark'] body {
-	background: var(--surface-muted);
-	color: var(--text-main);
+html.dark .text-slate-500,
+html.dark .text-slate-400 {
+  color: #94a3b8 !important;
 }
-
-/* Utility remaps so existing class-heavy pages react to theme globally. */
-[data-theme='dark'] .bg-white {
-	background-color: var(--surface-bg) !important;
+html.dark .border-gray-200,
+html.dark .border-gray-100,
+html.dark .border-gray-50,
+html.dark .border-slate-200,
+html.dark .border-slate-300 {
+  border-color: rgba(148, 163, 184, 0.18) !important;
 }
-
-[data-theme='dark'] .bg-gray-50,
-[data-theme='dark'] .bg-slate-50,
-[data-theme='dark'] .bg-gray-50\/50,
-[data-theme='dark'] .bg-slate-50\/50 {
-	background-color: var(--surface-muted) !important;
+html.dark input,
+html.dark textarea,
+html.dark select {
+  background-color: rgba(15, 23, 42, 0.6) !important;
+  color: #e2e8f0 !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
 }
-
-[data-theme='dark'] .bg-gray-100,
-[data-theme='dark'] .bg-slate-100 {
-	background-color: #1f2937 !important;
-}
-
-[data-theme='dark'] .text-slate-900,
-[data-theme='dark'] .text-slate-800,
-[data-theme='dark'] .text-slate-700,
-[data-theme='dark'] .text-slate-600 {
-	color: var(--text-main) !important;
-}
-
-[data-theme='dark'] .text-slate-500,
-[data-theme='dark'] .text-slate-400,
-[data-theme='dark'] .text-gray-500,
-[data-theme='dark'] .text-gray-400 {
-	color: var(--text-soft) !important;
-}
-
-[data-theme='dark'] .border-gray-50,
-[data-theme='dark'] .border-gray-100,
-[data-theme='dark'] .border-gray-200,
-[data-theme='dark'] .border-slate-100,
-[data-theme='dark'] .border-slate-200 {
-	border-color: var(--border-soft) !important;
-}
-
-[data-theme='dark'] .hover\:bg-gray-50:hover,
-[data-theme='dark'] .hover\:bg-gray-50\/50:hover,
-[data-theme='dark'] .hover\:bg-slate-900:hover,
-[data-theme='dark'] .hover\:bg-white:hover {
-	background-color: #1f2937 !important;
-}
-
-[data-theme='dark'] input,
-[data-theme='dark'] textarea,
-[data-theme='dark'] select {
-	background-color: #0f172a !important;
-	color: var(--text-main) !important;
-	border-color: var(--border-soft) !important;
-}
-
-[data-theme='dark'] input::placeholder,
-[data-theme='dark'] textarea::placeholder {
-	color: var(--text-soft) !important;
-}
-
-[data-theme='dark'] table thead {
-	background-color: #0f172a !important;
-}
-
-[data-theme='dark'] .shadow-sm,
-[data-theme='dark'] .shadow-md,
-[data-theme='dark'] .shadow-lg,
-[data-theme='dark'] .shadow-xl,
-[data-theme='dark'] .shadow-2xl {
-	box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28) !important;
+html.dark ::placeholder {
+  color: rgba(148, 163, 184, 0.8) !important;
 }
