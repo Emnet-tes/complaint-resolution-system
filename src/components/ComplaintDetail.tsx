@@ -13,6 +13,16 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { deptAdminApi, type AssignedComplaint, type ComplaintStatus } from '../api/deptadmin';
+import { type OrganizationComplaint } from '../api/orgadmin';
+
+type ComplaintDetailState = {
+  complaint?: AssignedComplaint | OrganizationComplaint;
+  source?: 'org' | 'dept';
+};
+
+const isOrganizationComplaint = (
+  complaint: AssignedComplaint | OrganizationComplaint,
+): complaint is OrganizationComplaint => 'submittedBy' in complaint && 'attachments' in complaint;
 
 const ComplaintDetail = () => {
   const { id } = useParams();
@@ -21,8 +31,9 @@ const ComplaintDetail = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
 
-  const initialFromState = (location.state as any)?.complaint as AssignedComplaint | undefined;
-  const [complaint, setComplaint] = useState<AssignedComplaint | null>(initialFromState ?? null);
+  const routeState = location.state as ComplaintDetailState | null;
+  const initialFromState = routeState?.complaint;
+  const [complaint, setComplaint] = useState<AssignedComplaint | OrganizationComplaint | null>(initialFromState ?? null);
   const [loading, setLoading] = useState(!initialFromState);
   const [saving, setSaving] = useState(false);
   const [newStatus, setNewStatus] = useState<ComplaintStatus>('Submitted');
@@ -33,12 +44,21 @@ const ComplaintDetail = () => {
   };
 
   const isDeptAdmin = user?.role === 'DeptAdmin';
+  const isOrgComplaint = complaint ? isOrganizationComplaint(complaint) : false;
 
   useEffect(() => {
     if (complaint) {
-      setNewStatus(complaint.status);
+      if (!isOrganizationComplaint(complaint)) {
+        setNewStatus(complaint.status);
+      }
       return;
     }
+
+    if (routeState?.source === 'org') {
+      setLoading(false);
+      return;
+    }
+
     const fetchOne = async () => {
       if (!id) return;
       try {
@@ -57,7 +77,7 @@ const ComplaintDetail = () => {
     };
     fetchOne();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, complaint, routeState?.source]);
 
   const statusBadge = useMemo(() => {
     const s = complaint?.status || 'Submitted';
@@ -72,9 +92,46 @@ const ComplaintDetail = () => {
     return { label: t(`dept_complaints.status.${s}`), cls };
   }, [complaint?.status, t]);
 
+  const complaintDepartmentName = complaint
+    ? isOrganizationComplaint(complaint)
+      ? complaint.department?.name || complaint.category || '-'
+      : complaint.department?.name || '-'
+    : '-';
+
+  const complaintDepartmentCode = complaint
+    ? isOrganizationComplaint(complaint)
+      ? complaint.department?.code || 'DP'
+      : complaint.department?.code || 'DP'
+    : 'DP';
+
+  const complaintLocationName = complaint
+    ? isOrganizationComplaint(complaint)
+      ? complaint.location?.locationName || '-'
+      : complaint.location?.locationName || '-'
+    : '-';
+
+  const complaintCoordinates = complaint
+    ? isOrganizationComplaint(complaint)
+      ? complaint.location?.coordinates || []
+      : complaint.location?.coordinates || []
+    : [];
+
+  const complaintAttachments = complaint
+    ? isOrganizationComplaint(complaint)
+      ? complaint.attachments
+      : complaint.images || []
+    : [];
+
+  const complaintAssigneeName = complaint
+    ? isOrganizationComplaint(complaint)
+      ? complaint.assignedTo || '-'
+      : complaint.assignedTo?.fullName || '-'
+    : '-';
+
   const handleUpdateStatus = async () => {
     if (!id) return;
     if (!isDeptAdmin) return;
+    if (isOrgComplaint) return;
     if (newStatus === 'Rejected' && !comment.trim()) {
       toast.error(t('dept_complaints.detail.comment_required'));
       return;
@@ -143,10 +200,12 @@ const ComplaintDetail = () => {
                 <h1 className="text-2xl font-bold text-slate-800 mt-3">{complaint.title}</h1>
                 <p className="text-sm text-slate-500 mt-1">
                   {t('dept_complaints.detail.submitted_by')}{' '}
-                  <span className="font-bold text-slate-700">{complaint.submittedBy?.fullName || '-'}</span>
+                  <span className="font-bold text-slate-700">
+                    {isOrganizationComplaint(complaint) ? complaint.submittedBy?.fullName || '-' : complaint.submittedBy?.fullName || '-'}
+                  </span>
                 </p>
              </div>
-             {isDeptAdmin && (
+             {isDeptAdmin && !isOrgComplaint && (
                <div className="flex flex-col gap-3 w-full max-w-sm">
                  <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
@@ -206,9 +265,18 @@ const ComplaintDetail = () => {
              <div className="absolute right-4 top-4 text-blue-200 opacity-50 rotate-12"><MessageSquare size={80}/></div>
              <h4 className="text-sm font-bold text-blue-900 mb-4 uppercase tracking-wider flex items-center"><Info size={16} className="mr-2"/> AI Analysis</h4>
              <div className="flex flex-wrap gap-3">
-                <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center"><span className="w-1.5 h-1.5 bg-orange-400 rounded-full mr-2"></span> Possible Duplicate of <span className="text-[#006B5D] ml-1">#CK-9210</span></span>
-                <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center"><span className="w-1.5 h-1.5 bg-red-500 rounded-full mr-2"></span> High Urgency Detected</span>
-                <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center"><span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></span> Tag: Road Maintenance</span>
+                {isOrganizationComplaint(complaint) ? (
+                  <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center">
+                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></span>
+                    AI Confidence: {Math.round((complaint.aiConfidence || 0) * 100)}%
+                  </span>
+                ) : (
+                  <>
+                    <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center"><span className="w-1.5 h-1.5 bg-orange-400 rounded-full mr-2"></span> Possible Duplicate of <span className="text-[#006B5D] ml-1">#CK-9210</span></span>
+                    <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center"><span className="w-1.5 h-1.5 bg-red-500 rounded-full mr-2"></span> High Urgency Detected</span>
+                    <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center"><span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></span> Tag: Road Maintenance</span>
+                  </>
+                )}
              </div>
           </div>
 
@@ -220,12 +288,12 @@ const ComplaintDetail = () => {
              </div>
              <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">
-                  {t('dept_complaints.detail.attachments', { count: complaint.images?.length || 0 })}
+                  {t('dept_complaints.detail.attachments', { count: complaintAttachments.length })}
                 </p>
                 <div className="grid grid-cols-3 gap-4">
-                   {(complaint.images || []).slice(0, 3).map((img, idx) => (
+                   {complaintAttachments.slice(0, 3).map((img, idx) => (
                      <div
-                       key={img.path || idx}
+                       key={`${img.path}-${idx}`}
                        className="aspect-video bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 font-bold text-[10px] uppercase tracking-widest border border-gray-200"
                      >
                        {t('dept_complaints.detail.attachment')} {idx + 1}
@@ -244,10 +312,10 @@ const ComplaintDetail = () => {
                 <div className="p-2 bg-white rounded-lg shadow-sm text-slate-400"><MapIcon size={20}/></div>
                 <div>
                   <p className="text-xs font-bold text-slate-800">
-                    {complaint.location?.locationName || '-'}
+                    {complaintLocationName}
                   </p>
                   <p className="text-[10px] text-slate-400 mt-1">
-                    {complaint.location?.coordinates?.length ? complaint.location.coordinates.join(', ') : '-'}
+                    {complaintCoordinates.length ? complaintCoordinates.join(', ') : '-'}
                   </p>
                 </div>
              </div>
@@ -275,18 +343,18 @@ const ComplaintDetail = () => {
                     <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">{t('dept_complaints.detail.department')}</p>
                     <div className="flex items-center text-sm font-bold text-slate-800">
                       <div className="w-6 h-6 bg-blue-50 text-[10px] flex items-center justify-center rounded text-blue-600 mr-2 uppercase font-bold tracking-tighter">
-                        {(complaint.department?.code || 'DP').slice(0, 3)}
+                        {complaintDepartmentCode.slice(0, 3)}
                       </div>
-                      {complaint.department?.name || '-'}
+                      {complaintDepartmentName}
                     </div>
                  </div>
                  <div>
                     <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">{t('dept_complaints.detail.assignee')}</p>
                     <div className="flex items-center text-sm font-bold text-slate-800">
                       <div className="w-6 h-6 bg-blue-100 text-[10px] flex items-center justify-center rounded text-blue-600 mr-2 uppercase font-bold tracking-tighter">
-                        {(complaint.assignedTo?.fullName || 'NA').slice(0, 2).toUpperCase()}
+                        {complaintAssigneeName.slice(0, 2).toUpperCase()}
                       </div>
-                      {complaint.assignedTo?.fullName || '-'}
+                      {complaintAssigneeName}
                     </div>
                  </div>
               </div>

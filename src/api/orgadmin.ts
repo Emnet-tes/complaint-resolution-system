@@ -74,6 +74,62 @@ export interface OrgAdminAnalytics {
   }[];
 }
 
+// --- Types for Organization Complaints ---
+
+export interface OrganizationComplaintLocation {
+  type: string;
+  coordinates: number[];
+  locationName: string | null;
+}
+
+export interface OrganizationComplaintHistoryItem {
+  _id: string;
+  action: string;
+  by: string | null;
+  comment?: string;
+  timestamp: string;
+}
+
+export interface OrganizationComplaint {
+  _id: string;
+  title: string;
+  description: string;
+  location: OrganizationComplaintLocation | null;
+  category: string | null;
+  submittedBy: {
+    _id: string;
+    fullName: string;
+    email: string;
+  };
+  department:
+    | {
+        _id: string;
+        code: string;
+        name: string;
+      }
+    | null;
+  organization: string;
+  isSpam: boolean;
+  aiConfidence: number;
+  duplicateOf: string | null;
+  assignedTo: string | null;
+  status: string;
+  priority: string;
+  overriddenFields: Record<string, unknown>;
+  history: OrganizationComplaintHistoryItem[];
+  syncStatus: string;
+  attachments: {
+    _id: string;
+    filename: string;
+    path: string;
+    uploadedAt: string;
+  }[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  resolvedAt?: string;
+}
+
 // --- API Implementation ---
 
 export const orgAdminApi = {
@@ -118,6 +174,14 @@ export const orgAdminApi = {
   /**
    * ANALYTICS
    */
+
+  /**
+   * COMPLAINTS
+   */
+
+  // Get all complaints in the logged-in OrgAdmin's organization
+  getOrganizationComplaints: () =>
+    api.get<OrganizationComplaint[]>('/complaints/organization'),
 
   // Get dashboard statistics for the logged-in OrgAdmin
   getAnalytics: () => api.get<OrgAdminAnalytics>("/analytics/org-admin"),
