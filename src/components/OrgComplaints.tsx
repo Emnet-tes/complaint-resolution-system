@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -6,21 +6,84 @@ import {
   AlertCircle, Clock, Trash2, 
   UserPlus, Edit
 } from 'lucide-react';
+import { orgAdminApi, type OrganizationComplaint } from '../api/orgadmin';
 import Modal from './Modal';
 import { Table, type Column } from '../components/Table';
+
+type OrgComplaintRow = {
+  id: string;
+  complaint: OrganizationComplaint;
+  title: string;
+  desc: string;
+  type: string;
+  org: string;
+  status: string;
+  priority: string;
+  date: string;
+  sColor: string;
+  pColor: string;
+};
 
 const OrgComplaints = () => {
   const { t } = useTranslation();
   const [viewMode, setViewMode] = useState('list');
   const [isAddComplaintOpen, setIsAddComplaintOpen] = useState(false);
   const [selectedComplaints, setSelectedComplaints] = useState<string[]>([]);
+  const [complaints, setComplaints] = useState<OrganizationComplaint[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Dummy Data
-  const complaintData = [
-    { id: '#ORG-1001', title: 'Org Budget Issue', desc: 'Budget overrun reported for Q1.', type: 'Finance', org: 'Head Office', status: 'Open', priority: 'Critical', date: '5 mins ago', sColor: 'text-red-600 border-red-200 bg-red-50', pColor: 'text-red-700' },
-    { id: '#ORG-1002', title: 'Policy Violation', desc: 'Non-compliance with new HR policy.', type: 'HR', org: 'HR Department', status: 'In Progress', priority: 'High', date: '30 mins ago', sColor: 'text-blue-600 border-blue-200 bg-blue-50', pColor: 'text-orange-600' },
-  ];
+  useEffect(() => {
+    const loadComplaints = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await orgAdminApi.getOrganizationComplaints();
+        setComplaints(response.data);
+      } catch {
+        setError(t('complaints.table.no_data'));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadComplaints();
+  }, [t]);
+
+  const complaintData: OrgComplaintRow[] = complaints.map((complaint) => {
+    const status = complaint.status ?? 'Unknown';
+    const priority = complaint.priority ?? 'Medium';
+    const statusLower = status.toLowerCase();
+    const priorityLower = priority.toLowerCase();
+
+    return {
+      id: complaint._id,
+      complaint,
+      title: complaint.title,
+      desc: complaint.description,
+      type: complaint.department?.name ?? complaint.category ?? 'Unassigned',
+      org: 'Organization',
+      status,
+      priority,
+      date: new Date(complaint.createdAt).toLocaleString(),
+      sColor: statusLower.includes('resolved')
+        ? 'text-green-600 border-green-200 bg-green-50'
+        : statusLower.includes('progress')
+          ? 'text-blue-600 border-blue-200 bg-blue-50'
+          : statusLower.includes('rejected')
+            ? 'text-red-600 border-red-200 bg-red-50'
+            : 'text-amber-600 border-amber-200 bg-amber-50',
+      pColor: priorityLower === 'critical'
+        ? 'text-red-700'
+        : priorityLower === 'high'
+          ? 'text-orange-600'
+          : priorityLower === 'low'
+            ? 'text-emerald-600'
+            : 'text-slate-500',
+    };
+  });
 
   // --- Selection Logic ---
   const isAllSelected = complaintData.length > 0 && selectedComplaints.length === complaintData.length;
@@ -35,7 +98,7 @@ const OrgComplaints = () => {
   };
 
   // --- Table Column Definitions ---
-  const columns: Column<typeof complaintData[0]>[] = [
+  const columns: Column<OrgComplaintRow>[] = [
     {
       // Master Checkbox in the Header
       header: (
@@ -59,11 +122,6 @@ const OrgComplaints = () => {
           onChange={(e) => handleSelectRow(row.id, e.target.checked)}
         />
       )
-    },
-    { 
-      header: t('complaints.table.id'), 
-      key: 'id', 
-      className: 'font-bold text-[#006B5D]' 
     },
     { 
       header: t('complaints.table.title_desc'), 
@@ -104,7 +162,7 @@ const OrgComplaints = () => {
       headerClassName: 'text-right',
       render: (row) => (
         <button
-          onClick={() => navigate(`/complaints/${row.id.replace('#', '')}`)}
+          onClick={() => navigate(`/complaints/${row.id}`, { state: { complaint: row.complaint, source: 'org' } })}
           className="text-[#006B5D] font-black text-[10px] uppercase tracking-widest hover:underline cursor-pointer"
         >
           {t('complaints.table.view_details')}
@@ -159,11 +217,21 @@ const OrgComplaints = () => {
 
       {/* Table Section */}
       {viewMode === 'list' ? (
-        <Table 
-          data={complaintData} 
-          columns={columns} 
-          noDataMessage={t('complaints.table.no_data')}
-        />
+        isLoading ? (
+          <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm font-medium text-slate-500">
+            Loading complaints...
+          </div>
+        ) : error ? (
+          <div className="rounded-3xl border border-red-200 bg-red-50 p-8 text-center text-sm font-medium text-red-700">
+            {error}
+          </div>
+        ) : (
+          <Table 
+            data={complaintData} 
+            columns={columns} 
+            noDataMessage={t('complaints.table.no_data')}
+          />
+        )
       ) : (
         <div className="bg-slate-100 h-96 rounded-3xl flex flex-col items-center justify-center border-2 border-dashed border-slate-200">
            <MapIcon size={48} className="text-slate-300 mb-4" />
