@@ -255,7 +255,14 @@
     },
     "side": {
       "admins": "የአስተዳዳሪ መለያዎች",
+      "accounts": "መለያዎች",
       "create": "ፍጠር",
+      "create_admin": "አስተዳዳሪ",
+      "create_head": "ኃላፊ",
+      "filter_all": "ሁሉም",
+      "filter_admin": "አስተዳዳሪዎች",
+      "filter_head": "ኃላፊዎች",
+      "head_readonly": "ለኃላፊ መለያ እርምጃዎች አሁን በፍጠር ብቻ የተገደቡ ናቸው።",
       "edit": "አስተካክል",
       "suspend": "አግድ"
     },
@@ -263,6 +270,7 @@
       "org_new": "አዲስ ድርጅት",
       "org_edit": "ድርጅት ያስተካክሉ",
       "admin_new": "አዲስ አስተዳዳሪ",
+      "head_new": "አዲስ ኃላፊ",
       "admin_edit": "አስተዳዳሪ ያስተካክሉ",
       "deactivate_title": "እግዱን ያረጋግጡ",
       "warning": "ማስጠንቀቂያ፡ ይህንን {{type}} ማገድ መዳረሻን ወዲያውኑ ይገድባል። እባክዎ ምክንያቱን ከታች ይጥቀሱ።",
@@ -283,6 +291,9 @@
       "save": "ለውጦችን አስቀምጥ",
       "confirm": "አረጋግጥ",
       "deactivate": "ማገጃውን አረጋግጥ"
+    },
+    "toasts": {
+      "head_created": "ኃላፊው በተሳካ ሁኔታ ተፈጥሯል!"
     }
   },
   "settings": {
