@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
-  List, Map as MapIcon, Download, Plus, Search, 
+  List, Map as MapIcon, Search, 
   AlertCircle, Clock, Trash2, 
   UserPlus, Edit
 } from 'lucide-react';
@@ -190,12 +190,12 @@ const OrgComplaints = () => {
               <MapIcon size={14} className="mr-2" /> {t('complaints.map_view')}
             </button>
           </div>
-          <button className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-black uppercase tracking-widest text-slate-600 hover:bg-gray-50 flex items-center cursor-pointer shadow-sm">
+          {/* <button className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-black uppercase tracking-widest text-slate-600 hover:bg-gray-50 flex items-center cursor-pointer shadow-sm">
             <Download size={14} className="mr-2" /> {t('complaints.export')}
-          </button>
-          <button onClick={() => setIsAddComplaintOpen(true)} className="px-5 py-2.5 bg-[#006B5D] text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center shadow-lg shadow-teal-900/20 hover:bg-[#005a4e] cursor-pointer">
+          </button> */}
+          {/* <button onClick={() => setIsAddComplaintOpen(true)} className="px-5 py-2.5 bg-[#006B5D] text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center shadow-lg shadow-teal-900/20 hover:bg-[#005a4e] cursor-pointer">
             <Plus size={16} className="mr-2" /> {t('complaints.new_btn')}
-          </button>
+          </button> */}
         </div>
       </div>
 
