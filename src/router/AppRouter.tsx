@@ -124,7 +124,7 @@ const AppRouter = () => {
             <Route
               path="complaints"
               element={
-                <ProtectedRoute allowedRoles={['OrgAdmin', 'DeptAdmin']}>
+                <ProtectedRoute allowedRoles={['DeptAdmin']}>
                   <RoleBasedComplaints />
                 </ProtectedRoute>
               }

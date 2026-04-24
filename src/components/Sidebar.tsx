@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, X, LayoutDashboard, Building2, ShieldCheck, ClipboardList, Settings as SettingsIcon } from 'lucide-react';
 import { useAuth, type Role } from '../context/AuthContext';
-import { useTranslation } from 'react-i18next'; // 1. Import hook
+import { useTranslation } from 'react-i18next';
 
 interface SidebarItem {
   id: string;
@@ -31,7 +31,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
     { id: 'org-dashboard', label: t('sidebar.dashboard'), path: '/org-dashboard', roles: ['OrgAdmin'], icon: LayoutDashboard },
     { id: 'dept-dashboard', label: t('sidebar.dashboard'), path: '/dept-dashboard', roles: ['DeptAdmin'], icon: LayoutDashboard },
     { id: 'departments', label: t('sidebar.departments'), path: '/departments', roles: ['OrgAdmin'], icon: ShieldCheck },
-    { id: 'complaints', label: t('sidebar.complaints'), path: '/complaints', roles: ['OrgAdmin', 'DeptAdmin'], icon: ClipboardList },
+    { id: 'complaints', label: t('sidebar.complaints'), path: '/complaints', roles: ['DeptAdmin'], icon: ClipboardList },
     { id: 'settings', label: t('sidebar.profile'), path: '/settings', roles: ['SysAdmin', 'OrgAdmin', 'DeptAdmin'], icon: SettingsIcon },
   ];
 

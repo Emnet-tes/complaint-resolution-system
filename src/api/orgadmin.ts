@@ -175,14 +175,6 @@ export const orgAdminApi = {
    * ANALYTICS
    */
 
-  /**
-   * COMPLAINTS
-   */
-
-  // Get all complaints in the logged-in OrgAdmin's organization
-  getOrganizationComplaints: () =>
-    api.get<OrganizationComplaint[]>('/complaints/organization'),
-
   // Get dashboard statistics for the logged-in OrgAdmin
   getAnalytics: () => api.get<OrgAdminAnalytics>("/analytics/org-admin"),
 };
