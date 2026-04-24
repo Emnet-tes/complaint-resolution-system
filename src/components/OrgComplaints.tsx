@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
-  List, Map as MapIcon, Download, Plus, Search, 
+  List, Map as MapIcon, Search, 
   AlertCircle, Clock, Trash2, 
   UserPlus, Edit
 } from 'lucide-react';
