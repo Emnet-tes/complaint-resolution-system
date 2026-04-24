@@ -255,7 +255,14 @@
     },
     "side": {
       "admins": "Admin Accounts",
+      "accounts": "Accounts",
       "create": "Create",
+      "create_admin": "Admin",
+      "create_head": "Head",
+      "filter_all": "All",
+      "filter_admin": "Admins",
+      "filter_head": "Heads",
+      "head_readonly": "Head account actions are limited to creation.",
       "edit": "Edit",
       "suspend": "Suspend"
     },
@@ -263,6 +270,7 @@
       "org_new": "New Organization",
       "org_edit": "Edit Organization",
       "admin_new": "New Admin",
+      "head_new": "New Head",
       "admin_edit": "Edit Admin",
       "deactivate_title": "Confirm Suspension",
       "warning": "Warning: Deactivating this {{type}} will restrict access immediately. Please provide a reason below.",
@@ -283,6 +291,9 @@
       "save": "Save Changes",
       "confirm": "Confirm",
       "deactivate": "Confirm Deactivate"
+    },
+    "toasts": {
+      "head_created": "Head created successfully!"
     }
   },
   "settings": {

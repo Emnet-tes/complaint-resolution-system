@@ -43,6 +43,29 @@ export interface CreateOrgAdminPayload {
   organizationId: string; // Swagger: "organizationId": "string"
 }
 
+// --- Types for Organization Heads ---
+
+export interface OrgHead {
+  _id: string;
+  fullName: string;
+  email: string;
+  role: string;
+  organization: {
+    _id: string;
+    name: string;
+  };
+  isActive: boolean;
+  createdAt: string;
+  lastLogin: string;
+}
+
+export interface CreateOrgHeadPayload {
+  fullName: string;
+  email: string;
+  password: string;
+  organizationId: string;
+}
+
 export interface UpdateOrgAdminPayload {
   fullName?: string;
   email?: string;
@@ -91,6 +114,18 @@ export const sysAdminApi = {
   // Deactivate an Organization Admin
   deactivateOrgAdmin: (id: string, payload?: { message: string }) =>
     api.put<{ message: string }>(`/users/org-admins/${id}/deactivate`, payload),
+
+  /**
+   * ORGANIZATION HEADS (/users/org-heads)
+   */
+
+  // Create a new Organization Head
+  createOrgHead: (data: CreateOrgHeadPayload) =>
+    api.post<OrgHead>("/users/org-heads", data),
+
+  // List all Organization Heads
+  listOrgHeads: () =>
+    api.get<OrgHead[]>("/users/org-heads"),
 
   /**
    * ORGANIZATIONS (/organizations)
