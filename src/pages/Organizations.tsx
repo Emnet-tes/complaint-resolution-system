@@ -25,7 +25,7 @@ const Organizations = () => {
   const [editingAdminId, setEditingAdminId] = useState<string | null>(null);
   const [accountModalRole, setAccountModalRole] = useState<'admin' | 'head'>('admin');
   const [sideViewFilter, setSideViewFilter] = useState<'all' | 'admin' | 'head'>('all');
-  const [deactivateTarget, setDeactivateTarget] = useState<{ id: string, type: 'org' | 'admin' } | null>(null);
+  const [deactivateTarget, setDeactivateTarget] = useState<{ id: string, type: 'org' | 'admin' | 'head' } | null>(null);
 
   // Form States
   const [orgForm, setOrgForm] = useState({ name: '', code: '', isActive: true });
@@ -65,11 +65,22 @@ const Organizations = () => {
     if (!selectedOrg) return;
     setSubmitting(true);
     try {
-      if (editingAdminId && accountModalRole === 'admin') {
-        const res = await sysAdminApi.updateOrgAdmin(editingAdminId, { fullName: adminForm.fullName, email: adminForm.email });
-        const updatedAdmin = { ...res.data, organization: typeof res.data.organization === 'string' ? selectedOrg : res.data.organization };
-        setAllAdmins(allAdmins.map(a => a._id === editingAdminId ? updatedAdmin : a));
-        toast.success(t('toasts.admin_updated', 'Admin updated successfully!'));
+      if (editingAdminId) {
+        if (accountModalRole === 'admin') {
+          const res = await sysAdminApi.updateOrgAdmin(editingAdminId, { fullName: adminForm.fullName, email: adminForm.email });
+          const updatedAdmin = { ...res.data, organization: typeof res.data.organization === 'string' ? selectedOrg : res.data.organization };
+          setAllAdmins(allAdmins.map(a => a._id === editingAdminId ? updatedAdmin : a));
+          toast.success(t('toasts.admin_updated', 'Admin updated successfully!'));
+        } else {
+          const res = await sysAdminApi.updateOrgHead(editingAdminId, {
+            fullName: adminForm.fullName,
+            email: adminForm.email,
+            organizationId: selectedOrg._id
+          });
+          const updatedHead = { ...res.data, organization: typeof res.data.organization === 'string' ? selectedOrg : res.data.organization };
+          setAllHeads(allHeads.map(h => h._id === editingAdminId ? updatedHead : h));
+          toast.success(t('orgs.toasts.head_updated', 'Head updated successfully!'));
+        }
       } else if (accountModalRole === 'head') {
         const res = await sysAdminApi.createOrgHead({ ...adminForm, organizationId: selectedOrg._id });
         const newHead = { ...res.data, organization: typeof res.data.organization === 'string' ? selectedOrg : res.data.organization };
@@ -116,9 +127,12 @@ const Organizations = () => {
         await sysAdminApi.deactivateOrganization(deactivateTarget.id, { message: deactivateReason });
         setOrganizations(organizations.map(o => o._id === deactivateTarget.id ? { ...o, isActive: false } : o));
         if (selectedOrg?._id === deactivateTarget.id) setSelectedOrg({ ...selectedOrg, isActive: false });
-      } else {
+      } else if (deactivateTarget.type === 'admin') {
         await sysAdminApi.deactivateOrgAdmin(deactivateTarget.id, { message: deactivateReason });
         setAllAdmins(allAdmins.map(a => a._id === deactivateTarget.id ? { ...a, isActive: false } : a));
+      } else {
+        await sysAdminApi.deactivateOrgHead(deactivateTarget.id, { message: deactivateReason });
+        setAllHeads(allHeads.map(h => h._id === deactivateTarget.id ? { ...h, isActive: false } : h));
       }
       setIsDeactivateModalOpen(false);
       setDeactivateReason('');
@@ -228,7 +242,12 @@ const Organizations = () => {
                         )}
                       </div>
                     ) : (
-                      <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{t('orgs.side.head_readonly', 'Head account actions are limited to creation.')}</div>
+                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => { setEditingAdminId(member._id); setAccountModalRole('head'); setAdminForm({fullName: member.fullName, email: member.email, password: ''}); setIsAdminModalOpen(true); }} className="flex-1 bg-white border border-gray-100 py-1.5 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-gray-100 flex items-center justify-center gap-1 cursor-pointer"><Edit3 size={12}/> {t('orgs.side.edit')}</button>
+                        {member.isActive && (
+                          <button onClick={() => { setDeactivateTarget({id: member._id, type:'head'}); setIsDeactivateModalOpen(true); }} className="flex-1 bg-white border border-red-50 py-1.5 rounded-lg text-[10px] font-bold text-red-500 hover:bg-red-50 flex items-center justify-center gap-1 cursor-pointer"><Power size={12}/> {t('orgs.side.suspend')}</button>
+                        )}
+                      </div>
                     )}
                   </div>
                 ))}
@@ -259,7 +278,7 @@ const Organizations = () => {
         </form>
       </Modal>
 
-      <Modal isOpen={isAdminModalOpen} onClose={() => setIsAdminModalOpen(false)} title={editingAdminId ? t('orgs.modals.admin_edit') : accountModalRole === 'head' ? t('orgs.modals.head_new', 'New Head') : t('orgs.modals.admin_new')}>
+      <Modal isOpen={isAdminModalOpen} onClose={() => setIsAdminModalOpen(false)} title={editingAdminId ? (accountModalRole === 'head' ? t('orgs.modals.head_edit', 'Edit Head') : t('orgs.modals.admin_edit')) : accountModalRole === 'head' ? t('orgs.modals.head_new', 'New Head') : t('orgs.modals.admin_new')}>
         <form onSubmit={handleAdminSubmit} className="space-y-4">
           <div className="space-y-1">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('orgs.labels.full_name')}</label>
