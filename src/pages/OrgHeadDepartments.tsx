@@ -69,15 +69,17 @@ const OrgHeadDepartments = () => {
   return (
     <div className="p-4 md:p-8 space-y-6">
       <div>
-        <nav className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">OrgHead / Departments</nav>
-        <h1 className="text-3xl font-black text-slate-800 tracking-tight">Departments</h1>
-        <p className="text-sm text-slate-500 font-medium">Read-only department list for organizational oversight.</p>
+        <nav className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+          {t('org_head_departments.nav')}
+        </nav>
+        <h1 className="text-3xl font-black text-slate-800 tracking-tight">{t('org_head_departments.title')}</h1>
+        <p className="text-sm text-slate-500 font-medium">{t('org_head_departments.subtitle')}</p>
       </div>
 
       <div className="bg-white px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm flex items-center focus-within:ring-2 focus-within:ring-[#006B5D]/10 transition-all">
         <Search size={18} className="text-slate-400 mr-2" />
         <input
-          placeholder={t('dept_mgmt.filters.search_name', 'Search department name')}
+          placeholder={t('org_head_departments.search_placeholder')}
           className="w-full text-sm outline-none font-medium"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -92,7 +94,7 @@ const OrgHeadDepartments = () => {
         <Table<Department>
           data={filteredDepartments}
           columns={columns}
-          noDataMessage={t('dept_mgmt.table.no_data', 'No departments found')}
+          noDataMessage={t('org_head_departments.no_data')}
         />
       )}
     </div>

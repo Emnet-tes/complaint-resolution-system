@@ -26,9 +26,10 @@ export interface OrgHeadComplaintHistoryItem {
 }
 
 export interface OrgHeadComplaintAttachment {
-  _id: string;
+  _id?: string;
   filename: string;
-  path: string;
+  path?: string;
+  url?: string;
   uploadedAt: string;
 }
 

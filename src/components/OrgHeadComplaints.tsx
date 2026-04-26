@@ -183,7 +183,7 @@ const OrgHeadComplaints = () => {
   };
   const columns: Column<OrgHeadComplaint>[] = [
     {
-      header: t('complaints.table.title_desc', 'Title / Description'),
+      header: t('complaints.table.title_desc'),
       key: 'title',
       render: (row) => (
         <div>
@@ -193,13 +193,13 @@ const OrgHeadComplaints = () => {
       ),
     },
     {
-      header: t('complaints.table.type', 'Department'),
+      header: t('complaints.table.type'),
       key: 'department',
       className: 'text-slate-500 font-medium',
-      render: (row) => row.department?.name || t('dept_mgmt.table.unassigned', 'Unassigned'),
+      render: (row) => row.department?.name || t('dept_mgmt.table.unassigned'),
     },
    {
-  header: t('complaints.table.status', 'Status'),
+  header: t('complaints.table.status'),
   key: 'status',
   render: (row) => (
     <span
@@ -212,18 +212,18 @@ const OrgHeadComplaints = () => {
   ),
 },
     {
-      header: t('complaints.table.priority', 'Priority'),
+      header: t('complaints.table.priority'),
       key: 'priority',
       className: 'text-slate-500 font-medium',
     },
     {
-      header: t('complaints.table.date', 'Date'),
+      header: t('complaints.table.date'),
       key: 'createdAt',
       className: 'text-slate-400 italic text-[11px]',
       render: (row) => new Date(row.createdAt).toLocaleDateString(),
     },
     {
-      header: t('dept_mgmt.table.actions', 'Actions'),
+      header: t('dept_mgmt.table.actions'),
       key: 'actions',
       className: 'text-right',
       headerClassName: 'text-right',
@@ -234,13 +234,13 @@ const OrgHeadComplaints = () => {
             className="text-amber-600 font-black text-[10px] uppercase tracking-widest hover:underline cursor-pointer flex items-center"
           >
             <Edit3 size={12} className="mr-1" />
-            Override
+            {t('org_head_complaints.override')}
           </button>
           <button
             onClick={() => navigate(`/complaints/${row._id}`, { state: { complaint: row, source: 'org' } })}
             className="text-[#006B5D] font-black text-[10px] uppercase tracking-widest hover:underline cursor-pointer"
           >
-            {t('complaints.table.view_details', 'View Details')}
+            {t('complaints.table.view_details')}
           </button>
         </div>
       ),
@@ -251,9 +251,9 @@ const OrgHeadComplaints = () => {
     <div className="space-y-6 p-4 md:p-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <nav className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">OrgHead / Complaints</nav>
-          <h1 className="text-3xl font-black text-slate-800 tracking-tight">Organization Complaints</h1>
-          <p className="text-sm text-slate-500 font-medium">Review and override complaint routing, status, and priority.</p>
+          <nav className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t('org_head_complaints.nav')}</nav>
+          <h1 className="text-3xl font-black text-slate-800 tracking-tight">{t('org_head_complaints.title')}</h1>
+          <p className="text-sm text-slate-500 font-medium">{t('org_head_complaints.subtitle')}</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -264,7 +264,7 @@ const OrgHeadComplaints = () => {
                 viewMode === 'list' ? 'bg-[#006B5D] text-white shadow-md' : 'text-slate-400'
               }`}
             >
-              <List size={14} className="mr-2" /> List
+              <List size={14} className="mr-2" /> {t('org_head_complaints.list_view')}
             </button>
             <button
               onClick={() => setViewMode('map')}
@@ -272,7 +272,7 @@ const OrgHeadComplaints = () => {
                 viewMode === 'map' ? 'bg-[#006B5D] text-white shadow-md' : 'text-slate-400'
               }`}
             >
-              <MapIcon size={14} className="mr-2" /> Map
+              <MapIcon size={14} className="mr-2" /> {t('org_head_complaints.map_view')}
             </button>
           </div>
         </div>
@@ -284,19 +284,19 @@ const OrgHeadComplaints = () => {
           <input
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by id, title, description, reporter"
+            placeholder={t('org_head_complaints.search_placeholder')}
             className="w-full text-sm outline-none bg-transparent font-medium"
           />
         </div>
         <div className="flex items-center gap-3 px-4">
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</div>
+          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('org_head_complaints.status_label')}</div>
           <div className="relative">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="appearance-none bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 pr-8 text-xs font-bold text-slate-600 outline-none"
             >
-              <option value="">All</option>
+              <option value="">{t('org_head_complaints.all')}</option>
               {ORGHEAD_STATUS_OPTIONS.map((status) => (
                 <option key={status} value={status}>
                   {status}
@@ -313,7 +313,7 @@ const OrgHeadComplaints = () => {
           <Loader2 className="animate-spin text-slate-400" size={40} />
         </div>
       ) : viewMode === 'list' ? (
-        <Table data={filteredComplaints} columns={columns} noDataMessage={t('complaints.table.no_data', 'No complaints found')} />
+        <Table data={filteredComplaints} columns={columns} noDataMessage={t('org_head_complaints.no_data')} />
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden h-[560px]">
           <MapContainer center={mapCenter} zoom={12} className="h-full w-full" scrollWheelZoom>
@@ -332,9 +332,9 @@ const OrgHeadComplaints = () => {
                 <Popup>
                   <div className="space-y-1 min-w-[180px]">
                     <p className="font-bold text-slate-800">{point.complaint.title}</p>
-                    <p className="text-xs text-slate-500">Status: {point.complaint.status}</p>
-                    <p className="text-xs text-slate-500">Priority: {point.complaint.priority}</p>
-                    <p className="text-xs text-slate-500">Dept: {point.complaint.department?.name || 'Unassigned'}</p>
+                    <p className="text-xs text-slate-500">{t('org_head_complaints.popup.status')}: {point.complaint.status}</p>
+                    <p className="text-xs text-slate-500">{t('org_head_complaints.popup.priority')}: {point.complaint.priority}</p>
+                    <p className="text-xs text-slate-500">{t('org_head_complaints.popup.department')}: {point.complaint.department?.name || t('dept_mgmt.table.unassigned')}</p>
                   </div>
                 </Popup>
               </CircleMarker>
@@ -344,30 +344,30 @@ const OrgHeadComplaints = () => {
           {!mapPoints.length && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="bg-white/90 border border-gray-100 rounded-xl px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-widest">
-                No location data in filtered complaints
+                {t('org_head_complaints.no_location')}
               </div>
             </div>
           )}
         </div>
       )}
 
-      <Modal isOpen={isOverrideModalOpen} onClose={() => setIsOverrideModalOpen(false)} title="Override Complaint">
+      <Modal isOpen={isOverrideModalOpen} onClose={() => setIsOverrideModalOpen(false)} title={t('org_head_complaints.override_title')}>
         <form onSubmit={handleOverrideSubmit} className="space-y-4">
           <div className="flex items-start gap-3 p-4 rounded-xl border border-amber-100 bg-amber-50">
             <AlertTriangle className="text-amber-600 shrink-0" size={20} />
             <p className="text-xs font-bold text-amber-800 leading-relaxed">
-              This override updates complaint routing/classification and writes a history comment.
+              {t('org_head_complaints.override_note')}
             </p>
           </div>
 
           <div className="space-y-1">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Department</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('org_head_complaints.department')}</label>
             <select
               className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm outline-none"
               value={overrideForm.department}
               onChange={(e) => setOverrideForm({ ...overrideForm, department: e.target.value })}
             >
-              <option value="">Unassigned</option>
+              <option value="">{t('dept_mgmt.table.unassigned')}</option>
               {departments.map((department) => (
                 <option key={department._id} value={department._id}>
                   {department.name}
@@ -378,7 +378,7 @@ const OrgHeadComplaints = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Priority</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('org_head_complaints.priority')}</label>
               <select
                 className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm outline-none"
                 value={overrideForm.priority}
@@ -393,7 +393,7 @@ const OrgHeadComplaints = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('org_head_complaints.status_label')}</label>
               <select
                 className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm outline-none"
                 value={overrideForm.status}
@@ -415,15 +415,15 @@ const OrgHeadComplaints = () => {
               onChange={(e) => setOverrideForm({ ...overrideForm, isSpam: e.target.checked })}
               className="w-4 h-4 accent-[#006B5D]"
             />
-            <label className="text-xs font-bold text-slate-600">Mark as spam</label>
+            <label className="text-xs font-bold text-slate-600">{t('org_head_complaints.mark_spam')}</label>
           </div>
 
           <div className="space-y-1">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Comment</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('org_head_complaints.comment')}</label>
             <textarea
               required
               className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm min-h-[100px] outline-none"
-              placeholder="Explain why this override is needed"
+              placeholder={t('org_head_complaints.comment_placeholder')}
               value={overrideForm.comment}
               onChange={(e) => setOverrideForm({ ...overrideForm, comment: e.target.value })}
             />
@@ -434,7 +434,7 @@ const OrgHeadComplaints = () => {
             disabled={submitting}
             className="w-full bg-[#006B5D] text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest cursor-pointer"
           >
-            {submitting ? <Loader2 className="animate-spin mx-auto" /> : 'Apply Override'}
+            {submitting ? <Loader2 className="animate-spin mx-auto" /> : t('org_head_complaints.apply_override')}
           </button>
         </form>
       </Modal>
