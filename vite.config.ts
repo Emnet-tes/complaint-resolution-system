@@ -4,6 +4,19 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  server: {
+    proxy: {
+      '/nominatim': {
+        target: 'https://nominatim.openstreetmap.org',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/nominatim/, ''),
+        headers: {
+          Referer: 'http://localhost:5173',
+        },
+      },
+    },
+  },
   build: {
     rollupOptions: {
       output: {

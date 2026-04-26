@@ -42,7 +42,6 @@ const DepartmentManagement = () => {
         orgAdminApi.listDepartments(),
         orgAdminApi.listDeptHeads()
       ]);
-      console.log('Departments:', deptRes.data);
       setDepartments(deptRes.data);
       setAdmins(adminRes.data);
     } catch (err: any) {
@@ -92,9 +91,9 @@ const DepartmentManagement = () => {
       setIsDeptModalOpen(false);
       setEditingDeptId(null);
       setDeptForm({ name: '', code: '', description: '', head: '' });
-      toast.success(editingDeptId ? t('dept_mgmt.toasts.dept_updated', 'Department updated successfully') : t('dept_mgmt.toasts.dept_success'), { id: loadId });
+      toast.success(editingDeptId ? t('dept_mgmt.toasts.dept_updated') : t('dept_mgmt.toasts.dept_success'), { id: loadId });
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Error', { id: loadId });
+      toast.error(err.response?.data?.message || t('dept_mgmt.toasts.generic_error'), { id: loadId });
     } finally {
       setSubmitting(false);
     }
@@ -125,9 +124,9 @@ const DepartmentManagement = () => {
       setIsAdminModalOpen(false);
       setEditingHeadId(null);
       setAdminForm({ fullName: '', email: '', password: '', departmentId: '', isActive: true });
-      toast.success(editingHeadId ? t('dept_mgmt.toasts.admin_updated', 'Department head updated successfully') : t('dept_mgmt.toasts.admin_success'), { id: loadId });
+      toast.success(editingHeadId ? t('dept_mgmt.toasts.admin_updated') : t('dept_mgmt.toasts.admin_success'), { id: loadId });
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Error', { id: loadId });
+      toast.error(err.response?.data?.message || t('dept_mgmt.toasts.generic_error'), { id: loadId });
     } finally {
       setSubmitting(false);
     }
@@ -138,7 +137,7 @@ const DepartmentManagement = () => {
     if (!deactivateTarget) return;
 
     setSubmitting(true);
-    const loadId = toast.loading(t('dept_mgmt.toasts.deactivating', 'Deactivating...'));
+    const loadId = toast.loading(t('dept_mgmt.toasts.deactivating'));
     try {
       if (deactivateTarget.type === 'dept') {
         await orgAdminApi.deactivateDepartment(deactivateTarget.id);
@@ -149,7 +148,7 @@ const DepartmentManagement = () => {
       }
       setIsDeactivateModalOpen(false);
       setDeactivateTarget(null);
-      toast.success(t('dept_mgmt.toasts.deactivated', 'Deactivated successfully'), { id: loadId });
+      toast.success(t('dept_mgmt.toasts.deactivated'), { id: loadId });
     } catch (err: any) {
       toast.error(err.response?.data?.message || t('dept_mgmt.toasts.fetch_error'), { id: loadId });
     } finally {
@@ -171,7 +170,7 @@ const DepartmentManagement = () => {
       )
     },
     {
-      header: t('dept_mgmt.table.actions', 'Actions'),
+      header: t('dept_mgmt.table.actions'),
       key: 'actions',
       headerClassName: 'text-right',
       className: 'text-right',
@@ -233,7 +232,7 @@ const DepartmentManagement = () => {
       )
     },
     {
-      header: t('dept_mgmt.table.actions', 'Actions'),
+      header: t('dept_mgmt.table.actions'),
       key: 'actions',
       headerClassName: 'text-right',
       className: 'text-right',
@@ -369,13 +368,13 @@ const DepartmentManagement = () => {
             <textarea className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm min-h-[80px] outline-none" value={deptForm.description} onChange={e => setDeptForm({...deptForm, description: e.target.value})} />
           </div>
           <button type="submit" disabled={submitting} className="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest cursor-pointer active:scale-95 transition-all">
-            {submitting ? <Loader2 className="animate-spin mx-auto" /> : editingDeptId ? t('dept_mgmt.buttons.update_dept', 'Update Department') : t('dept_mgmt.buttons.submit_dept')}
+            {submitting ? <Loader2 className="animate-spin mx-auto" /> : editingDeptId ? t('dept_mgmt.buttons.update_dept') : t('dept_mgmt.buttons.submit_dept')}
           </button>
         </form>
       </Modal>
 
       {/* Modal: New Admin */}
-      <Modal isOpen={isAdminModalOpen} onClose={() => setIsAdminModalOpen(false)} title={editingHeadId ? t('dept_mgmt.modals.edit_admin', 'Edit Department Head') : t('dept_mgmt.modals.new_admin')}>
+      <Modal isOpen={isAdminModalOpen} onClose={() => setIsAdminModalOpen(false)} title={editingHeadId ? t('dept_mgmt.modals.edit_admin') : t('dept_mgmt.modals.new_admin')}>
         <form onSubmit={handleCreateAdmin} className="space-y-4">
           <div className="space-y-1">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('dept_mgmt.modals.labels.full_name')}</label>
@@ -406,27 +405,27 @@ const DepartmentManagement = () => {
                 onChange={(e) => setAdminForm({ ...adminForm, isActive: e.target.checked })}
                 className="w-4 h-4 accent-[#006B5D]"
               />
-              <label className="text-xs font-bold text-slate-600">{t('dept_mgmt.modals.labels.status_active', 'Active')}</label>
+              <label className="text-xs font-bold text-slate-600">{t('dept_mgmt.modals.labels.status_active')}</label>
             </div>
           )}
           <button type="submit" disabled={submitting} className="w-full bg-[#006B5D] text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-[#005a4e] cursor-pointer shadow-xl transition-all">
-             {submitting ? <Loader2 className="animate-spin mx-auto" /> : editingHeadId ? t('dept_mgmt.buttons.update_admin', 'Update Department Head') : t('dept_mgmt.buttons.submit_admin')}
+             {submitting ? <Loader2 className="animate-spin mx-auto" /> : editingHeadId ? t('dept_mgmt.buttons.update_admin') : t('dept_mgmt.buttons.submit_admin')}
           </button>
         </form>
       </Modal>
 
-      <Modal isOpen={isDeactivateModalOpen} onClose={() => setIsDeactivateModalOpen(false)} title={t('dept_mgmt.modals.deactivate_title', 'Confirm Deactivation')}>
+      <Modal isOpen={isDeactivateModalOpen} onClose={() => setIsDeactivateModalOpen(false)} title={t('dept_mgmt.modals.deactivate_title')}>
         <form onSubmit={handleDeactivate} className="space-y-5">
           <div className="flex items-start gap-4 p-4 bg-amber-50 rounded-2xl border border-amber-100">
             <AlertTriangle className="text-amber-600 shrink-0" size={24} />
             <p className="text-xs font-bold text-amber-800 leading-relaxed">
               {deactivateTarget?.type === 'dept'
-                ? t('dept_mgmt.modals.deactivate_dept_msg', 'Are you sure you want to deactivate this department?')
-                : t('dept_mgmt.modals.deactivate_head_msg', 'Are you sure you want to deactivate this department head account?')}
+                ? t('dept_mgmt.modals.deactivate_dept_msg')
+                : t('dept_mgmt.modals.deactivate_head_msg')}
             </p>
           </div>
           <button type="submit" disabled={submitting} className="w-full bg-red-600 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-900/10 cursor-pointer">
-            {submitting ? <Loader2 className="animate-spin mx-auto" /> : t('dept_mgmt.buttons.deactivate', 'Deactivate')}
+            {submitting ? <Loader2 className="animate-spin mx-auto" /> : t('dept_mgmt.buttons.deactivate')}
           </button>
         </form>
       </Modal>

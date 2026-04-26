@@ -1,15 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BarChart3, FileText, Paperclip, CheckCircle2, Clock, Loader2, MapPin, Share2, FilePieChart, FileDown} from 'lucide-react';
+import { BarChart3, FileText, CheckCircle2, Clock, Loader2, Share2, FilePieChart, FileDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { Table, type Column } from '../components/Table';
 import { StatCard } from '../components/OrgComponents';
 import { jsPDF } from 'jspdf';
+import { orgHeadApi, type OrgHeadAnalytics } from '../api/orghead';
 import {
-  orgHeadApi,
-  type OrgHeadAnalytics,
-  type OrgHeadComplaint,
-} from '../api/orghead';
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from 'recharts';
 
 const getSummaryValue = (summary: OrgHeadAnalytics['summary'] | undefined, keys: string[], fallback = 0) => {
   if (!summary) return fallback;
@@ -27,10 +32,25 @@ const buildSafeFileName = (prefix: string, extension: string) => {
   return `${prefix}_${date}.${extension}`;
 };
 
+type DepartmentSummaryRow = {
+  departmentId: string;
+  name: string;
+  total: number;
+  resolved: number;
+  pending: number;
+  resolvedPercentage: number;
+};
+
+type OrgHeadAnalyticsResponse = OrgHeadAnalytics & {
+  departments?: DepartmentSummaryRow[];
+};
+
+const CHART_COLORS = ['#006B5D', '#0EA5E9', '#F59E0B'];
+
 const OrgHeadDashboard = () => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<OrgHeadAnalytics | null>(null);
+  const [stats, setStats] = useState<OrgHeadAnalyticsResponse | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -48,46 +68,54 @@ const OrgHeadDashboard = () => {
     fetchStats();
   }, [t]);
 
-  const complaints = useMemo(
-    () => stats?.complaints || stats?.recentComplaints || [],
+  const departments = useMemo(
+    () => stats?.departments || [],
     [stats],
   );
 
   const summary = stats?.summary;
-  const totalDepartments = getSummaryValue(summary, ['totalDepartments'], complaints.length);
+  const totalDepartments = getSummaryValue(summary, ['totalDepartments'], departments.length);
   const totalHeads = getSummaryValue(summary, ['totalHeads'], 0);
   const totalResolved = getSummaryValue(summary, ['totalResolved', 'resolved']);
   const totalPending = getSummaryValue(summary, ['totalPending', 'pending']);
-  
-  const statusSummary = useMemo(() => {
-    return [
-      { name: 'Submitted', value: complaints.filter((c) => c.status === 'Submitted').length },
-      { name: 'Manual Review', value: complaints.filter((c) => c.status === 'Manual Review').length },
-      { name: 'In Progress', value: complaints.filter((c) => c.status === 'In Progress').length },
-      { name: 'Resolved', value: complaints.filter((c) => c.status === 'Resolved').length },
-      { name: 'Rejected', value: complaints.filter((c) => c.status === 'Rejected').length },
-    ].filter((item) => item.value > 0);
-  }, [complaints]);
 
- 
-  
+  const chartData = useMemo(
+    () => departments.map((department) => ({
+      ...department,
+      totalLabel: t('org_dashboard.chart.total'),
+      resolvedLabel: t('org_dashboard.chart.resolved'),
+      pendingLabel: t('org_dashboard.chart.pending'),
+    })),
+    [departments, t],
+  );
+
   const handleExportCsv = () => {
-    const complaintRows = complaints.map((complaint) => [
-      complaint._id,
-      complaint.title.replaceAll(',', ' '),
-      complaint.department?.name || 'Unassigned',
-      complaint.status.replaceAll(',', ' '),
-      String(complaint.priority || ''),
-      String(complaint.attachments?.length || 0),
-      complaint.location?.locationName || '',
-      new Date(complaint.createdAt).toISOString(),
-    ].join(','));
-
     const csvContent = [
-      ['section,label,value,note'].join(','),
+      [
+        'section',
+        'label',
+        'value',
+        'note',
+      ].join(','),
+      ['summary', t('org_dashboard.csv.total_departments'), String(totalDepartments), ''].join(','),
+      ['summary', t('org_dashboard.csv.total_heads'), String(totalHeads), ''].join(','),
+      ['summary', t('org_dashboard.csv.total_resolved'), String(totalResolved), ''].join(','),
+      ['summary', t('org_dashboard.csv.total_pending'), String(totalPending), ''].join(','),
       '',
-      ['id,title,department,status,priority,attachments,location,createdAt'].join(','),
-      ...complaintRows,
+      [
+        t('org_dashboard.csv.department_name'),
+        t('org_dashboard.csv.total'),
+        t('org_dashboard.csv.resolved'),
+        t('org_dashboard.csv.pending'),
+        t('org_dashboard.csv.resolved_percentage'),
+      ].join(','),
+      ...departments.map((department) => [
+        department.name.replaceAll(',', ' '),
+        String(department.total),
+        String(department.resolved),
+        String(department.pending),
+        `${department.resolvedPercentage}%`,
+      ].join(',')),
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -104,41 +132,57 @@ const OrgHeadDashboard = () => {
 
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.text('OrgHead Dashboard Report', 14, 18);
+    doc.text(t('org_dashboard.pdf.title'), 14, 18);
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 26);
+    doc.text(`${t('org_dashboard.pdf.generated')}: ${new Date().toLocaleString()}`, 14, 26);
 
     let y = 38;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.text('Summary Cards', 14, y);
+    doc.text(t('org_dashboard.pdf.summary_title'), 14, y);
     y += 8;
 
     doc.setFontSize(10);
+    [
+      `${t('org_dashboard.stats.total_depts')}: ${totalDepartments}`,
+      `${t('org_dashboard.stats.dept_heads')}: ${totalHeads}`,
+      `${t('org_dashboard.stats.total_resolved')}: ${totalResolved}`,
+      `${t('org_dashboard.stats.total_pending')}: ${totalPending}`,
+    ].forEach((line) => {
+      doc.text(line, 14, y);
+      y += 6;
+    });
 
-
-    y += 4;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.text('Status Breakdown', 14, y);
+    y += 4;
+    doc.text(t('org_dashboard.pdf.department_title'), 14, y);
     y += 8;
     doc.setFont('helvetica', 'normal');
-    statusSummary.forEach((item) => {
-      doc.text(`${item.name}: ${item.value}`, 14, y);
+    departments.forEach((department) => {
+      doc.text(
+        `${department.name} | ${t('org_dashboard.table.col_total')}: ${department.total} | ${t('org_dashboard.table.col_resolved')}: ${department.resolved} | ${t('org_dashboard.table.col_pending')}: ${department.pending} | ${t('org_dashboard.table.col_success')}: ${department.resolvedPercentage}%`,
+        14,
+        y,
+      );
       y += 6;
+      if (y > 280) {
+        doc.addPage();
+        y = 18;
+      }
     });
 
     y += 6;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.text('Recent Complaints', 14, y);
+    doc.text(t('org_dashboard.pdf.summary_table_title'), 14, y);
     y += 8;
 
     doc.setFontSize(9);
-    complaints.slice(0, 12).forEach((complaint) => {
-      const line = `${complaint.title} | ${complaint.department?.name || 'Unassigned'} | ${complaint.status} | ${complaint.priority || '-'}`;
+    departments.forEach((department) => {
+      const line = `${department.name} | ${department.total} | ${department.resolved} | ${department.pending} | ${department.resolvedPercentage}%`;
       const lines = doc.splitTextToSize(line, 180);
       doc.text(lines, 14, y);
       y += lines.length * 5 + 2;
@@ -150,56 +194,6 @@ const OrgHeadDashboard = () => {
 
     doc.save(buildSafeFileName('orghead_dashboard', 'pdf'));
   };
-
-  const columns: Column<OrgHeadComplaint>[] = [
-    {
-      header: 'Complaint',
-      key: 'title',
-      render: (row) => (
-        <div>
-          <p className="font-bold text-slate-800">{row.title}</p>
-          <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1 font-medium">{row.description}</p>
-        </div>
-      ),
-    },
-    {
-      header: 'Department',
-      key: 'department',
-      render: (row) => row.department?.name || 'Unassigned',
-    },
-    {
-      header: 'Status',
-      key: 'status',
-      render: (row) => (
-        <span className="px-2 py-1 rounded-md text-[9px] font-black uppercase border w-fit inline-block bg-slate-50 text-slate-600 border-slate-200">
-          {row.status}
-        </span>
-      ),
-    },
-    {
-      header: 'Priority',
-      key: 'priority',
-      render: (row) => row.priority || '-',
-    },
-    {
-      header: 'Attachments',
-      key: 'attachments',
-      render: (row) => (
-        <span className="inline-flex items-center gap-1 rounded-lg border border-teal-100 bg-teal-50 px-2 py-1 text-[10px] font-black uppercase text-[#006B5D]">
-          <Paperclip size={12} /> {row.attachments?.length || 0}
-        </span>
-      ),
-    },
-    {
-      header: 'Location',
-      key: 'location',
-      render: (row) => (
-        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500">
-          <MapPin size={12} /> {row.location?.locationName || 'No location'}
-        </span>
-      ),
-    },
-  ];
 
   if (loading) {
     return (
@@ -213,97 +207,104 @@ const OrgHeadDashboard = () => {
     <div className="p-8 space-y-8 bg-gray-50/50 min-h-screen">
       <div>
         <nav className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
-          {t('org_dashboard.nav_path', 'OrgHead / Dashboard')}
+          {t('org_dashboard.nav_path')}
         </nav>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="text-3xl font-black text-slate-800 tracking-tight">
-              {t('org_dashboard.title', 'OrgHead Dashboard')}
+              {t('org_dashboard.title')}
             </h1>
-            <p className="text-sm text-slate-500 font-medium mt-2">Complaint analytics, status distribution, and exportable summary cards.</p>
+            <p className="text-sm text-slate-500 font-medium mt-2">{t('org_dashboard.subtitle')}</p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-        <StatCard
-              title={t('org_dashboard.stats.total_depts', 'Total Departments')}
-              value={totalDepartments}
-              subValue={t('org_dashboard.stats.sub_active', 'Departments in scope')}
-          icon={FileText}
-          color="bg-indigo-500"
-        />
-        <StatCard
-              title={t('org_dashboard.stats.dept_admins', 'Total Heads')}
-              value={totalHeads}
-              subValue={t('org_dashboard.stats.sub_staff', 'Department heads assigned')}
-          icon={CheckCircle2}
-          color="bg-emerald-500"
-        />
-        <StatCard
-              title={t('org_dashboard.stats.total_resolved', 'Resolved')}
-              value={totalResolved}
-              subValue={t('org_dashboard.stats.success_rate', 'Resolved complaints')}
-          icon={Clock}
-          color="bg-amber-500"
-        />
-        <StatCard
-              title={t('org_dashboard.stats.total_pending', 'Pending')}
-              value={totalPending}
-              subValue={t('org_dashboard.stats.sub_awaiting', 'Waiting for review')}
-          icon={Paperclip}
-          color="bg-[#006B5D]"
-        />
+        <StatCard title={t('org_dashboard.stats.total_depts')} value={totalDepartments} subValue={t('org_dashboard.stats.sub_active')} icon={FileText} color="bg-indigo-500" />
+        <StatCard title={t('org_dashboard.stats.dept_heads')} value={totalHeads} subValue={t('org_dashboard.stats.sub_staff')} icon={CheckCircle2} color="bg-emerald-500" />
+        <StatCard title={t('org_dashboard.stats.total_resolved')} value={totalResolved} subValue={t('org_dashboard.stats.sub_resolved')} icon={Clock} color="bg-amber-500" />
+        <StatCard title={t('org_dashboard.stats.total_pending')} value={totalPending} subValue={t('org_dashboard.stats.sub_pending')} icon={FileText} color="bg-[#006B5D]" />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
- <div className="xl:col-span-8 space-y-4">
+        <div className="xl:col-span-8 space-y-4">
           <div className="flex items-center gap-2">
             <BarChart3 size={18} className="text-[#006B5D]" />
             <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">
-              Recent Organization Complaints
+              {t('org_dashboard.chart.title')}
             </h3>
           </div>
 
-          <Table
-            data={complaints}
-            columns={columns}
-            noDataMessage={t('org_dashboard.table.no_data', 'No complaints found')}
-          />
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-4 md:p-6 h-[420px]">
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 40 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }}
+                    axisLine={false}
+                    tickLine={false}
+                    angle={-25}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: '16px',
+                      border: '1px solid #e2e8f0',
+                      boxShadow: '0 10px 30px rgba(15, 23, 42, 0.08)',
+                    }}
+                    formatter={(value, name) => [String(value ?? 0), String(name)]}
+                  />
+                  <Bar dataKey="total" name={t('org_dashboard.chart.total')} radius={[6, 6, 0, 0]} barSize={24}>
+                    {chartData.map((entry, index) => (
+                      <Cell key={`total-${entry.departmentId}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                    ))}
+                  </Bar>
+                  <Bar dataKey="resolved" name={t('org_dashboard.chart.resolved')} radius={[6, 6, 0, 0]} barSize={24}  />
+                  <Bar dataKey="pending" name={t('org_dashboard.chart.pending')} radius={[6, 6, 0, 0]} barSize={24} fill="#F59E0B" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-slate-400 text-sm font-medium">
+                {t('org_dashboard.table.no_data')}
+              </div>
+            )}
+          </div>
         </div>
 
-            <div className="xl:col-span-4">
-              <div className="bg-slate-900 p-8 rounded-3xl shadow-2xl text-white relative overflow-hidden group h-full min-h-[320px]">
-                <div className="relative z-10 h-full flex flex-col">
-                  <h4 className="font-black text-xl mb-3 tracking-tight italic text-emerald-400">
-                    {t('sys_dashboard.insights.title', 'Export Center')}
-                  </h4>
-                  <p className="text-slate-400 text-xs mb-8 leading-relaxed font-medium">
-                    Export complaint analytics and recent complaint rows as CSV or PDF.
-                  </p>
+        <div className="xl:col-span-4">
+          <div className="bg-slate-900 p-8 rounded-3xl shadow-2xl text-white relative overflow-hidden group h-full min-h-[320px]">
+            <div className="relative z-10 h-full flex flex-col">
+              <h4 className="font-black text-xl mb-3 tracking-tight italic text-emerald-400">
+                {t('org_dashboard.export.title')}
+              </h4>
+              <p className="text-slate-400 text-xs mb-8 leading-relaxed font-medium">
+                {t('org_dashboard.export.subtitle')}
+              </p>
 
-                  <div className="space-y-3 mt-auto">
-                    <button
-                      onClick={handleExportCsv}
-                      disabled={!complaints.length}
-                      className="w-full py-4 bg-[#006B5D] text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-[#005a4e] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                    >
-                      <Share2 size={16} /> {t('sys_dashboard.insights.export', 'Export CSV')}
-                    </button>
-                    <button
-                      onClick={handleExportPdf}
-                      disabled={!complaints.length}
-                      className="w-full py-4 bg-white/10 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-white/15 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 border border-white/10"
-                    >
-                      <FileDown size={16} /> PDF
-                    </button>
-                  </div>
-                </div>
-                <FilePieChart className="absolute -bottom-6 -right-6 w-40 h-40 text-white/5 rotate-12 transition-transform duration-700" />
+              <div className="space-y-3 mt-auto">
+                <button
+                  onClick={handleExportCsv}
+                  disabled={!departments.length}
+                  className="w-full py-4 bg-[#006B5D] text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-[#005a4e] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  <Share2 size={16} /> {t('org_dashboard.export.csv')}
+                </button>
+                <button
+                  onClick={handleExportPdf}
+                  disabled={!departments.length}
+                  className="w-full py-4 bg-white/10 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-white/15 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 border border-white/10"
+                >
+                  <FileDown size={16} /> {t('org_dashboard.export.pdf')}
+                </button>
               </div>
             </div>
-
-       
+            <FilePieChart className="absolute -bottom-6 -right-6 w-40 h-40 text-white/5 rotate-12 transition-transform duration-700" />
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -21,6 +21,124 @@ type ComplaintDetailState = {
   source?: 'org' | 'dept';
 };
 
+type GeoPolygon = number[][][];
+type GeoMultiPolygon = number[][][][];
+type WoredaFeature = {
+  type: 'Feature';
+  properties?: Record<string, any>;
+  geometry?: {
+    type: 'Polygon' | 'MultiPolygon';
+    coordinates: GeoPolygon | GeoMultiPolygon;
+  };
+};
+
+const WOREDA_GEOJSON_PATH = '/gis/Ethiopia_AdminBoundaries.geojson';
+
+const pointInRing = (point: [number, number], ring: number[][]) => {
+  const [x, y] = point;
+  let inside = false;
+
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = ring[i][0];
+    const yi = ring[i][1];
+    const xj = ring[j][0];
+    const yj = ring[j][1];
+
+    const intersects =
+      yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / ((yj - yi) || Number.EPSILON) + xi;
+
+    if (intersects) {
+      inside = !inside;
+    }
+  }
+
+  return inside;
+};
+
+const pointInPolygon = (point: [number, number], polygon: GeoPolygon) => {
+  if (!polygon.length) {
+    return false;
+  }
+
+  if (!pointInRing(point, polygon[0])) {
+    return false;
+  }
+
+  for (let i = 1; i < polygon.length; i += 1) {
+    if (pointInRing(point, polygon[i])) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+const normalizeText = (value: unknown) => {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const text = String(value).trim();
+  if (!text || text.toLowerCase() === 'null' || text.toLowerCase() === 'undefined') {
+    return null;
+  }
+
+  return text;
+};
+
+const isNumericText = (value: string) => /^\d+(\.\d+)?$/.test(value);
+
+const getFeatureSubCity = (feature: WoredaFeature) => {
+  const p = feature.properties || {};
+  return (
+    normalizeText(p.ZONENAME) ||
+    normalizeText(p.REGIONNAME) ||
+    normalizeText(p.Sub_City) ||
+    normalizeText(p.sub_city) ||
+    normalizeText(p.subcity) ||
+    normalizeText(p.kifle_ketema) ||
+    null
+  );
+};
+
+const getFeatureWoredaName = (feature: WoredaFeature) => {
+  const p = feature.properties || {};
+
+  const primaryTextName =
+    normalizeText(p.WOREDANAME) ||
+    normalizeText(p.woreda_name) ||
+    normalizeText(p.WOREDA_NAME) ||
+    normalizeText(p.name) ||
+    normalizeText(p.NAME) ||
+    normalizeText(p.admin3) ||
+    normalizeText(p.ADMIN3);
+
+  if (primaryTextName && !isNumericText(primaryTextName)) {
+    return primaryTextName;
+  }
+
+  const woredaRaw =
+    normalizeText(p.WOREDANO_) ||
+    normalizeText(p.woreda) ||
+    normalizeText(p.Woreda) ||
+    normalizeText(p.WOREDA);
+  const subCity = getFeatureSubCity(feature);
+
+  if (woredaRaw && !isNumericText(woredaRaw)) {
+    return woredaRaw;
+  }
+
+  if (subCity) {
+    return subCity;
+  }
+
+  if (woredaRaw) {
+    return `Woreda ${woredaRaw}`;
+  }
+
+  return '-';
+};
+
 const isOrganizationComplaint = (
   complaint: AssignedComplaint | OrgHeadComplaint,
 ): complaint is OrgHeadComplaint => 'submittedBy' in complaint && 'attachments' in complaint;
@@ -39,6 +157,14 @@ const ComplaintDetail = () => {
   const [saving, setSaving] = useState(false);
   const [newStatus, setNewStatus] = useState<ComplaintStatus>('Submitted');
   const [comment, setComment] = useState('');
+  const [resolvedLocation, setResolvedLocation] = useState<{
+    woreda: string;
+    street: string;
+    displayName: string;
+  } | null>(null);
+  const [isResolvingLocation, setIsResolvingLocation] = useState(false);
+  const [woredaFeatures, setWoredaFeatures] = useState<WoredaFeature[]>([]);
+  const [woredaFeaturesLoaded, setWoredaFeaturesLoaded] = useState(false);
 
   const handleBack = () => {
     navigate('/complaints');
@@ -120,19 +246,127 @@ const ComplaintDetail = () => {
       : complaint.location?.coordinates || []
     : [];
 
-  const hasValidCoordinates = complaintCoordinates.length >= 2;
-  const mapLatLng = hasValidCoordinates
-    ? ([complaintCoordinates[1], complaintCoordinates[0]] as [number, number])
-    : null;
+  const coordinateValues = useMemo(() => {
+    if (complaintCoordinates.length < 2) {
+      return { lat: null, lon: null };
+    }
+
+    const lon = Number(complaintCoordinates[0]);
+    const lat = Number(complaintCoordinates[1]);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+      return { lat: null, lon: null };
+    }
+
+    return { lat, lon };
+  }, [complaintCoordinates]);
+
+  const hasValidCoordinates = coordinateValues.lat !== null && coordinateValues.lon !== null;
+  const mapLatLng = useMemo(() => {
+    if (!hasValidCoordinates) {
+      return null;
+    }
+
+    return [coordinateValues.lat as number, coordinateValues.lon as number] as [number, number];
+  }, [coordinateValues.lat, coordinateValues.lon, hasValidCoordinates]);
 
   const complaintCreatedAt = complaint ? new Date(complaint.createdAt).toLocaleString() : '-';
   const complaintUpdatedAt = complaint ? new Date(complaint.updatedAt).toLocaleString() : '-';
 
-  const complaintSyncStatus = complaint
-    ? isOrganizationComplaint(complaint)
-      ? complaint.syncStatus || '-'
-      : '-'
-    : '-';
+  useEffect(() => {
+    let isActive = true;
+    const controller = new AbortController();
+
+    const loadWoredaBoundaries = async () => {
+      try {
+        const response = await fetch(WOREDA_GEOJSON_PATH, { signal: controller.signal });
+        if (!response.ok) {
+          throw new Error('woreda_boundary_file_missing');
+        }
+
+        const data = await response.json();
+        const features = Array.isArray(data?.features)
+          ? (data.features.filter((f: WoredaFeature) => f?.geometry?.coordinates) as WoredaFeature[])
+          : [];
+
+        if (isActive) {
+          setWoredaFeatures(features);
+        }
+      } catch (_error) {
+        if (isActive) {
+          setWoredaFeatures([]);
+        }
+      } finally {
+        if (isActive) {
+          setWoredaFeaturesLoaded(true);
+        }
+      }
+    };
+
+    loadWoredaBoundaries();
+
+    return () => {
+      isActive = false;
+      controller.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hasValidCoordinates) {
+      setResolvedLocation(null);
+      setIsResolvingLocation(false);
+      return;
+    }
+
+    if (!woredaFeaturesLoaded) {
+      setIsResolvingLocation(true);
+      return;
+    }
+
+    const lat = coordinateValues.lat as number;
+    const lon = coordinateValues.lon as number;
+    const point: [number, number] = [lon, lat];
+
+    setIsResolvingLocation(true);
+
+    const matchedFeature = woredaFeatures.find((feature) => {
+      const geometry = feature.geometry;
+      if (!geometry) {
+        return false;
+      }
+
+      if (geometry.type === 'Polygon') {
+        return pointInPolygon(point, geometry.coordinates as GeoPolygon);
+      }
+
+      if (geometry.type === 'MultiPolygon') {
+        return (geometry.coordinates as GeoMultiPolygon).some((polygon) => pointInPolygon(point, polygon));
+      }
+
+      return false;
+    });
+
+    const woreda = matchedFeature ? getFeatureWoredaName(matchedFeature) : '-';
+    const subCityName = matchedFeature ? getFeatureSubCity(matchedFeature) : null;
+    const street = complaintLocationName !== '-' ? complaintLocationName : subCityName || '-';
+    const displayName = woreda !== '-' ? `${woreda}, Ethiopia` : complaintLocationName;
+
+    setResolvedLocation({
+      woreda,
+      street,
+      displayName,
+    });
+    setIsResolvingLocation(false);
+  }, [
+    complaintLocationName,
+    coordinateValues.lat,
+    coordinateValues.lon,
+    hasValidCoordinates,
+    woredaFeatures,
+    woredaFeaturesLoaded,
+  ]);
+
+ 
 
   const complaintIsSpam = complaint
     ? isOrganizationComplaint(complaint)
@@ -158,6 +392,9 @@ const ComplaintDetail = () => {
       ? complaint.attachments
       : complaint.images || []
     : [];
+
+  const getAttachmentUrl = (attachment: { url?: string; path?: string }) =>
+    attachment.url || attachment.path || '';
 
   const complaintAssigneeName = complaint
     ? isOrganizationComplaint(complaint)
@@ -291,17 +528,32 @@ const ComplaintDetail = () => {
                       No attachments
                     </div>
                   ) : (
-                    complaintAttachments.slice(0, 6).map((img, idx) => (
-                      <a
-                        key={`${img.path}-${idx}`}
-                        href={img.path}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="aspect-video bg-slate-100 rounded-lg flex items-center justify-center text-slate-500 font-bold text-[10px] uppercase tracking-widest border border-gray-200 hover:border-[#006B5D] hover:text-[#006B5D] transition-colors"
-                      >
-                        {t('dept_complaints.detail.attachment')} {idx + 1}
-                      </a>
-                    ))
+                    complaintAttachments.slice(0, 6).map((img, idx) => {
+                      const attachmentUrl = getAttachmentUrl(img);
+
+                      if (!attachmentUrl) {
+                        return (
+                          <div
+                            key={`missing-${idx}`}
+                            className="aspect-video bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 font-bold text-[10px] uppercase tracking-widest border border-gray-200"
+                          >
+                            {t('dept_complaints.detail.attachment')} {idx + 1}
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <a
+                          key={`${attachmentUrl}-${idx}`}
+                          href={attachmentUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="aspect-video bg-slate-100 rounded-lg flex items-center justify-center text-slate-500 font-bold text-[10px] uppercase tracking-widest border border-gray-200 hover:border-[#006B5D] hover:text-[#006B5D] transition-colors"
+                        >
+                          {t('dept_complaints.detail.attachment')} {idx + 1}
+                        </a>
+                      );
+                    })
                   )}
                 </div>
              </div>
@@ -371,6 +623,25 @@ const ComplaintDetail = () => {
                 <div className="text-[11px] text-slate-500 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
                   {complaintLocationName} • {complaintCoordinates.join(', ')}
                 </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="bg-white border border-gray-100 rounded-xl px-3 py-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Woreda</p>
+                    <p className="mt-1 text-xs font-semibold text-slate-700">
+                      {isResolvingLocation ? t('sys_dashboard.loading') : resolvedLocation?.woreda || '-'}
+                    </p>
+                  </div>
+                  <div className="bg-white border border-gray-100 rounded-xl px-3 py-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Street Address</p>
+                    <p className="mt-1 text-xs font-semibold text-slate-700">
+                      {isResolvingLocation ? t('sys_dashboard.loading') : resolvedLocation?.street || '-'}
+                    </p>
+                  </div>
+                </div>
+                {resolvedLocation?.displayName && resolvedLocation.displayName !== '-' && (
+                  <div className="text-[11px] text-slate-500 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2">
+                    {resolvedLocation.displayName}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex items-center gap-4 text-slate-600 bg-gray-50 p-4 rounded-xl">
@@ -420,10 +691,6 @@ const ComplaintDetail = () => {
                     <div>
                       <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Updated</p>
                       <div className="text-xs font-bold text-slate-700">{complaintUpdatedAt}</div>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Sync Status</p>
-                      <div className="text-xs font-bold text-slate-700">{complaintSyncStatus}</div>
                     </div>
               </div>
 

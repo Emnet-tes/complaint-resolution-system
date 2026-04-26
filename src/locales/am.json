@@ -21,24 +21,92 @@
   "org_dashboard": {
     "nav_path": "ድርጅት / አጠቃላይ እይታ",
     "title": "የዳሽቦርድ መለኪያዎች",
+    "subtitle": "የክፍሎች ማጠቃለያ፣ የሰራተኞች ድምር እና ለመላክ የሚችሉ የአፈፃፀም መረጃዎች።",
     "stats": {
       "total_depts": "ጠቅላላ ክፍሎች",
-      "dept_admins": "የክፍል አስተዳዳሪዎች",
+      "dept_heads": "የክፍል ኃላፊዎች",
       "total_resolved": "ተፈትተዋል",
       "total_pending": "በሂደት ላይ",
       "sub_active": "ንቁ ክፍሎች",
       "sub_staff": "ሰራተኞች",
-      "sub_awaiting": "ምላሽ የሚጠባበቁ",
-      "success_rate": "ውጤታማነት"
+      "sub_pending": "ምላሽ የሚጠባበቁ",
+      "sub_resolved": "የተፈቱ ጉዳዮች"
     },
     "table": {
-      "title": "የክፍሎች ዝርዝር",
+      "title": "የክፍሎች ማጠቃለያ",
       "col_dept": "ክፍል",
       "col_total": "ጠቅላላ",
       "col_resolved": "ተፈትተዋል",
       "col_pending": "በሂደት ላይ",
       "col_success": "ውጤታማነት",
       "no_data": "ምንም የክፍል መረጃ የለም"
+    },
+    "chart": {
+      "title": "የክፍሎች አፈፃፀም",
+      "total": "ጠቅላላ",
+      "resolved": "ተፈትተዋል",
+      "pending": "በሂደት ላይ"
+    },
+    "export": {
+      "title": "የመላክ ማዕከል",
+      "subtitle": "የክፍሎችን ማጠቃለያ እንደ CSV ወይም PDF ያውርዱ።",
+      "csv": "CSV ላክ",
+      "pdf": "PDF ላክ"
+    },
+    "pdf": {
+      "title": "የOrgHead ክፍሎች ሪፖርት",
+      "generated": "ተፈጥሯል",
+      "summary_title": "ማጠቃለያ",
+      "department_title": "የክፍሎች ዝርዝር",
+      "summary_table_title": "የክፍሎች ማጠቃለያ ሰንጠረዥ"
+    },
+    "csv": {
+      "section": "ክፍል",
+      "label": "መለያ",
+      "value": "እሴት",
+      "note": "ማስታወሻ",
+      "total_departments": "ጠቅላላ ክፍሎች",
+      "total_heads": "ጠቅላላ ኃላፊዎች",
+      "total_resolved": "ጠቅላላ ተፈትተዋል",
+      "total_pending": "ጠቅላላ በሂደት ላይ",
+      "department_name": "የክፍል ስም",
+      "total": "ጠቅላላ",
+      "resolved": "ተፈትተዋል",
+      "pending": "በሂደት ላይ",
+      "resolved_percentage": "የተፈታ %"
+    }
+  },
+  "org_head_departments": {
+    "nav": "OrgHead / ክፍሎች",
+    "title": "ክፍሎች",
+    "subtitle": "ለድርጅታዊ ክትትል የሚያገለግል የክፍሎች ዝርዝር።",
+    "search_placeholder": "በክፍል ስም፣ ኮድ ወይም መግለጫ ይፈልጉ...",
+    "no_data": "ምንም ክፍል አልተገኘም"
+  },
+  "org_head_complaints": {
+    "nav": "OrgHead / ቅሬታዎች",
+    "title": "የድርጅት ቅሬታዎች",
+    "subtitle": "የቅሬታ መመደብ፣ ሁኔታ እና ቅድሚያ ይከልሱ እና ያስተካክሉ።",
+    "list_view": "ዝርዝር",
+    "map_view": "ካርታ",
+    "search_placeholder": "በመለያ፣ በርዕስ፣ በመግለጫ፣ በላኪ ይፈልጉ...",
+    "status_label": "ሁኔታ",
+    "all": "ሁሉም",
+    "no_data": "ምንም ቅሬታ አልተገኘም",
+    "no_location": "በተጣራው ቅሬታ ውስጥ የቦታ መረጃ የለም",
+    "override": "አስተካክል",
+    "override_title": "ቅሬታ አስተካክል",
+    "override_note": "ይህ ማስተካከያ የቅሬታ መመደብን/ምደባን ያዘምናል እና የታሪክ ማስታወሻ ያስገባል።",
+    "department": "ክፍል",
+    "priority": "ቅድሚያ",
+    "mark_spam": "እንደ ስፓም ምልክት አድርግ",
+    "comment": "አስተያየት",
+    "comment_placeholder": "ይህን ማስተካከያ ለምን እንደሚያስፈልግ ያብራሩ",
+    "apply_override": "ማስተካከያን ተግብር",
+    "popup": {
+      "status": "ሁኔታ",
+      "priority": "ቅድሚያ",
+      "department": "ክፍል"
     }
   },
   "dept_mgmt": {
@@ -64,11 +132,17 @@
       "active": "ንቁ",
       "inactive": "የተዘጋ",
       "unassigned": "ያልተመደበ",
+      "actions": "እርምጃዎች",
       "no_data": "ከፍለጋዎ ጋር የሚዛመድ መረጃ አልተገኘም"
     },
     "modals": {
       "new_dept": "አዲስ ክፍል",
       "new_admin": "አዲስ የክፍል አስተዳዳሪ",
+      "edit_dept": "ክፍል አስተካክል",
+      "edit_admin": "የክፍል ኃላፊ አስተካክል",
+      "deactivate_title": "ማብቂያ ያረጋግጡ",
+      "deactivate_dept_msg": "ይህን ክፍል ማብቃት እርግጠኛ ነዎት?",
+      "deactivate_head_msg": "ይህን የክፍል ኃላፊ መለያ ማብቃት እርግጠኛ ነዎት?",
       "labels": {
         "name": "የክፍል ስም",
         "code": "የክፍል ኮድ",
@@ -77,7 +151,8 @@
         "full_name": "ሙሉ ስም",
         "email": "ኢሜይል",
         "password": "የይለፍ ቃል",
-        "unit": "ክፍል"
+        "unit": "ክፍል",
+        "status_active": "ንቁ"
       },
       "placeholders": {
         "name": "ምሳሌ፡ ፋይናንስ",
@@ -92,14 +167,22 @@
       "add_dept": "ክፍል ጨምር",
       "add_admin": "አስተዳዳሪ ጨምር",
       "submit_dept": "ክፍሉን አጽድቅ",
-      "submit_admin": "መለያውን ፍጠር"
+      "submit_admin": "መለያውን ፍጠር",
+      "update_dept": "ክፍሉን አዘምን",
+      "update_admin": "የክፍሉን ኃላፊ አዘምን",
+      "deactivate": "አቁም"
     },
     "toasts": {
       "fetch_error": "መረጃዎችን ማምጣት አልተቻለም",
       "creating_dept": "ክፍሉ እየተፈጠረ ነው...",
       "dept_success": "ክፍሉ ተፈጥሯል!",
+      "dept_updated": "ክፍሉ ተዘምኗል!",
       "registering_admin": "አስተዳዳሪው እየተመዘገበ ነው...",
-      "admin_success": "አስተዳዳሪው ተመዝግቧል!"
+      "admin_success": "አስተዳዳሪው ተመዝግቧል!",
+      "admin_updated": "የክፍሉ ኃላፊ ተዘምኗል!",
+      "deactivating": "እየታገደ ነው...",
+      "deactivated": "በተሳካ ሁኔታ ተቋርጧል",
+      "generic_error": "ስህተት"
     }
   },
   "complaints": {
