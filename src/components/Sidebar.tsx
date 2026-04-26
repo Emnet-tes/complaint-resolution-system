@@ -29,10 +29,12 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
     { id: 'dashboard', label: t('sidebar.sys_overview'), path: '/dashboard', roles: ['SysAdmin'], icon: LayoutDashboard },
     { id: 'organizations', label: t('sidebar.organizations'), path: '/organizations', roles: ['SysAdmin'], icon: Building2 },
     { id: 'org-dashboard', label: t('sidebar.dashboard'), path: '/org-dashboard', roles: ['OrgAdmin'], icon: LayoutDashboard },
+    { id: 'org-head-dashboard', label: t('sidebar.dashboard'), path: '/org-head/dashboard', roles: ['OrgHead'], icon: LayoutDashboard },
+    { id: 'org-head-departments', label: t('sidebar.departments'), path: '/org-head/departments', roles: ['OrgHead'], icon: ShieldCheck },
     { id: 'dept-dashboard', label: t('sidebar.dashboard'), path: '/dept-dashboard', roles: ['DeptAdmin'], icon: LayoutDashboard },
     { id: 'departments', label: t('sidebar.departments'), path: '/departments', roles: ['OrgAdmin'], icon: ShieldCheck },
-    { id: 'complaints', label: t('sidebar.complaints'), path: '/complaints', roles: ['DeptAdmin'], icon: ClipboardList },
-    { id: 'settings', label: t('sidebar.profile'), path: '/settings', roles: ['SysAdmin', 'OrgAdmin', 'DeptAdmin'], icon: SettingsIcon },
+    { id: 'complaints', label: t('sidebar.complaints'), path: '/complaints', roles: ['DeptAdmin', 'OrgHead'], icon: ClipboardList },
+    { id: 'settings', label: t('sidebar.profile'), path: '/settings', roles: ['SysAdmin', 'OrgAdmin', 'OrgHead', 'DeptAdmin'], icon: SettingsIcon },
   ];
 
   const filteredItems = allItems.filter(item =>
@@ -75,7 +77,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
               <h2 className="text-[14px] font-black text-slate-800 whitespace-nowrap uppercase tracking-tight">
                 {/* 4. Localized Portal Titles */}
                 {user?.role === 'SysAdmin' ? t('sidebar.sys_portal') : 
-                 user?.role === 'OrgAdmin' ? t('sidebar.org_portal') : 
+                 user?.role === 'OrgAdmin' || user?.role === 'OrgHead' ? t('sidebar.org_portal') : 
                  t('sidebar.dept_portal')}
               </h2>
               <p className="text-[10px] font-bold text-slate-400 whitespace-nowrap uppercase tracking-widest">{user?.role}</p>
