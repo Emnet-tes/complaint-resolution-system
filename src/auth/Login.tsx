@@ -6,12 +6,13 @@ import { useDispatch } from 'react-redux';
 import { useAuth } from '../context/AuthContext';
 import { setCredentials } from '../store/slices/authSlice';
 import ThemeToggle from '../components/ThemeToggle';
+import toast from 'react-hot-toast';
 
 const Login = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
 
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -39,10 +40,19 @@ const Login = () => {
         dispatch(setCredentials({ token, role: user.role }));
       }
 
-      if (user.role === 'SysAdmin') navigate('/dashboard');
-      else if (user.role === 'OrgAdmin') navigate('/org-dashboard');
-      else if (user.role === 'DeptAdmin') navigate('/dept-dashboard');
-      else navigate('/login');
+      if (user.role === 'SysAdmin') {
+        navigate('/dashboard');
+      } else if (user.role === 'OrgAdmin') {
+        navigate('/org-dashboard');
+      } else if (user.role === 'OrgHead') {
+        navigate('/org-head/dashboard');
+      } else if (user.role === 'DeptAdmin') {
+        navigate('/dept-dashboard');
+      } else {
+        logout();
+        toast.error(t('auth.not_allowed', 'You are not allowed to access this system.'));
+        navigate('/login', { replace: true });
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || t('dept_mgmt.toasts.fetch_error'));
     } finally {

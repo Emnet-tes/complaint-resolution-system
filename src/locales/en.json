@@ -347,6 +347,7 @@
   "reset_password_subtitle": "Set your new password to login into your account!",
   "verify_code_title": "Verify Code",
   "verify_code_subtitle": "We have sent an email to your email account with a verification code!",
-  "verify_code_label": "Verification Code"
+  "verify_code_label": "Verification Code",
+  "not_allowed": "You are not allowed to access the system."
 }
 }

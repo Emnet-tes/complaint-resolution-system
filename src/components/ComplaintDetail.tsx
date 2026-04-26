@@ -5,24 +5,25 @@ import toast from 'react-hot-toast';
 import {
   CheckCircle,
   Map as MapIcon,
-  User,
   Info,
   MessageSquare,
   ArrowLeft,
   Loader2,
 } from 'lucide-react';
+import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 import { useAuth } from '../context/AuthContext';
 import { deptAdminApi, type AssignedComplaint, type ComplaintStatus } from '../api/deptadmin';
-import { type OrganizationComplaint } from '../api/orgadmin';
+import { orgHeadApi, type OrgHeadComplaint } from '../api/orghead';
 
 type ComplaintDetailState = {
-  complaint?: AssignedComplaint | OrganizationComplaint;
+  complaint?: AssignedComplaint | OrgHeadComplaint;
   source?: 'org' | 'dept';
 };
 
 const isOrganizationComplaint = (
-  complaint: AssignedComplaint | OrganizationComplaint,
-): complaint is OrganizationComplaint => 'submittedBy' in complaint && 'attachments' in complaint;
+  complaint: AssignedComplaint | OrgHeadComplaint,
+): complaint is OrgHeadComplaint => 'submittedBy' in complaint && 'attachments' in complaint;
 
 const ComplaintDetail = () => {
   const { id } = useParams();
@@ -33,7 +34,7 @@ const ComplaintDetail = () => {
 
   const routeState = location.state as ComplaintDetailState | null;
   const initialFromState = routeState?.complaint;
-  const [complaint, setComplaint] = useState<AssignedComplaint | OrganizationComplaint | null>(initialFromState ?? null);
+  const [complaint, setComplaint] = useState<AssignedComplaint | OrgHeadComplaint | null>(initialFromState ?? null);
   const [loading, setLoading] = useState(!initialFromState);
   const [saving, setSaving] = useState(false);
   const [newStatus, setNewStatus] = useState<ComplaintStatus>('Submitted');
@@ -54,21 +55,24 @@ const ComplaintDetail = () => {
       return;
     }
 
-    if (routeState?.source === 'org') {
-      setLoading(false);
-      return;
-    }
-
     const fetchOne = async () => {
       if (!id) return;
       try {
         setLoading(true);
-        // No dedicated "GET /complaints/:id" endpoint provided for DeptAdmin,
-        // so we fetch from assigned list and find the complaint by id.
-        const res = await deptAdminApi.getAssignedComplaints();
-        const found = res.data.find((c) => c._id === id) || null;
+        let found: AssignedComplaint | OrgHeadComplaint | null = null;
+
+        if (routeState?.source === 'org' || user?.role === 'OrgHead' || user?.role === 'OrgAdmin') {
+          const res = await orgHeadApi.getOrganizationComplaints();
+          found = res.data.find((c) => c._id === id) || null;
+        } else {
+          // No dedicated "GET /complaints/:id" endpoint provided for DeptAdmin,
+          // so we fetch from assigned list and find the complaint by id.
+          const res = await deptAdminApi.getAssignedComplaints();
+          found = res.data.find((c) => c._id === id) || null;
+        }
+
         setComplaint(found);
-        if (found) setNewStatus(found.status);
+        if (found && !isOrganizationComplaint(found)) setNewStatus(found.status);
       } catch (err: any) {
         toast.error(err.response?.data?.message || t('dept_mgmt.toasts.fetch_error'));
       } finally {
@@ -77,7 +81,7 @@ const ComplaintDetail = () => {
     };
     fetchOne();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, complaint, routeState?.source]);
+  }, [id, complaint, routeState?.source, user?.role]);
 
   const statusBadge = useMemo(() => {
     const s = complaint?.status || 'Submitted';
@@ -115,6 +119,39 @@ const ComplaintDetail = () => {
       ? complaint.location?.coordinates || []
       : complaint.location?.coordinates || []
     : [];
+
+  const hasValidCoordinates = complaintCoordinates.length >= 2;
+  const mapLatLng = hasValidCoordinates
+    ? ([complaintCoordinates[1], complaintCoordinates[0]] as [number, number])
+    : null;
+
+  const complaintCreatedAt = complaint ? new Date(complaint.createdAt).toLocaleString() : '-';
+  const complaintUpdatedAt = complaint ? new Date(complaint.updatedAt).toLocaleString() : '-';
+
+  const complaintSyncStatus = complaint
+    ? isOrganizationComplaint(complaint)
+      ? complaint.syncStatus || '-'
+      : '-'
+    : '-';
+
+  const complaintIsSpam = complaint
+    ? isOrganizationComplaint(complaint)
+      ? complaint.isSpam
+      : false
+    : false;
+
+  const complaintAiConfidence = complaint
+    ? isOrganizationComplaint(complaint)
+      ? Math.round((complaint.aiConfidence || 0) * 100)
+      : null
+    : null;
+
+  const complaintDuplicateOf = complaint
+    ? isOrganizationComplaint(complaint)
+      ? complaint.duplicateOf
+      : null
+    : null;
+
 
   const complaintAttachments = complaint
     ? isOrganizationComplaint(complaint)
@@ -198,12 +235,6 @@ const ComplaintDetail = () => {
                   {statusBadge.label}
                 </span>
                 <h1 className="text-2xl font-bold text-slate-800 mt-3">{complaint.title}</h1>
-                <p className="text-sm text-slate-500 mt-1">
-                  {t('dept_complaints.detail.submitted_by')}{' '}
-                  <span className="font-bold text-slate-700">
-                    {isOrganizationComplaint(complaint) ? complaint.submittedBy?.fullName || '-' : complaint.submittedBy?.fullName || '-'}
-                  </span>
-                </p>
              </div>
              {isDeptAdmin && !isOrgComplaint && (
                <div className="flex flex-col gap-3 w-full max-w-sm">
@@ -244,43 +275,7 @@ const ComplaintDetail = () => {
                </div>
              )}
           </div>
-
-          {/* Stepper */}
-          <div className="bg-white p-8 rounded-xl border border-gray-100 shadow-sm">
-             <div className="relative flex justify-between">
-                <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-100 -translate-y-1/2 z-0"></div>
-                <div className="absolute top-1/2 left-0 w-1/2 h-1 bg-[#006B5D] -translate-y-1/2 z-0"></div>
-                
-                {['In Progress', 'Resolved', 'Closed'].map((step, i) => (
-                  <div key={i} className="relative z-10 flex flex-col items-center">
-                    <div className={`w-4 h-4 rounded-full border-4 border-white shadow-sm mb-2 ${i === 0 ? 'bg-[#006B5D]' : i === 1 ? 'bg-slate-300' : 'bg-slate-300'}`}></div>
-                    <span className={`text-[11px] font-bold ${i === 0 ? 'text-[#006B5D]' : 'text-slate-400'}`}>{step}</span>
-                  </div>
-                ))}
-             </div>
-          </div>
-
-          {/* AI Analysis */}
-          <div className="bg-blue-50/50 border border-blue-100 p-6 rounded-xl relative overflow-hidden">
-             <div className="absolute right-4 top-4 text-blue-200 opacity-50 rotate-12"><MessageSquare size={80}/></div>
-             <h4 className="text-sm font-bold text-blue-900 mb-4 uppercase tracking-wider flex items-center"><Info size={16} className="mr-2"/> AI Analysis</h4>
-             <div className="flex flex-wrap gap-3">
-                {isOrganizationComplaint(complaint) ? (
-                  <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></span>
-                    AI Confidence: {Math.round((complaint.aiConfidence || 0) * 100)}%
-                  </span>
-                ) : (
-                  <>
-                    <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center"><span className="w-1.5 h-1.5 bg-orange-400 rounded-full mr-2"></span> Possible Duplicate of <span className="text-[#006B5D] ml-1">#CK-9210</span></span>
-                    <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center"><span className="w-1.5 h-1.5 bg-red-500 rounded-full mr-2"></span> High Urgency Detected</span>
-                    <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center"><span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></span> Tag: Road Maintenance</span>
-                  </>
-                )}
-             </div>
-          </div>
-
-          {/* Description & Images */}
+   {/* Description & Images */}
           <section className="bg-white p-6 rounded-xl border border-gray-100 space-y-6 shadow-sm">
              <div>
                 <h3 className="font-bold text-slate-800 mb-3">{t('dept_complaints.detail.description')}</h3>
@@ -291,34 +286,101 @@ const ComplaintDetail = () => {
                   {t('dept_complaints.detail.attachments', { count: complaintAttachments.length })}
                 </p>
                 <div className="grid grid-cols-3 gap-4">
-                   {complaintAttachments.slice(0, 3).map((img, idx) => (
-                     <div
-                       key={`${img.path}-${idx}`}
-                       className="aspect-video bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 font-bold text-[10px] uppercase tracking-widest border border-gray-200"
-                     >
-                       {t('dept_complaints.detail.attachment')} {idx + 1}
-                     </div>
-                   ))}
+                  {complaintAttachments.length === 0 ? (
+                    <div className="col-span-3 p-4 rounded-lg border border-gray-200 bg-slate-50 text-xs text-slate-400 font-bold uppercase tracking-widest text-center">
+                      No attachments
+                    </div>
+                  ) : (
+                    complaintAttachments.slice(0, 6).map((img, idx) => (
+                      <a
+                        key={`${img.path}-${idx}`}
+                        href={img.path}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="aspect-video bg-slate-100 rounded-lg flex items-center justify-center text-slate-500 font-bold text-[10px] uppercase tracking-widest border border-gray-200 hover:border-[#006B5D] hover:text-[#006B5D] transition-colors"
+                      >
+                        {t('dept_complaints.detail.attachment')} {idx + 1}
+                      </a>
+                    ))
+                  )}
                 </div>
              </div>
           </section>
+          {/* AI Analysis */}
+          <div className="bg-blue-50/50 border border-blue-100 p-6 rounded-xl relative overflow-hidden">
+             <div className="absolute right-4 top-4 text-blue-200 opacity-50 rotate-12"><MessageSquare size={80}/></div>
+             <h4 className="text-sm font-bold text-blue-900 mb-4 uppercase tracking-wider flex items-center"><Info size={16} className="mr-2"/> AI Analysis</h4>
+             <div className="flex flex-wrap gap-3">
+                {isOrganizationComplaint(complaint) ? (
+                  <>
+                    <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center">
+                      <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></span>
+                      AI Confidence: {complaintAiConfidence}%
+                    </span>
+                    <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center">
+                      <span className={`w-1.5 h-1.5 rounded-full mr-2 ${complaintIsSpam ? 'bg-red-500' : 'bg-emerald-500'}`}></span>
+                      Spam: {complaintIsSpam ? 'Yes' : 'No'}
+                    </span>
+                    {complaintDuplicateOf && (
+                      <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center">
+                        <span className="w-1.5 h-1.5 bg-amber-500 rounded-full mr-2"></span>
+                        Duplicate Of: {complaintDuplicateOf}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center">
+                      <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></span>
+                      Status: {complaint.status}
+                    </span>
+                    <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center">
+                      <span className="w-1.5 h-1.5 bg-orange-400 rounded-full mr-2"></span>
+                      Priority: {complaint.priority || '-'}
+                    </span>
+                  </>
+                )}
+             </div>
+          </div>
+
+       
 
           {/* Location */}
           <section className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
              <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-slate-800">{t('dept_complaints.detail.location')}</h3>
              </div>
-             <div className="flex items-center gap-4 text-slate-600 bg-gray-50 p-4 rounded-xl">
+            {mapLatLng ? (
+              <div className="space-y-3">
+                <div className="h-[280px] rounded-xl overflow-hidden border border-gray-100">
+                  <MapContainer center={mapLatLng} zoom={14} className="h-full w-full" scrollWheelZoom>
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <CircleMarker center={mapLatLng} radius={8} pathOptions={{ color: '#006B5D', fillColor: '#0f766e', fillOpacity: 0.7 }}>
+                      <Popup>
+                        <div className="space-y-1 min-w-[180px]">
+                          <p className="font-bold text-slate-800">{complaint.title}</p>
+                          <p className="text-xs text-slate-500">{complaintLocationName}</p>
+                        </div>
+                      </Popup>
+                    </CircleMarker>
+                  </MapContainer>
+                </div>
+                <div className="text-[11px] text-slate-500 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
+                  {complaintLocationName} • {complaintCoordinates.join(', ')}
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4 text-slate-600 bg-gray-50 p-4 rounded-xl">
                 <div className="p-2 bg-white rounded-lg shadow-sm text-slate-400"><MapIcon size={20}/></div>
                 <div>
-                  <p className="text-xs font-bold text-slate-800">
-                    {complaintLocationName}
-                  </p>
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    {complaintCoordinates.length ? complaintCoordinates.join(', ') : '-'}
-                  </p>
+                  <p className="text-xs font-bold text-slate-800">No location coordinates available</p>
+                  <p className="text-[10px] text-slate-400 mt-1">{complaintLocationName}</p>
                 </div>
-             </div>
+              </div>
+            )}
           </section>
         </div>
 
@@ -331,12 +393,6 @@ const ComplaintDetail = () => {
                     <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">{t('dept_complaints.detail.priority')}</p>
                     <div className="flex items-center text-sm font-bold text-slate-800">
                       <span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span> {complaint.priority || '-'}
-                    </div>
-                 </div>
-                 <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">{t('dept_complaints.detail.category')}</p>
-                    <div className="flex items-center text-sm font-bold text-slate-800">
-                      <MapIcon size={16} className="mr-2 text-slate-400" /> {complaint.category || '-'}
                     </div>
                  </div>
                  <div>
@@ -357,18 +413,20 @@ const ComplaintDetail = () => {
                       {complaintAssigneeName}
                     </div>
                  </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Created</p>
+                      <div className="text-xs font-bold text-slate-700">{complaintCreatedAt}</div>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Updated</p>
+                      <div className="text-xs font-bold text-slate-700">{complaintUpdatedAt}</div>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Sync Status</p>
+                      <div className="text-xs font-bold text-slate-700">{complaintSyncStatus}</div>
+                    </div>
               </div>
 
-              <div className="mt-8 pt-8 border-t border-gray-100">
-                 <p className="text-[10px] font-bold text-slate-400 uppercase mb-4">{t('dept_complaints.detail.reporter')}</p>
-                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400"><User size={20}/></div>
-                    <div>
-                       <p className="text-xs font-bold text-slate-800">{complaint.submittedBy?.fullName || '-'}</p>
-                       <p className="text-[10px] text-slate-400">{complaint.submittedBy?.email || '-'}</p>
-                    </div>
-                 </div>
-              </div>
            </div>
         </div>
       </div>

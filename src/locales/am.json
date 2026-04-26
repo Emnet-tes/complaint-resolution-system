@@ -347,6 +347,7 @@
   "reset_password_subtitle": "ወደ መለያዎ ለመግባት አዲስ የይለፍ ቃል ያዘጋጁ!",
   "verify_code_title": "ኮዱን ያረጋግጡ",
   "verify_code_subtitle": "የማረጋገጫ ኮድ ወደ ኢሜይልዎ ልከናል። እባክዎ ኢሜይልዎን ያረጋግጡ!",
-  "verify_code_label": "የማረጋገጫ ኮድ"
+  "verify_code_label": "የማረጋገጫ ኮድ",
+  "not_allowed": "ይህ ገጽ ለእርስዎ የተፈቀደ አይደለም"
 }
 }

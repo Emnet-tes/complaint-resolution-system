@@ -80,6 +80,52 @@ export interface OrgAdminAnalytics {
   }[];
 }
 
+export interface OrganizationComplaintLocation {
+  type: string;
+  coordinates: number[];
+  locationName: string | null;
+}
+
+export interface OrganizationComplaint {
+  _id: string;
+  title: string;
+  description: string;
+  location: OrganizationComplaintLocation | null;
+  category: string | null;
+  submittedBy: {
+    _id: string;
+    fullName: string;
+    email: string;
+  };
+  department:
+    | {
+        _id: string;
+        code: string;
+        name: string;
+      }
+    | null;
+  organization: string;
+  isSpam: boolean;
+  aiConfidence: number;
+  duplicateOf: string | null;
+  assignedTo: string | null;
+  status: string;
+  priority: string;
+  overriddenFields: Record<string, unknown>;
+  history: OrganizationComplaintHistoryItem[];
+  syncStatus: string;
+  attachments: {
+    _id: string;
+    filename: string;
+    path: string;
+    uploadedAt: string;
+  }[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  resolvedAt?: string;
+}
+
 
 export interface OrganizationComplaintHistoryItem {
   _id: string;
