@@ -66,6 +66,13 @@ export interface CreateOrgHeadPayload {
   organizationId: string;
 }
 
+export interface UpdateOrgHeadPayload {
+  fullName?: string;
+  email?: string;
+  organizationId?: string;
+  isActive?: boolean;
+}
+
 export interface UpdateOrgAdminPayload {
   fullName?: string;
   email?: string;
@@ -126,6 +133,14 @@ export const sysAdminApi = {
   // List all Organization Heads
   listOrgHeads: () =>
     api.get<OrgHead[]>("/users/org-heads"),
+
+  // Update an Organization Head
+  updateOrgHead: (id: string, data: UpdateOrgHeadPayload) =>
+    api.put<OrgHead>(`/users/org-heads/${id}`, data),
+
+  // Deactivate an Organization Head
+  deactivateOrgHead: (id: string, payload?: { message: string }) =>
+    api.put<{ message: string }>(`/users/org-heads/${id}/deactivate`, payload),
 
   /**
    * ORGANIZATIONS (/organizations)
