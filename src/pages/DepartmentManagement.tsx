@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
-import { UserPlus, Shield, User, LayoutGrid, Users, Search, Filter } from 'lucide-react';
-import { orgAdminApi, type Department } from '../api/orgadmin';
+import { UserPlus, Shield, LayoutGrid, Users, Search, Filter, Edit3, Power, AlertTriangle, Loader2 } from 'lucide-react';
+import { orgAdminApi, type Department, type DeptAdmin } from '../api/orgadmin';
 import { Table, type Column } from '../components/Table';
 import Modal from '../components/Modal';
 import { toast } from 'react-hot-toast'; 
@@ -14,11 +14,18 @@ const DepartmentManagement = () => {
   const [activeTab, setActiveTab] = useState<'depts' | 'admins'>('depts');
   const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   // Data State
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [admins, setAdmins] = useState<any[]>([]);
+  const [admins, setAdmins] = useState<DeptAdmin[]>([]);
+
+  // Tracking State
+  const [editingDeptId, setEditingDeptId] = useState<string | null>(null);
+  const [editingHeadId, setEditingHeadId] = useState<string | null>(null);
+  const [deactivateTarget, setDeactivateTarget] = useState<{ id: string; type: 'dept' | 'head' } | null>(null);
 
   // Filter State
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,15 +33,16 @@ const DepartmentManagement = () => {
 
   // Form States
   const [deptForm, setDeptForm] = useState({ name: '', code: '', description: '', head: '' });
-  const [adminForm, setAdminForm] = useState({ fullName: '', email: '', password: '', departmentId: '' });
+  const [adminForm, setAdminForm] = useState({ fullName: '', email: '', password: '', departmentId: '', isActive: true });
 
   const fetchData = async () => {
     setLoading(true);
     try {
       const [deptRes, adminRes] = await Promise.all([
         orgAdminApi.listDepartments(),
-        orgAdminApi.listDeptAdmins()
+        orgAdminApi.listDeptHeads()
       ]);
+      console.log('Departments:', deptRes.data);
       setDepartments(deptRes.data);
       setAdmins(adminRes.data);
     } catch (err: any) {
@@ -51,39 +59,101 @@ const DepartmentManagement = () => {
     d.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredAdmins = admins.filter(a => {
-    const matchesName = a.fullName.toLowerCase().includes(searchTerm.toLowerCase());
-    const deptName = typeof a.department === 'object' ? a.department?.name : a.department;
-    const matchesUnit = (deptName || '').toLowerCase().includes(unitFilter.toLowerCase());
-    return matchesName && matchesUnit;
+  const filteredAdmins = admins.filter((admin) => {
+    const normalizedName = admin.fullName.toLowerCase();
+    const normalizedDept = (
+      typeof admin.department === 'object' ? admin.department?.name : admin.department
+    )?.toLowerCase() || '';
+
+    const nameMatches = normalizedName.includes(searchTerm.toLowerCase());
+    const unitMatches = normalizedDept.includes(unitFilter.toLowerCase());
+
+    return nameMatches && unitMatches;
   });
+
 
   // --- Handlers ---
   const handleCreateDept = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
     const loadId = toast.loading(t('dept_mgmt.toasts.creating_dept'));
     try {
-      const res = await orgAdminApi.createDepartment(deptForm);
-      setDepartments([res.data, ...departments]);
+      if (editingDeptId) {
+        const res = await orgAdminApi.updateDepartment(editingDeptId, {
+          name: deptForm.name,
+          code: deptForm.code,
+          description: deptForm.description
+        });
+        setDepartments(departments.map((d) => d._id === editingDeptId ? res.data : d));
+      } else {
+        const res = await orgAdminApi.createDepartment(deptForm);
+        setDepartments([res.data, ...departments]);
+      }
       setIsDeptModalOpen(false);
+      setEditingDeptId(null);
       setDeptForm({ name: '', code: '', description: '', head: '' });
-      toast.success(t('dept_mgmt.toasts.dept_success'), { id: loadId });
+      toast.success(editingDeptId ? t('dept_mgmt.toasts.dept_updated', 'Department updated successfully') : t('dept_mgmt.toasts.dept_success'), { id: loadId });
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Error', { id: loadId });
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleCreateAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
     const loadId = toast.loading(t('dept_mgmt.toasts.registering_admin'));
     try {
-      await orgAdminApi.createDeptAdmin(adminForm);
-      await fetchData();
+      if (editingHeadId) {
+        const res = await orgAdminApi.updateDeptHead(editingHeadId, {
+          fullName: adminForm.fullName,
+          email: adminForm.email,
+          departmentId: adminForm.departmentId,
+          isActive: adminForm.isActive
+        });
+        setAdmins(admins.map((a) => a._id === editingHeadId ? res.data : a));
+      } else {
+        const res = await orgAdminApi.createDeptHead({
+          fullName: adminForm.fullName,
+          email: adminForm.email,
+          password: adminForm.password,
+          departmentId: adminForm.departmentId
+        });
+        setAdmins([res.data, ...admins]);
+      }
       setIsAdminModalOpen(false);
-      setAdminForm({ fullName: '', email: '', password: '', departmentId: '' });
-      toast.success(t('dept_mgmt.toasts.admin_success'), { id: loadId });
+      setEditingHeadId(null);
+      setAdminForm({ fullName: '', email: '', password: '', departmentId: '', isActive: true });
+      toast.success(editingHeadId ? t('dept_mgmt.toasts.admin_updated', 'Department head updated successfully') : t('dept_mgmt.toasts.admin_success'), { id: loadId });
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Error', { id: loadId });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeactivate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!deactivateTarget) return;
+
+    setSubmitting(true);
+    const loadId = toast.loading(t('dept_mgmt.toasts.deactivating', 'Deactivating...'));
+    try {
+      if (deactivateTarget.type === 'dept') {
+        await orgAdminApi.deactivateDepartment(deactivateTarget.id);
+        setDepartments(departments.map((d) => d._id === deactivateTarget.id ? { ...d, isActive: false } : d));
+      } else {
+        await orgAdminApi.deactivateDeptHead(deactivateTarget.id);
+        setAdmins(admins.map((a) => a._id === deactivateTarget.id ? { ...a, isActive: false } : a));
+      }
+      setIsDeactivateModalOpen(false);
+      setDeactivateTarget(null);
+      toast.success(t('dept_mgmt.toasts.deactivated', 'Deactivated successfully'), { id: loadId });
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || t('dept_mgmt.toasts.fetch_error'), { id: loadId });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -92,16 +162,6 @@ const DepartmentManagement = () => {
     { header: t('dept_mgmt.table.dept'), key: 'name', className: 'font-bold text-slate-800' },
     { header: t('dept_mgmt.table.code'), key: 'code', className: 'font-mono text-xs text-slate-500 uppercase' },
     { 
-      header: t('dept_mgmt.table.head'), 
-      key: 'head',
-      render: (row) => (
-        <div className="flex items-center gap-2 text-slate-600 font-medium">
-          <User size={14} className="text-slate-300" />
-          {typeof row.head === 'object' ? (row.head as any)?.fullName : (row.head || '—')}
-        </div>
-      )
-    },
-    { 
       header: t('dept_mgmt.table.status'), 
       key: 'isActive',
       render: (row) => (
@@ -109,10 +169,48 @@ const DepartmentManagement = () => {
           {row.isActive ? t('dept_mgmt.table.active') : t('dept_mgmt.table.inactive')}
         </span>
       )
+    },
+    {
+      header: t('dept_mgmt.table.actions', 'Actions'),
+      key: 'actions',
+      headerClassName: 'text-right',
+      className: 'text-right',
+      render: (row) => (
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setEditingDeptId(row._id);
+              setDeptForm({
+                name: row.name,
+                code: row.code,
+                description: row.description,
+                head: row.head || ''
+              });
+              setIsDeptModalOpen(true);
+            }}
+            className="p-2 text-slate-300 hover:text-slate-600 cursor-pointer"
+          >
+            <Edit3 size={16} />
+          </button>
+          {row.isActive && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setDeactivateTarget({ id: row._id, type: 'dept' });
+                setIsDeactivateModalOpen(true);
+              }}
+              className="p-2 text-slate-300 hover:text-red-500 cursor-pointer"
+            >
+              <Power size={16} />
+            </button>
+          )}
+        </div>
+      )
     }
   ];
 
-  const adminColumns: Column<any>[] = [
+  const headColumns: Column<DeptAdmin>[] = [
     { header: t('dept_mgmt.table.name'), key: 'fullName', className: 'font-bold text-slate-800' },
     { header: t('dept_mgmt.table.email'), key: 'email', className: 'text-slate-500 text-xs' },
     { 
@@ -124,7 +222,55 @@ const DepartmentManagement = () => {
         </span>
       )
     },
-    { header: t('dept_mgmt.table.role'), key: 'role', className: 'text-[10px] font-black text-slate-400 uppercase tracking-widest' }
+    { header: t('dept_mgmt.table.role'), key: 'role', className: 'text-[10px] font-black text-slate-400 uppercase tracking-widest' },
+    {
+      header: t('dept_mgmt.table.status'),
+      key: 'isActive',
+      render: (row) => (
+        <span className={`px-2 py-1 rounded-md text-[9px] font-black uppercase ${(row.isActive ?? true) ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
+          {(row.isActive ?? true) ? t('dept_mgmt.table.active') : t('dept_mgmt.table.inactive')}
+        </span>
+      )
+    },
+    {
+      header: t('dept_mgmt.table.actions', 'Actions'),
+      key: 'actions',
+      headerClassName: 'text-right',
+      className: 'text-right',
+      render: (row) => (
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setEditingHeadId(row._id);
+              setAdminForm({
+                fullName: row.fullName,
+                email: row.email,
+                password: '',
+                departmentId: typeof row.department === 'object' ? row.department?._id || '' : '',
+                isActive: row.isActive ?? true
+              });
+              setIsAdminModalOpen(true);
+            }}
+            className="p-2 text-slate-300 hover:text-slate-600 cursor-pointer"
+          >
+            <Edit3 size={16} />
+          </button>
+          {(row.isActive ?? true) && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setDeactivateTarget({ id: row._id, type: 'head' });
+                setIsDeactivateModalOpen(true);
+              }}
+              className="p-2 text-slate-300 hover:text-red-500 cursor-pointer"
+            >
+              <Power size={16} />
+            </button>
+          )}
+        </div>
+      )
+    }
   ];
 
   return (
@@ -136,10 +282,10 @@ const DepartmentManagement = () => {
           <h1 className="text-3xl font-black text-slate-800 tracking-tight">{t('dept_mgmt.title')}</h1>
         </div>
         <div className="flex gap-2">
-            <button onClick={() => setIsDeptModalOpen(true)} className="bg-slate-800 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center hover:bg-slate-900 transition-all cursor-pointer shadow-lg">
+            <button onClick={() => { setEditingDeptId(null); setDeptForm({ name: '', code: '', description: '', head: '' }); setIsDeptModalOpen(true); }} className="bg-slate-800 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center hover:bg-slate-900 transition-all cursor-pointer shadow-lg">
                 <Shield size={16} className="mr-2" /> {t('dept_mgmt.buttons.add_dept')}
             </button>
-            <button onClick={() => setIsAdminModalOpen(true)} className="bg-[#006B5D] text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center shadow-lg shadow-teal-900/10 hover:bg-[#005a4e] transition-all cursor-pointer">
+            <button onClick={() => { setEditingHeadId(null); setAdminForm({ fullName: '', email: '', password: '', departmentId: '', isActive: true }); setIsAdminModalOpen(true); }} className="bg-[#006B5D] text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center shadow-lg shadow-teal-900/10 hover:bg-[#005a4e] transition-all cursor-pointer">
                 <UserPlus size={16} className="mr-2" /> {t('dept_mgmt.buttons.add_admin')}
             </button>
         </div>
@@ -188,12 +334,12 @@ const DepartmentManagement = () => {
       <Table 
         loading={loading}
         data={activeTab === 'depts' ? filteredDepartments : filteredAdmins} 
-        columns={activeTab === 'depts' ? deptColumns : adminColumns}
+        columns={activeTab === 'depts' ? deptColumns : headColumns}
         noDataMessage={t('dept_mgmt.table.no_data')}
       />
 
       {/* Modal: New Department */}
-      <Modal isOpen={isDeptModalOpen} onClose={() => setIsDeptModalOpen(false)} title={t('dept_mgmt.modals.new_dept')}>
+      <Modal isOpen={isDeptModalOpen} onClose={() => setIsDeptModalOpen(false)} title={editingDeptId ? t('dept_mgmt.modals.edit_dept', 'Edit Department') : t('dept_mgmt.modals.new_dept')}>
         <form onSubmit={handleCreateDept} className="space-y-4">
           <div className="space-y-1">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('dept_mgmt.modals.labels.name')}</label>
@@ -203,22 +349,24 @@ const DepartmentManagement = () => {
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('dept_mgmt.modals.labels.code')}</label>
             <input required className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-mono uppercase outline-none" value={deptForm.code} onChange={e => setDeptForm({...deptForm, code: e.target.value})} />
           </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('dept_mgmt.modals.labels.head')}</label>
-            <input required className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm outline-none" value={deptForm.head} onChange={e => setDeptForm({...deptForm, head: e.target.value})} />
-          </div>
+          {!editingDeptId && (
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('dept_mgmt.modals.labels.head')}</label>
+              <input required className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm outline-none" value={deptForm.head} onChange={e => setDeptForm({...deptForm, head: e.target.value})} />
+            </div>
+          )}
           <div className="space-y-1">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('dept_mgmt.modals.labels.desc')}</label>
             <textarea className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm min-h-[80px] outline-none" value={deptForm.description} onChange={e => setDeptForm({...deptForm, description: e.target.value})} />
           </div>
-          <button type="submit" disabled={loading} className="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest cursor-pointer active:scale-95 transition-all">
-            {t('dept_mgmt.buttons.submit_dept')}
+          <button type="submit" disabled={submitting} className="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest cursor-pointer active:scale-95 transition-all">
+            {submitting ? <Loader2 className="animate-spin mx-auto" /> : editingDeptId ? t('dept_mgmt.buttons.update_dept', 'Update Department') : t('dept_mgmt.buttons.submit_dept')}
           </button>
         </form>
       </Modal>
 
       {/* Modal: New Admin */}
-      <Modal isOpen={isAdminModalOpen} onClose={() => setIsAdminModalOpen(false)} title={t('dept_mgmt.modals.new_admin')}>
+      <Modal isOpen={isAdminModalOpen} onClose={() => setIsAdminModalOpen(false)} title={editingHeadId ? t('dept_mgmt.modals.edit_admin', 'Edit Department Head') : t('dept_mgmt.modals.new_admin')}>
         <form onSubmit={handleCreateAdmin} className="space-y-4">
           <div className="space-y-1">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('dept_mgmt.modals.labels.full_name')}</label>
@@ -228,10 +376,12 @@ const DepartmentManagement = () => {
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('dept_mgmt.modals.labels.email')}</label>
             <input required type="email" className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm outline-none" value={adminForm.email} onChange={e => setAdminForm({...adminForm, email: e.target.value})} />
           </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('dept_mgmt.modals.labels.password')}</label>
-            <input required type="password" className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm outline-none" value={adminForm.password} onChange={e => setAdminForm({...adminForm, password: e.target.value})} />
-          </div>
+          {!editingHeadId && (
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('dept_mgmt.modals.labels.password')}</label>
+              <input required type="password" className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm outline-none" value={adminForm.password} onChange={e => setAdminForm({...adminForm, password: e.target.value})} />
+            </div>
+          )}
           <div className="space-y-1">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('dept_mgmt.modals.labels.unit')}</label>
             <select required className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm outline-none cursor-pointer" value={adminForm.departmentId} onChange={e => setAdminForm({...adminForm, departmentId: e.target.value})}>
@@ -239,8 +389,35 @@ const DepartmentManagement = () => {
                 {departments.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
             </select>
           </div>
-          <button type="submit" disabled={loading} className="w-full bg-[#006B5D] text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-[#005a4e] cursor-pointer shadow-xl transition-all">
-             {t('dept_mgmt.buttons.submit_admin')}
+          {editingHeadId && (
+            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <input
+                type="checkbox"
+                checked={adminForm.isActive}
+                onChange={(e) => setAdminForm({ ...adminForm, isActive: e.target.checked })}
+                className="w-4 h-4 accent-[#006B5D]"
+              />
+              <label className="text-xs font-bold text-slate-600">{t('dept_mgmt.modals.labels.status_active', 'Active')}</label>
+            </div>
+          )}
+          <button type="submit" disabled={submitting} className="w-full bg-[#006B5D] text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-[#005a4e] cursor-pointer shadow-xl transition-all">
+             {submitting ? <Loader2 className="animate-spin mx-auto" /> : editingHeadId ? t('dept_mgmt.buttons.update_admin', 'Update Department Head') : t('dept_mgmt.buttons.submit_admin')}
+          </button>
+        </form>
+      </Modal>
+
+      <Modal isOpen={isDeactivateModalOpen} onClose={() => setIsDeactivateModalOpen(false)} title={t('dept_mgmt.modals.deactivate_title', 'Confirm Deactivation')}>
+        <form onSubmit={handleDeactivate} className="space-y-5">
+          <div className="flex items-start gap-4 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+            <AlertTriangle className="text-amber-600 shrink-0" size={24} />
+            <p className="text-xs font-bold text-amber-800 leading-relaxed">
+              {deactivateTarget?.type === 'dept'
+                ? t('dept_mgmt.modals.deactivate_dept_msg', 'Are you sure you want to deactivate this department?')
+                : t('dept_mgmt.modals.deactivate_head_msg', 'Are you sure you want to deactivate this department head account?')}
+            </p>
+          </div>
+          <button type="submit" disabled={submitting} className="w-full bg-red-600 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-900/10 cursor-pointer">
+            {submitting ? <Loader2 className="animate-spin mx-auto" /> : t('dept_mgmt.buttons.deactivate', 'Deactivate')}
           </button>
         </form>
       </Modal>
