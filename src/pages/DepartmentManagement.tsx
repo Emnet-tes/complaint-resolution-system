@@ -331,12 +331,21 @@ const DepartmentManagement = () => {
                 
             )}
         </div>
-      <Table 
-        loading={loading}
-        data={activeTab === 'depts' ? filteredDepartments : filteredAdmins} 
-        columns={activeTab === 'depts' ? deptColumns : headColumns}
-        noDataMessage={t('dept_mgmt.table.no_data')}
-      />
+      {activeTab === 'depts' ? (
+        <Table<Department>
+          loading={loading}
+          data={filteredDepartments}
+          columns={deptColumns}
+          noDataMessage={t('dept_mgmt.table.no_data')}
+        />
+      ) : (
+        <Table<DeptAdmin>
+          loading={loading}
+          data={filteredAdmins}
+          columns={headColumns}
+          noDataMessage={t('dept_mgmt.table.no_data')}
+        />
+      )}
 
       {/* Modal: New Department */}
       <Modal isOpen={isDeptModalOpen} onClose={() => setIsDeptModalOpen(false)} title={editingDeptId ? t('dept_mgmt.modals.edit_dept', 'Edit Department') : t('dept_mgmt.modals.new_dept')}>
