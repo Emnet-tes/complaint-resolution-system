@@ -7,7 +7,13 @@ export interface DeptAdmin {
   fullName: string;
   email: string;
   role: string;
-  department: string; // ID or name depending on population
+  department:
+    | string
+    | {
+        _id: string;
+        name: string;
+      };
+  isActive?: boolean;
 }
 
 export interface CreateDeptAdminPayload {
@@ -22,6 +28,7 @@ export interface UpdateDeptAdminPayload {
   email?: string;
   password?: string;
   departmentId?: string;
+  isActive?: boolean;
 }
 
 // --- Types for Departments ---
@@ -52,7 +59,6 @@ export interface UpdateDepartmentPayload {
   name?: string;
   code?: string;
   description?: string;
-  head?: string;
 }
 
 // --- Types for Analytics ---
@@ -134,23 +140,23 @@ export interface OrganizationComplaint {
 
 export const orgAdminApi = {
   /**
-   * DEPARTMENT ADMINS (/users/dept-admins)
+   * DEPARTMENT ADMINS (/users/dept-headss)
    */
 
-  // Create a new Department Admin
-  createDeptAdmin: (data: CreateDeptAdminPayload) =>
-    api.post<DeptAdmin>("/users/dept-admins", data),
+  // Create a new Department Head
+  createDeptHead: (data: CreateDeptAdminPayload) =>
+    api.post<DeptAdmin>("/users/dept-heads", data),
 
-  // List all Department Admins in the OrgAdmin's organization
-  listDeptAdmins: () => api.get<DeptAdmin[]>("/users/dept-admins"),
+  // List all Department Heads in the OrgAdmin's organization
+  listDeptHeads: () => api.get<DeptAdmin[]>("/users/dept-heads"),
 
-  // Update a Department Admin
-  updateDeptAdmin: (id: string, data: UpdateDeptAdminPayload) =>
-    api.put<DeptAdmin>(`/users/dept-admins/${id}`, data),
+  // Update a Department Head
+  updateDeptHead: (id: string, data: UpdateDeptAdminPayload) =>
+    api.put<DeptAdmin>(`/users/dept-heads/${id}`, data),
 
-  // Deactivate a Department Admin
-  deactivateDeptAdmin: (id: string) =>
-    api.put<{ message: string }>(`/users/dept-admins/${id}/deactivate`),
+  // Deactivate a Department Head
+  deactivateDeptHead: (id: string) =>
+    api.put<{ message: string }>(`/users/dept-heads/${id}/deactivate`),
 
   /**
    * DEPARTMENTS (/departments)
