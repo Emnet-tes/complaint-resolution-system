@@ -272,7 +272,8 @@
       "Submitted": "ተልኳል",
       "In Progress": "በሂደት ላይ",
       "Resolved": "ተፈትቷል",
-      "Rejected": "ተቀባይነት አላገኘም"
+      "Rejected": "ተቀባይነት አላገኘም",
+      "Manual Review": "በሰው እይታ ላይ"
     },
     "stats": {
       "total": "ጠቅላላ",
@@ -364,6 +365,18 @@
       "confirming": "በማረጋገጥ ላይ...",
       "overridden": "ቅሬታው በተሳካ ሁኔታ ተስተካክሏል",
       "error": "እርምጃው አልተሳካም።"
+    }
+    ,
+    "comments": {
+      "title": "አስተያየቶች",
+      "placeholder": "አስተያየት ያስገቡ...",
+      "post_button": "አስተያየት ላክ",
+      "loading": "አስተያየቶች ...",
+      "empty": "አስተያየቶች የሉም",
+      "posting": "አስተያየት እየተላከ...",
+      "posted": "አስተያየት ተልኳል",
+      "post_error": "አስተያየት ማስቀመጥ አልተቻለም",
+      "fetch_error": "አስተያየቶችን ማግኘት አልተቻለም"
     }
   },
   "org_head_departments": {

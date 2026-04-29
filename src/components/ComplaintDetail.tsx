@@ -15,7 +15,7 @@ import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useAuth } from '../context/AuthContext';
 import { deptAdminApi, type AssignedComplaint, type ComplaintStatus } from '../api/deptadmin';
-import { orgHeadApi, type OrgHeadComplaint } from '../api/orghead';
+import { orgHeadApi, type OrgHeadComplaint, type ComplaintComment } from '../api/orghead';
 
 type ComplaintDetailState = {
   complaint?: AssignedComplaint | OrgHeadComplaint;
@@ -161,6 +161,10 @@ const ComplaintDetail = () => {
   const [saving, setSaving] = useState(false);
   const [newStatus, setNewStatus] = useState<ComplaintStatus>('Submitted');
   const [comment, setComment] = useState('');
+  const [orgComments, setOrgComments] = useState<ComplaintComment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [newOrgComment, setNewOrgComment] = useState('');
+  const [postingOrgComment, setPostingOrgComment] = useState(false);
   const [resolvedLocation, setResolvedLocation] = useState<{
     woreda: string;
     street: string;
@@ -423,6 +427,58 @@ const ComplaintDetail = () => {
       : complaint.assignedTo?.fullName || '-'
     : '-';
 
+  useEffect(() => {
+    if (!complaint || !isOrgComplaint) {
+      setOrgComments([]);
+      setNewOrgComment('');
+      return;
+    }
+
+    let isActive = true;
+
+    const loadComments = async () => {
+      setCommentsLoading(true);
+      try {
+        const res = await orgHeadApi.getComments(complaint._id);
+        if (isActive) {
+          setOrgComments(res.data || []);
+        }
+      } catch (err: any) {
+        if (isActive) {
+          toast.error(err.response?.data?.message || t('org_head_complaints.comments.fetch_error', 'Failed to load comments'));
+        }
+      } finally {
+        if (isActive) {
+          setCommentsLoading(false);
+        }
+      }
+    };
+
+    loadComments();
+
+    return () => {
+      isActive = false;
+    };
+  }, [complaint?._id, isOrgComplaint, t]);
+
+  const handleAddOrgComment = async () => {
+    if (!complaint || !isOrgComplaint || !newOrgComment.trim()) return;
+
+    setPostingOrgComment(true);
+    const loadId = toast.loading(t('org_head_complaints.comments.posting', 'Posting comment...'));
+    try {
+      await orgHeadApi.addComment(complaint._id, { commentText: newOrgComment.trim() });
+      const res = await orgHeadApi.getComments(complaint._id);
+      setOrgComments(res.data || []);
+      setNewOrgComment('');
+      toast.success(t('org_head_complaints.comments.posted', 'Comment posted'), { id: loadId });
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || t('org_head_complaints.comments.post_error', 'Failed to post comment'), { id: loadId });
+    } finally {
+      setPostingOrgComment(false);
+    }
+  };
+
   const handleUpdateStatus = async () => {
     if (!id) return;
     if (!isDeptHead) return;
@@ -580,7 +636,7 @@ const ComplaintDetail = () => {
              </div>
           </section>
           {/* AI Analysis */}
-          <div className="bg-blue-50/50 border border-blue-100 p-6 rounded-xl relative overflow-hidden">
+          <div className="bg-white border border-gray-100 p-6 rounded-xl relative overflow-hidden">
              <div className="absolute right-4 top-4 text-blue-200 opacity-50 rotate-12"><MessageSquare size={80}/></div>
              <h4 className="text-sm font-bold text-blue-900 mb-4 uppercase tracking-wider flex items-center"><Info size={16} className="mr-2"/> {aiAnalysisLabel}</h4>
              <div className="flex flex-wrap gap-3">
@@ -716,6 +772,65 @@ const ComplaintDetail = () => {
               </div>
 
            </div>
+
+             {isOrgComplaint && (
+               <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                 <div className="flex items-center justify-between gap-3 mb-4">
+                   <h4 className="font-bold text-slate-800 flex items-center gap-2">
+                     <MessageSquare size={16} className="text-[#006B5D]" />
+                     {t('org_head_complaints.comments.title', 'Comments')}
+                   </h4>
+                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                     {orgComments.length}
+                   </span>
+                 </div>
+
+                 <div className="space-y-3 max-h-72 overflow-auto pr-1">
+                   {commentsLoading ? (
+                     <div className="text-xs text-slate-400 font-medium">{t('org_head_complaints.comments.loading', 'Loading comments...')}</div>
+                   ) : orgComments.length ? (
+                     orgComments.map((item) => (
+                       <div key={item._id} className="rounded-xl border border-gray-100 bg-slate-50 p-3">
+                         <div className="flex items-center justify-between gap-3">
+                           <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest">
+                             {typeof item.author === 'string' ? item.author : item.author?.fullName || '—'}
+                           </p>
+                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                             {new Date(item.createdAt).toLocaleString()}
+                           </p>
+                         </div>
+                         <p className="mt-2 text-sm text-slate-700 leading-relaxed">{item.commentText}</p>
+                       </div>
+                     ))
+                   ) : (
+                     <div className="rounded-xl border border-dashed border-gray-200 bg-slate-50 p-4 text-xs font-bold uppercase tracking-widest text-slate-400">
+                       {t('org_head_complaints.comments.empty', 'No comments yet')}
+                     </div>
+                   )}
+                 </div>
+
+                 <div className="mt-4 space-y-2">
+                   <textarea
+                     value={newOrgComment}
+                     onChange={(e) => setNewOrgComment(e.target.value)}
+                     placeholder={t('org_head_complaints.comments.placeholder', 'Write a comment...')}
+                     className="w-full min-h-[96px] rounded-xl border border-gray-100 bg-gray-50 px-3 py-3 text-sm text-slate-700 outline-none"
+                   />
+                   <button
+                     type="button"
+                     onClick={handleAddOrgComment}
+                     disabled={postingOrgComment || !newOrgComment.trim()}
+                     className="w-full rounded-xl bg-[#006B5D] px-4 py-3 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-[#005a4e] disabled:cursor-not-allowed disabled:opacity-50"
+                   >
+                     {postingOrgComment ? (
+                       <Loader2 className="mx-auto animate-spin" size={14} />
+                     ) : (
+                       t('org_head_complaints.comments.post_button', 'Post Comment')
+                     )}
+                   </button>
+                 </div>
+               </div>
+             )}
         </div>
       </div>
     </div>
