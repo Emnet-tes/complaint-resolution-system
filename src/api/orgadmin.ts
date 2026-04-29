@@ -66,17 +66,54 @@ export interface UpdateDepartmentPayload {
 export interface OrgAdminAnalytics {
   summary: {
     totalDepartments: number;
-    totalAdmins: number;
-    totalResolved: number;
-    totalPending: number;
+    totalDepartmentHeads: number;
+    activeDepartmentHeads: number;
+    inactiveDepartmentHeads: number;
+    departmentsWithHeads: number;
+    departmentsWithoutHeads: number;
+    departmentsWithActiveHeads: number;
+    departmentsWithInactiveHeads: number;
+    systemHealthScore: number;
   };
   departments: {
     departmentId: string;
     name: string;
-    total: number;
-    resolved: number;
-    pending: number;
-    resolvedPercentage: number;
+    description: string;
+    createdAt: string;
+    headInfo: {
+      id: string;
+      name: string;
+      email: string;
+      isActive: boolean;
+      lastLogin: string;
+      isCurrentlyActive: boolean;
+      inactiveDays: number;
+    } | null;
+    metrics: {
+      hasHeadAssigned: boolean;
+      headStatus: 'Active' | 'Inactive' | 'Unassigned' | string;
+      totalComplaintsAssigned: number;
+      newComplaintsLast30Days: number;
+    };
+  }[];
+  insights: {
+    unassignedDepartments: {
+      name: string;
+      createdAt: string;
+    }[];
+    inactiveHeadsList: {
+      name: string;
+      departmentName?: string;
+      inactiveDays: number;
+    }[];
+    needsAttention: boolean;
+  };
+  recommendations: {
+    type: string;
+    priority: string;
+    message: string;
+    departments?: string[];
+    suggestedAction?: string;
   }[];
 }
 

@@ -20,25 +20,48 @@
   },
   "org_dashboard": {
     "nav_path": "ድርጅት / አጠቃላይ እይታ",
-    "title": "የዳሽቦርድ መለኪያዎች",
+    "title": "የክፍል ሽፋን እና የቅሬታ መጠን",
+    "subtitle": "የኃላፊ ሽፋንን እና የቅሬታ መጠንን ለእያንዳንዱ ክፍል በአንድ ቦታ ይመልከቱ።",
+    "loading": "በስራ ላይ...",
     "stats": {
-      "total_depts": "ጠቅላላ ክፍሎች",
-      "dept_admins": "የክፍል አስተዳዳሪዎች",
-      "total_resolved": "ተፈትተዋል",
-      "total_pending": "በሂደት ላይ",
-      "sub_active": "ንቁ ክፍሎች",
-      "sub_staff": "ሰራተኞች",
-      "sub_awaiting": "ምላሽ የሚጠባበቁ",
-      "success_rate": "ውጤታማነት"
+      "total_depts_heads": "ጠቅላላ ክፍሎች",
+      "total_heads": "{{count}} የክፍል ኃላፊዎች",
+      "active_inactive_heads": "ንቁ ኃላፊዎች",
+      "inactive_heads": "{{count}} የማይንቁ ኃላፊዎች",
+      "covered_uncovered": "ኃላፊ ያላቸው ክፍሎች",
+      "not_covered": "{{count}} ያልተመደቡ",
+      "active_inactive_coverage": "ንቁ ኃላፊ ያላቸው ክፍሎች",
+      "inactive_coverage": "{{count}} የማይንቁ ኃላፊ ያላቸው"
     },
     "table": {
-      "title": "የክፍሎች ዝርዝር",
+      "title": "የክፍል ሽፋን እና የቅሬታ መጠን",
       "col_dept": "ክፍል",
-      "col_total": "ጠቅላላ",
-      "col_resolved": "ተፈትተዋል",
-      "col_pending": "በሂደት ላይ",
-      "col_success": "ውጤታማነት",
-      "no_data": "ምንም የክፍል መረጃ የለም"
+      "col_head": "ኃላፊ",
+      "col_status": "ሁኔታ",
+      "col_assigned": "የተመደበ",
+      "col_recent": "አዲስ (30 ቀን)",
+      "col_coverage": "ሽፋን",
+      "covered": "ተሸፍኗል",
+      "unassigned": "ያልተመደበ",
+      "no_data": "ምንም የክፍል ሽፋን መረጃ የለም"
+    },
+    "chart": {
+      "title": "የሽፋን እና የቅሬታ መጠን",
+      "subtitle": "ኃላፊ ከተመደበ 100% ሽፋን፣ ካልተመደበ 0% ሽፋን ይታያል።",
+      "summary": "ጠቅላላ የተመደቡ ቅሬታዎች",
+      "volume_label": "ቅሬታዎች",
+      "new_30d": "በ30 ቀናት ውስጥ {{count}} አዲስ",
+      "coverage": "ሽፋን",
+      "volume": "የቅሬታ መጠን"
+    },
+    "export": {
+      "title": "ላክ",
+      "subtitle": "የአሁኑን ማጠቃለያ እና የክፍል መረጃ እንደ CSV ፋይል ያውርዱ።",
+      "csv": "CSV አውጣ",
+      "pdf": "PDF አውጣ",
+      "pdf_summary": "የማጠቃለያ እይታ",
+      "pdf_departments": "የክፍሎች ዝርዝር",
+      "note": "ማጠቃለያ እና የክፍሎች ዝርዝር ይጨምራል"
     }
   },
   "dept_mgmt": {

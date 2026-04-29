@@ -20,27 +20,50 @@
   },
   "org_dashboard": {
     "nav_path": "Organization / Overview",
-    "title": "Dashboard Metrics",
+    "title": "Department Coverage & Complaint Volume",
+    "subtitle": "View head assignment coverage and complaint volume together for each department.",
+    "loading": "loading...",
     "stats": {
-      "total_depts": "Total Departments",
-      "dept_admins": "Dept Admins",
-      "total_resolved": "Total Resolved",
-      "total_pending": "Total Pending",
-      "sub_active": "Active Units",
-      "sub_staff": "Staff Members",
-      "sub_awaiting": "Awaiting Action",
-      "success_rate": "Success Rate"
+      "total_depts_heads": "Total Departments",
+      "total_heads": "{{count}} Department Heads",
+      "active_inactive_heads": "Active Heads",
+      "inactive_heads": "{{count}} Inactive Heads",
+      "covered_uncovered": "Departments with Heads",
+      "not_covered": "{{count}} without heads",
+      "active_inactive_coverage": "Departments with Active Heads",
+      "inactive_coverage": "{{count}} with inactive heads"
     },
     "table": {
-      "title": "Department Breakdown",
+      "title": "Department Coverage & Complaint Volume",
       "col_dept": "Department",
-      "col_total": "Total",
-      "col_resolved": "Resolved",
-      "col_pending": "Pending",
-      "col_success": "Success",
-      "no_data": "No department data available"
+      "col_head": "Head",
+      "col_status": "Status",
+      "col_assigned": "Assigned",
+      "col_recent": "30d New",
+      "col_coverage": "Coverage",
+      "covered": "Covered",
+      "unassigned": "Unassigned",
+      "no_data": "No department coverage data available"
+    },
+    "chart": {
+      "title": "Coverage vs Complaint Volume",
+      "subtitle": "Coverage is shown as 100% when a department head is assigned and 0% when it is not.",
+      "summary": "Total assigned complaints",
+      "volume_label": "complaints",
+      "new_30d": "{{count}} new in 30 days",
+      "coverage": "Coverage",
+      "volume": "Complaint Volume"
+    },
+    "export": {
+      "title": "Export",
+      "subtitle": "Download the current summary and department rows as a CSV file.",
+      "csv": "Export CSV",
+      "pdf": "Export PDF",
+      "pdf_summary": "Summary snapshot",
+      "pdf_departments": "Department breakdown",
+      "note": "Includes summary metrics and department breakdown"
     }
-},
+  },
   "dept_mgmt": {
     "nav": "Organization / Management",
     "title": "Infrastructure",
