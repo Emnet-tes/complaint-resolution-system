@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { User, Lock, Eye, EyeOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+
 import { authApi } from '../api/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -57,11 +58,12 @@ const Settings = () => {
             {/* Profile Section */}
             <section className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6">
                <div className="flex items-center gap-6">
-                  <div className="w-20 h-20 bg-teal-50 rounded-2xl flex items-center justify-center text-[#006B5D] relative group">
-                     <User size={40}/>
-                     <button className="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase tracking-widest cursor-pointer">
-                        {t('settings.profile.change')}
-                     </button>
+                  <div className="w-20 h-20 bg-teal-50 rounded-2xl flex items-center justify-center text-[#006B5D] relative overflow-hidden border border-teal-100/50">
+                     {user?.profilePicture ? (
+                        <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                     ) : (
+                        <User size={40}/>
+                     )}
                   </div>
                   <div>
                      <h3 className="text-lg font-black text-slate-800 tracking-tight">
@@ -79,25 +81,31 @@ const Settings = () => {
                         {user?.role === 'DeptHead' ? t('dept_complaints.table.department', 'Department') : t('settings.profile.first_name')}
                      </label>
                      <input
-                       className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-2 focus:ring-[#006B5D]/10 outline-none transition-all"
-                       placeholder={user?.role === 'DeptHead' ? (t('sidebar.dept_portal') || 'Department') : 'System'}
-                       defaultValue={user?.role === 'DeptHead' ? '' : 'System'}
+                       className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 cursor-not-allowed"
+                       placeholder={user?.role === 'DeptHead' ? (t('sidebar.dept_portal') || 'Department') : 'First Name'}
+                       value={user?.fullname?.split(' ')[0] || ''}
+                       readOnly
                      />
                   </div>
                   <div className="space-y-1.5">
                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                         {t('settings.profile.last_name')}
                      </label>
-                     <input className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-2 focus:ring-[#006B5D]/10 outline-none transition-all" defaultValue="Admin" />
+                     <input 
+                       className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 cursor-not-allowed" 
+                       placeholder="Last Name"
+                       value={user?.fullname?.split(' ').slice(1).join(' ') || ''}
+                       readOnly
+                     />
                   </div>
                   <div className="space-y-1.5 sm:col-span-2">
                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                         {t('settings.profile.email')}
                      </label>
                      <input
-                       className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold"
-                       placeholder={user?.email || ''}
-                       defaultValue=""
+                       className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 cursor-not-allowed"
+                       value={user?.email || ''}
+                       readOnly
                      />
                   </div>
                </div>
@@ -175,21 +183,12 @@ const Settings = () => {
                       disabled={loading}
                       className="px-6 py-2.5 bg-[#006B5D] text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-[#005a4e] shadow-lg shadow-teal-900/10 transition-all cursor-pointer active:scale-95 disabled:opacity-70"
                     >
-                      {loading ? t('sys_dashboard.loading') : t('settings.actions.update')}
+                      {loading ? t('sys_dashboard.loading') : t('settings.actions.update_password', 'Update Password')}
                     </button>
                   </div>
                </form>
             </section>
 
-            {/* Form Actions (profile only, password handled in its own form) */}
-            <div className="flex justify-end gap-4">
-               <button className="px-6 py-2.5 border border-gray-200 rounded-xl text-xs font-black uppercase tracking-widest text-slate-600 hover:bg-white transition-all cursor-pointer">
-                  {t('settings.actions.discard')}
-               </button>
-               <button className="px-6 py-2.5 bg-[#006B5D] text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-[#005a4e] shadow-lg shadow-teal-900/10 transition-all cursor-pointer active:scale-95">
-                  {t('settings.actions.update')}
-               </button>
-            </div>
          </div>
       </div>
     </div>
