@@ -26,7 +26,7 @@ export function Table<T>({
   onRowClick 
 }: TableProps<T>) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden ">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm border-collapse">
           <thead className="bg-gray-50 text-[10px] uppercase font-black text-slate-400 tracking-tighter border-b border-gray-100">
@@ -56,7 +56,7 @@ export function Table<T>({
                 <tr 
                   key={rowIndex} 
                   onClick={() => onRowClick?.(row)}
-                  className={`transition-all ${onRowClick ? 'cursor-pointer hover:bg-teal-50/40' : 'hover:bg-gray-50'}`}
+                  className={`transition-all ${onRowClick ? 'cursor-pointer hover:bg-teal-50/40 ' : 'hover:bg-gray-100/40 '}`}
                 >
                   {columns.map((col, colIndex) => (
                     <td key={colIndex} className={`px-8 py-5 ${col.className || ''}`}>

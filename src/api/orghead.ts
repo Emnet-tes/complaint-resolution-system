@@ -131,6 +131,13 @@ export interface OrgHeadAnalytics {
   recentComplaints?: OrgHeadComplaint[];
 }
 
+export interface ComplaintComment {
+  _id: string;
+  commentText: string;
+  author: { _id?: string; fullName?: string } | string | null;
+  createdAt: string;
+}
+
 export const orgHeadApi = {
   getOrganizationComplaints: () =>
     api.get<OrgHeadComplaint[]>('/complaints/organization'),
@@ -139,6 +146,14 @@ export const orgHeadApi = {
 
   overrideComplaint: (id: string, data: OverrideComplaintPayload) =>
     api.put<{ message: string }>(`/complaints/${id}/override`, data),
+
+  addComment: (id: string, data: { commentText: string }) =>
+    api.post<{ message: string }>(`/complaints/${id}/comments`, data),
+
+  getComments: (id: string) => api.get<ComplaintComment[]>(`/complaints/${id}/comments`),
+
+  postComment: (id: string, payload: { commentText: string }) =>
+    api.post<{ message: string }>(`/complaints/${id}/comments`, payload),
 
   listDepartments: () => api.get<Department[]>('/departments'),
 };

@@ -290,7 +290,7 @@ const OrgDashboard = () => {
           </div>
 
           <div className="xl:col-span-4 space-y-6">
-            <div className="bg-slate-900 p-8 rounded-3xl shadow-2xl text-white relative overflow-hidden group">
+            <div className="bg-slate-950 p-8 rounded-3xl shadow-2xl text-white relative overflow-hidden group">
               <div className="relative z-10">
                 <h4 className="font-black text-xl mb-3 tracking-tight italic text-emerald-400">
                   {t('org_dashboard.export.title')}
