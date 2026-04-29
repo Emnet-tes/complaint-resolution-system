@@ -31,10 +31,10 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
     { id: 'org-dashboard', label: t('sidebar.dashboard'), path: '/org-dashboard', roles: ['OrgAdmin'], icon: LayoutDashboard },
     { id: 'org-head-dashboard', label: t('sidebar.dashboard'), path: '/org-head/dashboard', roles: ['OrgHead'], icon: LayoutDashboard },
     { id: 'org-head-departments', label: t('sidebar.departments'), path: '/org-head/departments', roles: ['OrgHead'], icon: ShieldCheck },
-    { id: 'dept-dashboard', label: t('sidebar.dashboard'), path: '/dept-dashboard', roles: ['DeptAdmin'], icon: LayoutDashboard },
+    { id: 'dept-dashboard', label: t('sidebar.dashboard'), path: '/dept-dashboard', roles: ['DeptHead'], icon: LayoutDashboard },
     { id: 'departments', label: t('sidebar.departments'), path: '/departments', roles: ['OrgAdmin'], icon: ShieldCheck },
-    { id: 'complaints', label: t('sidebar.complaints'), path: '/complaints', roles: ['DeptAdmin', 'OrgHead'], icon: ClipboardList },
-    { id: 'settings', label: t('sidebar.profile'), path: '/settings', roles: ['SysAdmin', 'OrgAdmin', 'OrgHead', 'DeptAdmin'], icon: SettingsIcon },
+    { id: 'complaints', label: t('sidebar.complaints'), path: '/complaints', roles: ['DeptHead', 'OrgHead'], icon: ClipboardList },
+    { id: 'settings', label: t('sidebar.profile'), path: '/settings', roles: ['SysAdmin', 'OrgAdmin', 'OrgHead', 'DeptHead'], icon: SettingsIcon },
   ];
 
   const filteredItems = allItems.filter(item =>
