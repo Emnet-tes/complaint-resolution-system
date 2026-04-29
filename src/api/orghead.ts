@@ -77,22 +77,56 @@ export interface OverrideComplaintPayload {
 }
 
 export interface OrgHeadAnalyticsSummary {
-  totalDepartments?: number;
-  totalHeads?: number;
-  totalResolved?: number;
-  totalPending?: number;
-  totalComplaints?: number;
-  total?: number;
-  resolved?: number;
-  pending?: number;
-  manualReview?: number;
-  reviewed?: number;
-  withAttachments?: number;
-  attachments?: number;
+  totalDepartments: number;
+  totalComplaints: number;
+  resolvedComplaints: number;
+  pendingComplaints: number;
+  overallResolutionRate: number;
+  staleComplaints: number;
+  avgResolutionTimeHours: number;
+}
+
+export interface OrgHeadDepartmentAnalytics {
+  departmentId: string;
+  name: string;
+  total: number;
+  resolved: number;
+  pending: number;
+  resolvedPercentage: number;
+  avgResolutionTimeHours: number;
+  newComplaintsLast30Days: number;
+  performanceScore: number;
+}
+
+export interface OrgHeadInsights {
+  problemDepartments: {
+    name: string;
+    resolvedPercentage: number;
+    avgTime: number;
+    pending: number;
+  }[];
+  topPerformers: OrgHeadDepartmentAnalytics[];
+  monthlyTrends: {
+    month: string;
+    year: number;
+    count: number;
+  }[];
+  needsAttention: boolean;
+}
+
+export interface OrgHeadRecommendation {
+  type: string;
+  priority: string;
+  message: string;
+  departments?: string[];
+  suggestedAction?: string;
 }
 
 export interface OrgHeadAnalytics {
-  summary?: OrgHeadAnalyticsSummary;
+  summary: OrgHeadAnalyticsSummary;
+  departments: OrgHeadDepartmentAnalytics[];
+  insights: OrgHeadInsights;
+  recommendations: OrgHeadRecommendation[];
   complaints?: OrgHeadComplaint[];
   recentComplaints?: OrgHeadComplaint[];
 }

@@ -133,7 +133,7 @@ const OrgHeadComplaints = () => {
     if (!selectedComplaint) return;
 
     setSubmitting(true);
-    const loadId = toast.loading(t('orgs.btns.confirm', 'Confirming...'));
+    const loadId = toast.loading(t('org_head_complaints.toasts.confirming', 'Confirming...'));
     try {
       await orgHeadApi.overrideComplaint(selectedComplaint._id, {
         department: overrideForm.department || undefined,
@@ -167,9 +167,9 @@ const OrgHeadComplaints = () => {
 
       setIsOverrideModalOpen(false);
       setSelectedComplaint(null);
-      toast.success(t('toasts.admin_updated', 'Complaint overridden successfully'), { id: loadId });
+      toast.success(t('org_head_complaints.toasts.overridden', 'Complaint overridden successfully'), { id: loadId });
     } catch (err: any) {
-      toast.error(err.response?.data?.message || t('toasts.error', 'Action failed.'), { id: loadId });
+      toast.error(err.response?.data?.message || t('org_head_complaints.toasts.error', 'Action failed.'), { id: loadId });
     } finally {
       setSubmitting(false);
     }

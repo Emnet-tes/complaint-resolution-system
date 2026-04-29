@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import toast from 'react-hot-toast';
 import {
   CheckCircle,
@@ -101,7 +102,10 @@ const getFeatureSubCity = (feature: WoredaFeature) => {
   );
 };
 
-const getFeatureWoredaName = (feature: WoredaFeature) => {
+const getFeatureWoredaName = (
+  feature: WoredaFeature,
+  translate: TFunction,
+) => {
   const p = feature.properties || {};
 
   const primaryTextName =
@@ -133,7 +137,7 @@ const getFeatureWoredaName = (feature: WoredaFeature) => {
   }
 
   if (woredaRaw) {
-    return `Woreda ${woredaRaw}`;
+    return `${translate('dept_complaints.detail.woreda_prefix', 'Woreda')} ${woredaRaw}`;
   }
 
   return '-';
@@ -272,6 +276,23 @@ const ComplaintDetail = () => {
 
   const complaintCreatedAt = complaint ? new Date(complaint.createdAt).toLocaleString() : '-';
   const complaintUpdatedAt = complaint ? new Date(complaint.updatedAt).toLocaleString() : '-';
+  const aiConfidenceLabel = t('dept_complaints.detail.ai_confidence', 'AI Confidence');
+  const spamLabel = t('dept_complaints.detail.spam', 'Spam');
+  const yesLabel = t('dept_complaints.detail.yes', 'Yes');
+  const noLabel = t('dept_complaints.detail.no', 'No');
+  const duplicateOfLabel = t('dept_complaints.detail.duplicate_of', 'Duplicate Of');
+  const statusValueLabel = t('dept_complaints.detail.status_value', 'Status');
+  const priorityValueLabel = t('dept_complaints.detail.priority_value', 'Priority');
+  const noAttachmentsLabel = t('dept_complaints.detail.no_attachments', 'No attachments');
+  const aiAnalysisLabel = t('dept_complaints.detail.ai_analysis', 'AI Analysis');
+  const woredaLabel = t('dept_complaints.detail.woreda', 'Woreda');
+  const streetAddressLabel = t('dept_complaints.detail.street_address', 'Street Address');
+  const noLocationCoordinatesLabel = t(
+    'dept_complaints.detail.no_location_coordinates',
+    'No location coordinates available',
+  );
+  const createdLabel = t('dept_complaints.detail.created', 'Created');
+  const updatedLabel = t('dept_complaints.detail.updated', 'Updated');
 
   useEffect(() => {
     let isActive = true;
@@ -346,10 +367,10 @@ const ComplaintDetail = () => {
       return false;
     });
 
-    const woreda = matchedFeature ? getFeatureWoredaName(matchedFeature) : '-';
+    const woreda = matchedFeature ? getFeatureWoredaName(matchedFeature, t) : '-';
     const subCityName = matchedFeature ? getFeatureSubCity(matchedFeature) : null;
     const street = complaintLocationName !== '-' ? complaintLocationName : subCityName || '-';
-    const displayName = woreda !== '-' ? `${woreda}, Ethiopia` : complaintLocationName;
+    const displayName = woreda !== '-' ? `${woreda}, ${t('dept_complaints.detail.country', 'Ethiopia')}` : complaintLocationName;
 
     setResolvedLocation({
       woreda,
@@ -525,7 +546,7 @@ const ComplaintDetail = () => {
                 <div className="grid grid-cols-3 gap-4">
                   {complaintAttachments.length === 0 ? (
                     <div className="col-span-3 p-4 rounded-lg border border-gray-200 bg-slate-50 text-xs text-slate-400 font-bold uppercase tracking-widest text-center">
-                      No attachments
+                      {noAttachmentsLabel}
                     </div>
                   ) : (
                     complaintAttachments.slice(0, 6).map((img, idx) => {
@@ -561,22 +582,22 @@ const ComplaintDetail = () => {
           {/* AI Analysis */}
           <div className="bg-blue-50/50 border border-blue-100 p-6 rounded-xl relative overflow-hidden">
              <div className="absolute right-4 top-4 text-blue-200 opacity-50 rotate-12"><MessageSquare size={80}/></div>
-             <h4 className="text-sm font-bold text-blue-900 mb-4 uppercase tracking-wider flex items-center"><Info size={16} className="mr-2"/> AI Analysis</h4>
+             <h4 className="text-sm font-bold text-blue-900 mb-4 uppercase tracking-wider flex items-center"><Info size={16} className="mr-2"/> {aiAnalysisLabel}</h4>
              <div className="flex flex-wrap gap-3">
                 {isOrganizationComplaint(complaint) ? (
                   <>
                     <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center">
                       <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></span>
-                      AI Confidence: {complaintAiConfidence}%
+                      {aiConfidenceLabel}: {complaintAiConfidence}%
                     </span>
                     <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center">
                       <span className={`w-1.5 h-1.5 rounded-full mr-2 ${complaintIsSpam ? 'bg-red-500' : 'bg-emerald-500'}`}></span>
-                      Spam: {complaintIsSpam ? 'Yes' : 'No'}
+                      {spamLabel}: {complaintIsSpam ? yesLabel : noLabel}
                     </span>
                     {complaintDuplicateOf && (
                       <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center">
                         <span className="w-1.5 h-1.5 bg-amber-500 rounded-full mr-2"></span>
-                        Duplicate Of: {complaintDuplicateOf}
+                        {duplicateOfLabel}: {complaintDuplicateOf}
                       </span>
                     )}
                   </>
@@ -584,11 +605,11 @@ const ComplaintDetail = () => {
                   <>
                     <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center">
                       <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></span>
-                      Status: {complaint.status}
+                      {statusValueLabel}: {complaint.status}
                     </span>
                     <span className="bg-white px-3 py-1.5 rounded-lg border border-blue-100 text-[11px] font-bold text-slate-700 flex items-center">
                       <span className="w-1.5 h-1.5 bg-orange-400 rounded-full mr-2"></span>
-                      Priority: {complaint.priority || '-'}
+                      {priorityValueLabel}: {complaint.priority || '-'}
                     </span>
                   </>
                 )}
@@ -625,13 +646,13 @@ const ComplaintDetail = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="bg-white border border-gray-100 rounded-xl px-3 py-2">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Woreda</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{woredaLabel}</p>
                     <p className="mt-1 text-xs font-semibold text-slate-700">
                       {isResolvingLocation ? t('sys_dashboard.loading') : resolvedLocation?.woreda || '-'}
                     </p>
                   </div>
                   <div className="bg-white border border-gray-100 rounded-xl px-3 py-2">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Street Address</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{streetAddressLabel}</p>
                     <p className="mt-1 text-xs font-semibold text-slate-700">
                       {isResolvingLocation ? t('sys_dashboard.loading') : resolvedLocation?.street || '-'}
                     </p>
@@ -647,7 +668,7 @@ const ComplaintDetail = () => {
               <div className="flex items-center gap-4 text-slate-600 bg-gray-50 p-4 rounded-xl">
                 <div className="p-2 bg-white rounded-lg shadow-sm text-slate-400"><MapIcon size={20}/></div>
                 <div>
-                  <p className="text-xs font-bold text-slate-800">No location coordinates available</p>
+                  <p className="text-xs font-bold text-slate-800">{noLocationCoordinatesLabel}</p>
                   <p className="text-[10px] text-slate-400 mt-1">{complaintLocationName}</p>
                 </div>
               </div>
@@ -685,11 +706,11 @@ const ComplaintDetail = () => {
                     </div>
                  </div>
                     <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Created</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">{createdLabel}</p>
                       <div className="text-xs font-bold text-slate-700">{complaintCreatedAt}</div>
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Updated</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">{updatedLabel}</p>
                       <div className="text-xs font-bold text-slate-700">{complaintUpdatedAt}</div>
                     </div>
               </div>
