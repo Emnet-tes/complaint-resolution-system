@@ -24,10 +24,17 @@
     "subtitle": "View head assignment coverage and complaint volume together for each department.",
     "loading": "loading...",
     "stats": {
+      "total_depts": "Total Departments",
       "total_depts_heads": "Total Departments",
       "total_heads": "{{count}} Department Heads",
       "active_inactive_heads": "Active Heads",
       "inactive_heads": "{{count}} Inactive Heads",
+      "complaints_assigned": "Total Complaints",
+      "total_resolved": "Resolved Complaints",
+      "total_pending": "Pending Complaints",
+      "avg_time": "Avg Resolution Time",
+      "sub_active": "Departments in scope",
+      "sub_stale": "stale complaints",
       "covered_uncovered": "Departments with Heads",
       "not_covered": "{{count}} without heads",
       "active_inactive_coverage": "Departments with Active Heads",
@@ -52,7 +59,13 @@
       "volume_label": "complaints",
       "new_30d": "{{count}} new in 30 days",
       "coverage": "Coverage",
-      "volume": "Complaint Volume"
+      "volume": "Complaint Volume",
+      "pending": "Pending",
+      "resolved": "Resolved"
+    },
+    "trends": {
+      "title": "Monthly Complaint Trend",
+      "count": "Complaints"
     },
     "export": {
       "title": "Export",
@@ -61,7 +74,15 @@
       "pdf": "Export PDF",
       "pdf_summary": "Summary snapshot",
       "pdf_departments": "Department breakdown",
+      "recommendations": "Recommendations",
       "note": "Includes summary metrics and department breakdown"
+    },
+    "pdf": {
+      "title": "Organization Head Dashboard",
+      "generated": "Generated",
+      "summary_title": "Summary",
+      "department_title": "Department Breakdown",
+      "summary_table_title": "Department Summary Table"
     }
   },
   "dept_mgmt": {
@@ -289,7 +310,23 @@
       "category": "Category",
       "department": "Department",
       "assignee": "Assignee",
-      "reporter": "Reporter"
+      "reporter": "Reporter",
+      "ai_analysis": "AI Analysis",
+      "ai_confidence": "AI Confidence",
+      "spam": "Spam",
+      "yes": "Yes",
+      "no": "No",
+      "duplicate_of": "Duplicate Of",
+      "status_value": "Status",
+      "priority_value": "Priority",
+      "no_attachments": "No attachments",
+      "woreda": "Woreda",
+      "street_address": "Street Address",
+      "no_location_coordinates": "No location coordinates available",
+      "created": "Created",
+      "updated": "Updated",
+      "woreda_prefix": "Woreda",
+      "country": "Ethiopia"
     },
     "toasts": {
       "status_updated": "Status updated"
@@ -297,6 +334,44 @@
     "notifications": {
       "assigned_title": "New complaint assigned"
     }
+  },
+  "org_head_complaints": {
+    "nav": "Dashboard / Organization Complaints",
+    "title": "Organization Complaints",
+    "subtitle": "Review complaints raised across the organization.",
+    "list_view": "List",
+    "map_view": "Map",
+    "search_placeholder": "Search by title, description, or ID...",
+    "status_label": "Status",
+    "all": "All",
+    "no_data": "No organization complaints found",
+    "override": "Override",
+    "override_title": "Override Complaint",
+    "override_note": "Use this action only when a complaint needs manual correction or reassignment.",
+    "department": "Department",
+    "priority": "Priority",
+    "mark_spam": "Mark as spam",
+    "comment": "Comment",
+    "comment_placeholder": "Add a reason for the override",
+    "apply_override": "Apply Override",
+    "no_location": "No complaint locations to display",
+    "popup": {
+      "status": "Status",
+      "priority": "Priority",
+      "department": "Department"
+    },
+    "toasts": {
+      "confirming": "Confirming...",
+      "overridden": "Complaint overridden successfully",
+      "error": "Action failed."
+    }
+  },
+  "org_head_departments": {
+    "nav": "Dashboard / Departments",
+    "title": "Departments",
+    "subtitle": "View departments available to organization heads.",
+    "search_placeholder": "Search departments...",
+    "no_data": "No departments found"
   },
   "orgs": {
     "title": "Organizations",

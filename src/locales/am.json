@@ -24,10 +24,17 @@
     "subtitle": "የኃላፊ ሽፋንን እና የቅሬታ መጠንን ለእያንዳንዱ ክፍል በአንድ ቦታ ይመልከቱ።",
     "loading": "በስራ ላይ...",
     "stats": {
+      "total_depts": "ጠቅላላ ክፍሎች",
       "total_depts_heads": "ጠቅላላ ክፍሎች",
       "total_heads": "{{count}} የክፍል ኃላፊዎች",
       "active_inactive_heads": "ንቁ ኃላፊዎች",
       "inactive_heads": "{{count}} የማይንቁ ኃላፊዎች",
+      "complaints_assigned": "ጠቅላላ ቅሬታዎች",
+      "total_resolved": "የተፈቱ ቅሬታዎች",
+      "total_pending": "በሂደት ላይ ያሉ ቅሬታዎች",
+      "avg_time": "አማካይ የመፍትሄ ጊዜ",
+      "sub_active": "በክትትል ውስጥ ያሉ ክፍሎች",
+      "sub_stale": "የቆዩ ቅሬታዎች",
       "covered_uncovered": "ኃላፊ ያላቸው ክፍሎች",
       "not_covered": "{{count}} ያልተመደቡ",
       "active_inactive_coverage": "ንቁ ኃላፊ ያላቸው ክፍሎች",
@@ -52,16 +59,30 @@
       "volume_label": "ቅሬታዎች",
       "new_30d": "በ30 ቀናት ውስጥ {{count}} አዲስ",
       "coverage": "ሽፋን",
-      "volume": "የቅሬታ መጠን"
+      "volume": "የቅሬታ መጠን",
+      "pending": "በሂደት ላይ",
+      "resolved": "ተፈትቷል"
+    },
+    "trends": {
+      "title": "ወርሃዊ የቅሬታ አዝማሚያ",
+      "count": "ቅሬታዎች"
     },
     "export": {
       "title": "ላክ",
       "subtitle": "የአሁኑን ማጠቃለያ እና የክፍል መረጃ እንደ CSV ፋይል ያውርዱ።",
-      "csv": "CSV አውጣ",
-      "pdf": "PDF አውጣ",
+      "csv": "CSV ያውርዱ",
+      "pdf": "PDF ",
       "pdf_summary": "የማጠቃለያ እይታ",
       "pdf_departments": "የክፍሎች ዝርዝር",
+      "recommendations": "ምክሮች",
       "note": "ማጠቃለያ እና የክፍሎች ዝርዝር ይጨምራል"
+    },
+    "pdf": {
+      "title": "የድርጅት ኃላፊ ዳሽቦርድ",
+      "generated": "የተፈጠረበት ጊዜ",
+      "summary_title": "ማጠቃለያ",
+      "department_title": "የክፍሎች ዝርዝር",
+      "summary_table_title": "የክፍል ማጠቃለያ ሰንጠረዥ"
     }
   },
   "dept_mgmt": {
@@ -289,7 +310,23 @@
       "category": "ምድብ",
       "department": "ክፍል",
       "assignee": "ተመዳቢ",
-      "reporter": "የቅሬታ አቅራቢ"
+      "reporter": "የቅሬታ አቅራቢ",
+      "ai_analysis": "የAI ትንታኔ",
+      "ai_confidence": "የAI እምነት መጠን",
+      "spam": "ስፓም",
+      "yes": "አዎ",
+      "no": "አይ",
+      "duplicate_of": "ተደጋጋሚ ነው",
+      "status_value": "ሁኔታ",
+      "priority_value": "ቅድሚያ",
+      "no_attachments": "ምንም ተያያዥ ፋይል የለም",
+      "woreda": "ወረዳ",
+      "street_address": "የመንገድ አድራሻ",
+      "no_location_coordinates": "የቦታ ኮርድኔቶች የሉም",
+      "created": "ተፈጠረ",
+      "updated": "ተዘምኗል",
+      "woreda_prefix": "ወረዳ",
+      "country": "ኢትዮጵያ"
     },
     "toasts": {
       "status_updated": "ሁኔታ ተዘምኗል"
@@ -297,6 +334,44 @@
     "notifications": {
       "assigned_title": "አዲስ ቅሬታ ተመድቧል"
     }
+  },
+  "org_head_complaints": {
+    "nav": "ዳሽቦርድ / የድርጅት ቅሬታዎች",
+    "title": "የድርጅት ቅሬታዎች",
+    "subtitle": "በድርጅቱ ውስጥ የተነሱ ቅሬታዎችን ይከታተሉ።",
+    "list_view": "ዝርዝር",
+    "map_view": "ካርታ",
+    "search_placeholder": "በርዕስ፣ በመግለጫ ወይም በመለያ ይፈልጉ...",
+    "status_label": "ሁኔታ",
+    "all": "ሁሉም",
+    "no_data": "ምንም የድርጅት ቅሬታ አልተገኘም",
+    "override": "አስተካክል",
+    "override_title": "ቅሬታ አስተካክል",
+    "override_note": "ይህን እርምጃ ቅሬታው በእጅ ማስተካከል ወይም እንደገና ማመደብ ሲያስፈልግ ብቻ ይጠቀሙ።",
+    "department": "ክፍል",
+    "priority": "ቅድሚያ",
+    "mark_spam": "እንደ ስፓም ምልክት አድርግ",
+    "comment": "አስተያየት",
+    "comment_placeholder": "ለማስተካከያው ምክንያት ያክሉ",
+    "apply_override": "ማስተካከያውን ተግብር",
+    "no_location": "የሚታዩ የቅሬታ ቦታዎች የሉም",
+    "popup": {
+      "status": "ሁኔታ",
+      "priority": "ቅድሚያ",
+      "department": "ክፍል"
+    },
+    "toasts": {
+      "confirming": "በማረጋገጥ ላይ...",
+      "overridden": "ቅሬታው በተሳካ ሁኔታ ተስተካክሏል",
+      "error": "እርምጃው አልተሳካም።"
+    }
+  },
+  "org_head_departments": {
+    "nav": "ዳሽቦርድ / ክፍሎች",
+    "title": "ክፍሎች",
+    "subtitle": "ለድርጅት ኃላፊዎች የሚታዩ ክፍሎች።",
+    "search_placeholder": "ክፍሎችን ይፈልጉ...",
+    "no_data": "ምንም ክፍል አልተገኘም"
   },
   "orgs": {
     "title": "ድርጅቶች",

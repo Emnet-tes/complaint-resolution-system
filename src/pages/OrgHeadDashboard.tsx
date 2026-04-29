@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BarChart3, FileText, CheckCircle2, Clock, Loader2, Share2, FilePieChart, FileDown } from 'lucide-react';
+import { BarChart3, FileText, CheckCircle2, Clock, Loader2, Share2, FilePieChart, FileDown, TrendingUp, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { StatCard } from '../components/OrgComponents';
@@ -13,44 +13,20 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell,
+  AreaChart,
+  Area,
 } from 'recharts';
-
-const getSummaryValue = (summary: OrgHeadAnalytics['summary'] | undefined, keys: string[], fallback = 0) => {
-  if (!summary) return fallback;
-  for (const key of keys) {
-    const value = summary[key as keyof NonNullable<OrgHeadAnalytics['summary']>];
-    if (typeof value === 'number') return value;
-  }
-  return fallback;
-};
-
-
 
 const buildSafeFileName = (prefix: string, extension: string) => {
   const date = new Date().toISOString().slice(0, 10);
   return `${prefix}_${date}.${extension}`;
 };
 
-type DepartmentSummaryRow = {
-  departmentId: string;
-  name: string;
-  total: number;
-  resolved: number;
-  pending: number;
-  resolvedPercentage: number;
-};
-
-type OrgHeadAnalyticsResponse = OrgHeadAnalytics & {
-  departments?: DepartmentSummaryRow[];
-};
-
-const CHART_COLORS = ['#006B5D', '#0EA5E9', '#F59E0B'];
 
 const OrgHeadDashboard = () => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<OrgHeadAnalyticsResponse | null>(null);
+  const [stats, setStats] = useState<OrgHeadAnalytics | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -74,47 +50,79 @@ const OrgHeadDashboard = () => {
   );
 
   const summary = stats?.summary;
-  const totalDepartments = getSummaryValue(summary, ['totalDepartments'], departments.length);
-  const totalHeads = getSummaryValue(summary, ['totalHeads'], 0);
-  const totalResolved = getSummaryValue(summary, ['totalResolved', 'resolved']);
-  const totalPending = getSummaryValue(summary, ['totalPending', 'pending']);
+  const totalDepartments = summary?.totalDepartments ?? departments.length;
+  const totalComplaints = summary?.totalComplaints ?? 0;
+  const totalResolved = summary?.resolvedComplaints ?? 0;
+  const totalPending = summary?.pendingComplaints ?? 0;
+  const overallResolutionRate = summary?.overallResolutionRate ?? 0;
+  const staleComplaints = summary?.staleComplaints ?? 0;
+  const avgResolutionTimeHours = summary?.avgResolutionTimeHours ?? 0;
+  const recommendations = stats?.recommendations || [];
+  const topPerformers = stats?.insights?.topPerformers || [];
+  const problemDepartments = stats?.insights?.problemDepartments || [];
 
   const chartData = useMemo(
     () => departments.map((department) => ({
       ...department,
-      totalLabel: t('org_dashboard.chart.total'),
       resolvedLabel: t('org_dashboard.chart.resolved'),
       pendingLabel: t('org_dashboard.chart.pending'),
     })),
     [departments, t],
   );
 
+  const trendsData = useMemo(
+    () => (stats?.insights?.monthlyTrends || []).map((item, index) => ({
+      id: `${item.month}-${item.year}-${index}`,
+      period: `${item.month} ${String(item.year).slice(2)}`,
+      count: item.count,
+    })),
+    [stats?.insights?.monthlyTrends],
+  );
+
   const handleExportCsv = () => {
     const csvContent = [
-      [
-        'section',
-        'label',
-        'value',
-        'note',
-      ].join(','),
-      ['summary', t('org_dashboard.csv.total_departments'), String(totalDepartments), ''].join(','),
-      ['summary', t('org_dashboard.csv.total_heads'), String(totalHeads), ''].join(','),
-      ['summary', t('org_dashboard.csv.total_resolved'), String(totalResolved), ''].join(','),
-      ['summary', t('org_dashboard.csv.total_pending'), String(totalPending), ''].join(','),
+      ['section', 'label', 'value'].join(','),
+      ['summary', 'total_departments', String(totalDepartments)].join(','),
+      ['summary', 'total_complaints', String(totalComplaints)].join(','),
+      ['summary', 'resolved_complaints', String(totalResolved)].join(','),
+      ['summary', 'pending_complaints', String(totalPending)].join(','),
+      ['summary', 'overall_resolution_rate', `${overallResolutionRate}%`].join(','),
+      ['summary', 'avg_resolution_time_hours', String(avgResolutionTimeHours)].join(','),
+      ['summary', 'stale_complaints', String(staleComplaints)].join(','),
       '',
-      [
-        t('org_dashboard.csv.department_name'),
-        t('org_dashboard.csv.total'),
-        t('org_dashboard.csv.resolved'),
-        t('org_dashboard.csv.pending'),
-        t('org_dashboard.csv.resolved_percentage'),
-      ].join(','),
+      ['departments', 'name', 'total', 'resolved', 'pending', 'resolved_percentage', 'avg_resolution_time_hours', 'new_last_30_days', 'performance_score'].join(','),
       ...departments.map((department) => [
         department.name.replaceAll(',', ' '),
         String(department.total),
         String(department.resolved),
         String(department.pending),
         `${department.resolvedPercentage}%`,
+        String(department.avgResolutionTimeHours),
+        String(department.newComplaintsLast30Days),
+        String(department.performanceScore),
+      ].join(',')),
+      '',
+      ['top_performers', 'name', 'performance_score', 'resolved_percentage'].join(','),
+      ...topPerformers.map((department) => [
+        department.name.replaceAll(',', ' '),
+        String(department.performanceScore),
+        `${department.resolvedPercentage}%`,
+      ].join(',')),
+      '',
+      ['problem_departments', 'name', 'resolved_percentage', 'avg_time', 'pending'].join(','),
+      ...problemDepartments.map((department) => [
+        department.name.replaceAll(',', ' '),
+        `${department.resolvedPercentage}%`,
+        String(department.avgTime),
+        String(department.pending),
+      ].join(',')),
+      '',
+      ['recommendations', 'priority', 'type', 'message', 'suggested_action'].join(','),
+      ...recommendations.map((item) => [
+        item.priority,
+        item.type,
+        item.message.replaceAll(',', ' '),
+        (item.suggestedAction || '').replaceAll(',', ' '),
       ].join(',')),
     ].join('\n');
 
@@ -147,9 +155,11 @@ const OrgHeadDashboard = () => {
     doc.setFontSize(10);
     [
       `${t('org_dashboard.stats.total_depts')}: ${totalDepartments}`,
-      `${t('org_dashboard.stats.dept_heads')}: ${totalHeads}`,
+      `${t('org_dashboard.stats.complaints_assigned', 'Total Complaints')}: ${totalComplaints}`,
       `${t('org_dashboard.stats.total_resolved')}: ${totalResolved}`,
       `${t('org_dashboard.stats.total_pending')}: ${totalPending}`,
+      `${t('org_dashboard.chart.resolved', 'Resolution')}: ${overallResolutionRate}%`,
+      `${t('org_dashboard.stats.avg_time', 'Avg Time')}: ${avgResolutionTimeHours}h`,
     ].forEach((line) => {
       doc.text(line, 14, y);
       y += 6;
@@ -163,7 +173,7 @@ const OrgHeadDashboard = () => {
     doc.setFont('helvetica', 'normal');
     departments.forEach((department) => {
       doc.text(
-        `${department.name} | ${t('org_dashboard.table.col_total')}: ${department.total} | ${t('org_dashboard.table.col_resolved')}: ${department.resolved} | ${t('org_dashboard.table.col_pending')}: ${department.pending} | ${t('org_dashboard.table.col_success')}: ${department.resolvedPercentage}%`,
+        `${department.name} | ${t('org_dashboard.chart.total')}: ${department.total} | ${t('org_dashboard.chart.resolved')}: ${department.resolved} | ${t('org_dashboard.chart.pending')}: ${department.pending} | ${department.resolvedPercentage}% | ${department.performanceScore}`,
         14,
         y,
       );
@@ -184,6 +194,23 @@ const OrgHeadDashboard = () => {
     departments.forEach((department) => {
       const line = `${department.name} | ${department.total} | ${department.resolved} | ${department.pending} | ${department.resolvedPercentage}%`;
       const lines = doc.splitTextToSize(line, 180);
+      doc.text(lines, 14, y);
+      y += lines.length * 5 + 2;
+      if (y > 280) {
+        doc.addPage();
+        y = 18;
+      }
+    });
+
+    y += 6;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text(t('org_dashboard.export.recommendations', 'Recommendations'), 14, y);
+    y += 8;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    recommendations.forEach((item) => {
+      const lines = doc.splitTextToSize(`${item.priority.toUpperCase()} | ${item.message} ${item.suggestedAction ? `| ${item.suggestedAction}` : ''}`, 180);
       doc.text(lines, 14, y);
       y += lines.length * 5 + 2;
       if (y > 280) {
@@ -221,21 +248,22 @@ const OrgHeadDashboard = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <StatCard title={t('org_dashboard.stats.total_depts')} value={totalDepartments} subValue={t('org_dashboard.stats.sub_active')} icon={FileText} color="bg-indigo-500" />
-        <StatCard title={t('org_dashboard.stats.dept_heads')} value={totalHeads} subValue={t('org_dashboard.stats.sub_staff')} icon={CheckCircle2} color="bg-emerald-500" />
-        <StatCard title={t('org_dashboard.stats.total_resolved')} value={totalResolved} subValue={t('org_dashboard.stats.sub_resolved')} icon={Clock} color="bg-amber-500" />
-        <StatCard title={t('org_dashboard.stats.total_pending')} value={totalPending} subValue={t('org_dashboard.stats.sub_pending')} icon={FileText} color="bg-[#006B5D]" />
+        <StatCard title={t('org_dashboard.stats.complaints_assigned', 'Total Complaints')} value={totalComplaints} subValue={`${overallResolutionRate}% ${t('org_dashboard.chart.resolved', 'Resolved')}`} icon={CheckCircle2} color="bg-emerald-500" />
+        <StatCard title={t('org_dashboard.stats.total_resolved')} value={totalResolved} subValue={`${avgResolutionTimeHours}h ${t('org_dashboard.stats.avg_time', 'avg time')}`} icon={Clock} color="bg-amber-500" />
+        <StatCard title={t('org_dashboard.stats.total_pending')} value={totalPending} subValue={`${staleComplaints} ${t('org_dashboard.stats.sub_stale', 'stale complaints')}`} icon={FileText} color="bg-[#006B5D]" />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         <div className="xl:col-span-8 space-y-4">
-          <div className="flex items-center gap-2">
+          
+
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-4 md:p-6 h-[420px]">
+            <div className="flex items-center gap-2 mb-4">
             <BarChart3 size={18} className="text-[#006B5D]" />
             <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">
               {t('org_dashboard.chart.title')}
             </h3>
           </div>
-
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-4 md:p-6 h-[420px]">
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 40 }}>
@@ -258,14 +286,42 @@ const OrgHeadDashboard = () => {
                     }}
                     formatter={(value, name) => [String(value ?? 0), String(name)]}
                   />
-                  <Bar dataKey="total" name={t('org_dashboard.chart.total')} radius={[6, 6, 0, 0]} barSize={24}>
-                    {chartData.map((entry, index) => (
-                      <Cell key={`total-${entry.departmentId}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                    ))}
-                  </Bar>
-                  <Bar dataKey="resolved" name={t('org_dashboard.chart.resolved')} radius={[6, 6, 0, 0]} barSize={24}  />
                   <Bar dataKey="pending" name={t('org_dashboard.chart.pending')} radius={[6, 6, 0, 0]} barSize={24} fill="#F59E0B" />
+                  <Bar dataKey="resolved" name={t('org_dashboard.chart.resolved')} radius={[6, 6, 0, 0]} barSize={24}  />
                 </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-slate-400 text-sm font-medium">
+                {t('org_dashboard.table.no_data')}
+              </div>
+            )}
+          </div>
+
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-4 md:p-6 h-[320px]">
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp size={18} className="text-[#006B5D]" />
+              <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">
+                {t('org_dashboard.trends.title', 'Monthly Trends')}
+              </h3>
+            </div>
+            {trendsData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="88%">
+                <AreaChart data={trendsData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+                  <defs>
+                    <linearGradient id="orgHeadTrendFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#006B5D" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#006B5D" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                  <XAxis dataKey="period" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0' }}
+                    formatter={(value) => [String(value ?? 0), t('org_dashboard.trends.count', 'Complaints')]}
+                  />
+                  <Area type="monotone" dataKey="count" stroke="#006B5D" fill="url(#orgHeadTrendFill)" strokeWidth={3} />
+                </AreaChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-slate-400 text-sm font-medium">
@@ -275,8 +331,32 @@ const OrgHeadDashboard = () => {
           </div>
         </div>
 
-        <div className="xl:col-span-4">
-          <div className="bg-slate-900 p-8 rounded-3xl shadow-2xl text-white relative overflow-hidden group h-full min-h-[320px]">
+        <div className="xl:col-span-4 space-y-6">
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <AlertTriangle size={18} className="text-amber-500" />
+              <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">
+                {t('org_dashboard.export.recommendations', 'Recommendations')}
+              </h3>
+            </div>
+            {recommendations.length ? (
+              <div className="space-y-3">
+                {recommendations.slice(0, 2).map((item) => (
+                  <div key={`${item.type}-${item.message}`} className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-amber-700 font-black">{item.priority}</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-700">{item.message}</p>
+                    {item.suggestedAction ? (
+                      <p className="mt-2 text-xs text-slate-500 leading-relaxed">{item.suggestedAction}</p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500">{t('org_dashboard.table.no_data')}</p>
+            )}
+          </div>
+
+          <div className="bg-slate-900 p-8 rounded-3xl shadow-2xl text-white relative overflow-hidden group h-full max-h-[320px]">
             <div className="relative z-10 h-full flex flex-col">
               <h4 className="font-black text-xl mb-3 tracking-tight italic text-emerald-400">
                 {t('org_dashboard.export.title')}
