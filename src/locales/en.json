@@ -64,6 +64,7 @@
       "note": "Includes summary metrics and department breakdown"
     }
   },
+  },
   "dept_mgmt": {
     "nav": "Organization / Management",
     "title": "Infrastructure",
@@ -87,11 +88,17 @@
       "active": "Active",
       "inactive": "Deactivated",
       "unassigned": "Unassigned",
+      "actions": "Actions",
       "no_data": "No records found matching your criteria"
     },
     "modals": {
       "new_dept": "New Department",
       "new_admin": "New Dept Admin",
+      "edit_dept": "Edit Department",
+      "edit_admin": "Edit Department Head",
+      "deactivate_title": "Confirm Deactivation",
+      "deactivate_dept_msg": "Are you sure you want to deactivate this department?",
+      "deactivate_head_msg": "Are you sure you want to deactivate this department head account?",
       "labels": {
         "name": "Department Name",
         "code": "Network Code",
@@ -100,7 +107,8 @@
         "full_name": "Full Name",
         "email": "Email Address",
         "password": "System Password",
-        "unit": "Assigned Unit"
+        "unit": "Assigned Unit",
+        "status_active": "Active"
       },
       "placeholders": {
         "name": "e.g. Finance",
@@ -115,14 +123,22 @@
       "add_dept": "Add Department",
       "add_admin": "Add Admin",
       "submit_dept": "Finalize Department",
-      "submit_admin": "Confirm Access"
+      "submit_admin": "Confirm Access",
+      "update_dept": "Update Department",
+      "update_admin": "Update Department Head",
+      "deactivate": "Deactivate"
     },
     "toasts": {
       "fetch_error": "Failed to sync system data",
       "creating_dept": "Creating department...",
       "dept_success": "Department created successfully!",
+      "dept_updated": "Department updated successfully!",
       "registering_admin": "Registering admin...",
-      "admin_success": "Admin registered successfully!"
+      "admin_success": "Admin registered successfully!",
+      "admin_updated": "Department head updated successfully!",
+      "deactivating": "Deactivating...",
+      "deactivated": "Deactivated successfully",
+      "generic_error": "Error"
     }
   },
   "complaints": {
@@ -278,7 +294,14 @@
     },
     "side": {
       "admins": "Admin Accounts",
+      "accounts": "Accounts",
       "create": "Create",
+      "create_admin": "Admin",
+      "create_head": "Head",
+      "filter_all": "All",
+      "filter_admin": "Admins",
+      "filter_head": "Heads",
+      "head_readonly": "Head account actions are limited to creation.",
       "edit": "Edit",
       "suspend": "Suspend"
     },
@@ -286,6 +309,7 @@
       "org_new": "New Organization",
       "org_edit": "Edit Organization",
       "admin_new": "New Admin",
+      "head_new": "New Head",
       "admin_edit": "Edit Admin",
       "deactivate_title": "Confirm Suspension",
       "warning": "Warning: Deactivating this {{type}} will restrict access immediately. Please provide a reason below.",
@@ -306,6 +330,9 @@
       "save": "Save Changes",
       "confirm": "Confirm",
       "deactivate": "Confirm Deactivate"
+    },
+    "toasts": {
+      "head_created": "Head created successfully!"
     }
   },
   "settings": {
@@ -359,6 +386,7 @@
   "reset_password_subtitle": "Set your new password to login into your account!",
   "verify_code_title": "Verify Code",
   "verify_code_subtitle": "We have sent an email to your email account with a verification code!",
-  "verify_code_label": "Verification Code"
+  "verify_code_label": "Verification Code",
+  "not_allowed": "You are not allowed to access the system."
 }
 }

@@ -87,11 +87,17 @@
       "active": "ንቁ",
       "inactive": "የተዘጋ",
       "unassigned": "ያልተመደበ",
+      "actions": "እርምጃዎች",
       "no_data": "ከፍለጋዎ ጋር የሚዛመድ መረጃ አልተገኘም"
     },
     "modals": {
       "new_dept": "አዲስ ክፍል",
       "new_admin": "አዲስ የክፍል አስተዳዳሪ",
+      "edit_dept": "ክፍል አስተካክል",
+      "edit_admin": "የክፍል ኃላፊ አስተካክል",
+      "deactivate_title": "ማብቂያ ያረጋግጡ",
+      "deactivate_dept_msg": "ይህን ክፍል ማብቃት እርግጠኛ ነዎት?",
+      "deactivate_head_msg": "ይህን የክፍል ኃላፊ መለያ ማብቃት እርግጠኛ ነዎት?",
       "labels": {
         "name": "የክፍል ስም",
         "code": "የክፍል ኮድ",
@@ -100,7 +106,8 @@
         "full_name": "ሙሉ ስም",
         "email": "ኢሜይል",
         "password": "የይለፍ ቃል",
-        "unit": "ክፍል"
+        "unit": "ክፍል",
+        "status_active": "ንቁ"
       },
       "placeholders": {
         "name": "ምሳሌ፡ ፋይናንስ",
@@ -115,14 +122,22 @@
       "add_dept": "ክፍል ጨምር",
       "add_admin": "አስተዳዳሪ ጨምር",
       "submit_dept": "ክፍሉን አጽድቅ",
-      "submit_admin": "መለያውን ፍጠር"
+      "submit_admin": "መለያውን ፍጠር",
+      "update_dept": "ክፍሉን አዘምን",
+      "update_admin": "የክፍሉን ኃላፊ አዘምን",
+      "deactivate": "አቁም"
     },
     "toasts": {
       "fetch_error": "መረጃዎችን ማምጣት አልተቻለም",
       "creating_dept": "ክፍሉ እየተፈጠረ ነው...",
       "dept_success": "ክፍሉ ተፈጥሯል!",
+      "dept_updated": "ክፍሉ ተዘምኗል!",
       "registering_admin": "አስተዳዳሪው እየተመዘገበ ነው...",
-      "admin_success": "አስተዳዳሪው ተመዝግቧል!"
+      "admin_success": "አስተዳዳሪው ተመዝግቧል!",
+      "admin_updated": "የክፍሉ ኃላፊ ተዘምኗል!",
+      "deactivating": "እየታገደ ነው...",
+      "deactivated": "በተሳካ ሁኔታ ተቋርጧል",
+      "generic_error": "ስህተት"
     }
   },
   "complaints": {
@@ -278,7 +293,14 @@
     },
     "side": {
       "admins": "የአስተዳዳሪ መለያዎች",
+      "accounts": "መለያዎች",
       "create": "ፍጠር",
+      "create_admin": "አስተዳዳሪ",
+      "create_head": "ኃላፊ",
+      "filter_all": "ሁሉም",
+      "filter_admin": "አስተዳዳሪዎች",
+      "filter_head": "ኃላፊዎች",
+      "head_readonly": "ለኃላፊ መለያ እርምጃዎች አሁን በፍጠር ብቻ የተገደቡ ናቸው።",
       "edit": "አስተካክል",
       "suspend": "አግድ"
     },
@@ -286,6 +308,7 @@
       "org_new": "አዲስ ድርጅት",
       "org_edit": "ድርጅት ያስተካክሉ",
       "admin_new": "አዲስ አስተዳዳሪ",
+      "head_new": "አዲስ ኃላፊ",
       "admin_edit": "አስተዳዳሪ ያስተካክሉ",
       "deactivate_title": "እግዱን ያረጋግጡ",
       "warning": "ማስጠንቀቂያ፡ ይህንን {{type}} ማገድ መዳረሻን ወዲያውኑ ይገድባል። እባክዎ ምክንያቱን ከታች ይጥቀሱ።",
@@ -306,6 +329,9 @@
       "save": "ለውጦችን አስቀምጥ",
       "confirm": "አረጋግጥ",
       "deactivate": "ማገጃውን አረጋግጥ"
+    },
+    "toasts": {
+      "head_created": "ኃላፊው በተሳካ ሁኔታ ተፈጥሯል!"
     }
   },
   "settings": {
@@ -359,6 +385,7 @@
   "reset_password_subtitle": "ወደ መለያዎ ለመግባት አዲስ የይለፍ ቃል ያዘጋጁ!",
   "verify_code_title": "ኮዱን ያረጋግጡ",
   "verify_code_subtitle": "የማረጋገጫ ኮድ ወደ ኢሜይልዎ ልከናል። እባክዎ ኢሜይልዎን ያረጋግጡ!",
-  "verify_code_label": "የማረጋገጫ ኮድ"
+  "verify_code_label": "የማረጋገጫ ኮድ",
+  "not_allowed": "ይህ ገጽ ለእርስዎ የተፈቀደ አይደለም"
 }
 }

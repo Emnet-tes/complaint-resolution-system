@@ -20,6 +20,8 @@ import OrgDashboard from '../pages/OrgDashboard';
 import DepartmentManagement from '../pages/DepartmentManagement';
 import { useState } from 'react';
 import DeptDashboard from '../pages/DeptDashboard';
+import OrgHeadDepartments from '../pages/OrgHeadDepartments';
+import OrgHeadDashboard from '../pages/OrgHeadDashboard';
 
 const MainLayout = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -119,12 +121,28 @@ const AppRouter = () => {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="org-head/departments"
+              element={
+                <ProtectedRoute allowedRoles={['OrgHead']}>
+                  <OrgHeadDepartments />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="org-head/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['OrgHead']}>
+                  <OrgHeadDashboard />
+                </ProtectedRoute>
+              }
+            />
 
             {/* --- SHARED COMPLAINT ROUTES --- */}
             <Route
               path="complaints"
               element={
-                <ProtectedRoute allowedRoles={['DeptAdmin']}>
+                <ProtectedRoute allowedRoles={['DeptAdmin', 'OrgHead']}>
                   <RoleBasedComplaints />
                 </ProtectedRoute>
               }
@@ -132,7 +150,7 @@ const AppRouter = () => {
             <Route
               path="complaints/:id"
               element={
-                <ProtectedRoute allowedRoles={['OrgAdmin', 'DeptAdmin']}>
+                <ProtectedRoute allowedRoles={['OrgAdmin', 'DeptAdmin', 'OrgHead']}>
                   <ComplaintDetail />
                 </ProtectedRoute>
               }
@@ -142,7 +160,7 @@ const AppRouter = () => {
             <Route
               path="settings"
               element={
-                <ProtectedRoute allowedRoles={['SysAdmin', 'OrgAdmin', 'DeptAdmin']}>
+                <ProtectedRoute allowedRoles={['SysAdmin', 'OrgAdmin', 'OrgHead', 'DeptAdmin']}>
                   <Settings />
                 </ProtectedRoute>
               }

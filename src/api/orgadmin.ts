@@ -117,20 +117,10 @@ export interface OrgAdminAnalytics {
   }[];
 }
 
-// --- Types for Organization Complaints ---
-
 export interface OrganizationComplaintLocation {
   type: string;
   coordinates: number[];
   locationName: string | null;
-}
-
-export interface OrganizationComplaintHistoryItem {
-  _id: string;
-  action: string;
-  by: string | null;
-  comment?: string;
-  timestamp: string;
 }
 
 export interface OrganizationComplaint {
@@ -172,6 +162,16 @@ export interface OrganizationComplaint {
   __v: number;
   resolvedAt?: string;
 }
+
+
+export interface OrganizationComplaintHistoryItem {
+  _id: string;
+  action: string;
+  by: string | null;
+  comment?: string;
+  timestamp: string;
+}
+
 
 // --- API Implementation ---
 

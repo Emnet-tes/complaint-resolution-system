@@ -43,6 +43,36 @@ export interface CreateOrgAdminPayload {
   organizationId: string; // Swagger: "organizationId": "string"
 }
 
+// --- Types for Organization Heads ---
+
+export interface OrgHead {
+  _id: string;
+  fullName: string;
+  email: string;
+  role: string;
+  organization: {
+    _id: string;
+    name: string;
+  };
+  isActive: boolean;
+  createdAt: string;
+  lastLogin: string;
+}
+
+export interface CreateOrgHeadPayload {
+  fullName: string;
+  email: string;
+  password: string;
+  organizationId: string;
+}
+
+export interface UpdateOrgHeadPayload {
+  fullName?: string;
+  email?: string;
+  organizationId?: string;
+  isActive?: boolean;
+}
+
 export interface UpdateOrgAdminPayload {
   fullName?: string;
   email?: string;
@@ -91,6 +121,26 @@ export const sysAdminApi = {
   // Deactivate an Organization Admin
   deactivateOrgAdmin: (id: string, payload?: { message: string }) =>
     api.put<{ message: string }>(`/users/org-admins/${id}/deactivate`, payload),
+
+  /**
+   * ORGANIZATION HEADS (/users/org-heads)
+   */
+
+  // Create a new Organization Head
+  createOrgHead: (data: CreateOrgHeadPayload) =>
+    api.post<OrgHead>("/users/org-heads", data),
+
+  // List all Organization Heads
+  listOrgHeads: () =>
+    api.get<OrgHead[]>("/users/org-heads"),
+
+  // Update an Organization Head
+  updateOrgHead: (id: string, data: UpdateOrgHeadPayload) =>
+    api.put<OrgHead>(`/users/org-heads/${id}`, data),
+
+  // Deactivate an Organization Head
+  deactivateOrgHead: (id: string, payload?: { message: string }) =>
+    api.put<{ message: string }>(`/users/org-heads/${id}/deactivate`, payload),
 
   /**
    * ORGANIZATIONS (/organizations)
