@@ -19,6 +19,8 @@ const Login = () => {
         navigate('/dashboard');
       } else if (user.role === 'OrgAdmin') {
         navigate('/org-dashboard');
+      } else if (user.role === 'DeptHead') {
+        navigate('/dept-dashboard');
       } else {
         // Fallback
         navigate('/login');

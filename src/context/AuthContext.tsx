@@ -3,8 +3,8 @@ import type { ReactNode } from 'react';
 import Cookies from 'js-cookie';
 import { authApi } from '../api/api';
 
-// Roles as returned by backend: SysAdmin, OrgAdmin, OrgHead, DeptAdmin
-export type Role = 'SysAdmin' | 'OrgAdmin' | 'OrgHead' | 'DeptAdmin' | null;
+// Roles as returned by backend: SysAdmin, OrgAdmin, OrgHead, DeptHead
+export type Role = 'SysAdmin' | 'OrgAdmin' | 'OrgHead' | 'DeptHead' | null;
 
 export interface User {
   fullname: string;

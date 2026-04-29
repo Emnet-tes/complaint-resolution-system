@@ -76,12 +76,12 @@ const Settings = () => {
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="space-y-1.5">
                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        {user?.role === 'DeptAdmin' ? t('dept_complaints.table.department', 'Department') : t('settings.profile.first_name')}
+                        {user?.role === 'DeptHead' ? t('dept_complaints.table.department', 'Department') : t('settings.profile.first_name')}
                      </label>
                      <input
                        className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-2 focus:ring-[#006B5D]/10 outline-none transition-all"
-                       placeholder={user?.role === 'DeptAdmin' ? (t('sidebar.dept_portal') || 'Department') : 'First Name'}
-                       defaultValue={user?.fullname?.split(' ')[0] || ''}
+                       placeholder={user?.role === 'DeptHead' ? (t('sidebar.dept_portal') || 'Department') : 'System'}
+                       defaultValue={user?.role === 'DeptHead' ? '' : 'System'}
                      />
                   </div>
                   <div className="space-y-1.5">
