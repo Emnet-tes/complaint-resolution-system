@@ -26,12 +26,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedUser = Cookies.get('user');
-    const token = Cookies.get('token');
-    if (savedUser && token) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
+    const initAuth = async () => {
+      const savedUser = Cookies.get('user');
+      const token = Cookies.get('token');
+      
+      if (savedUser && token) {
+        setUser(JSON.parse(savedUser));
+      }
+      
+      if (token) {
+        try {
+          const response = await authApi.getProfile();
+          const data = response.data;
+          const profileData = data.user || data;
+          
+          if (profileData) {
+            setUser((prev) => {
+              const updatedUser: User = {
+                fullname: profileData.fullname || (profileData.firstName ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : prev?.fullname || ''),
+                email: profileData.email || prev?.email || '',
+                role: (profileData.role as Role) || prev?.role || null,
+              };
+              Cookies.set('user', JSON.stringify(updatedUser), { expires: 7 });
+              return updatedUser;
+            });
+          }
+        } catch (error) {
+          console.error("Failed to fetch user profile", error);
+        }
+      }
+      setLoading(false);
+    };
+
+    initAuth();
   }, []);
 
   const login = async (credentials: any): Promise<User> => {

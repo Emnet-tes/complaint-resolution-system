@@ -80,24 +80,28 @@ const Settings = () => {
                      </label>
                      <input
                        className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-2 focus:ring-[#006B5D]/10 outline-none transition-all"
-                       placeholder={user?.role === 'DeptAdmin' ? (t('sidebar.dept_portal') || 'Department') : 'System'}
-                       defaultValue={user?.role === 'DeptAdmin' ? '' : 'System'}
+                       placeholder={user?.role === 'DeptAdmin' ? (t('sidebar.dept_portal') || 'Department') : 'First Name'}
+                       defaultValue={user?.fullname?.split(' ')[0] || ''}
                      />
                   </div>
                   <div className="space-y-1.5">
                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                         {t('settings.profile.last_name')}
                      </label>
-                     <input className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-2 focus:ring-[#006B5D]/10 outline-none transition-all" defaultValue="Admin" />
+                     <input 
+                       className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-2 focus:ring-[#006B5D]/10 outline-none transition-all" 
+                       placeholder="Last Name"
+                       defaultValue={user?.fullname?.split(' ').slice(1).join(' ') || ''} 
+                     />
                   </div>
                   <div className="space-y-1.5 sm:col-span-2">
                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                         {t('settings.profile.email')}
                      </label>
                      <input
-                       className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold"
-                       placeholder={user?.email || ''}
-                       defaultValue=""
+                       className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 cursor-not-allowed"
+                       value={user?.email || ''}
+                       readOnly
                      />
                   </div>
                </div>
