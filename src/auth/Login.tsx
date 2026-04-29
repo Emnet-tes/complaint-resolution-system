@@ -46,7 +46,7 @@ const Login = () => {
         navigate('/org-dashboard');
       } else if (user.role === 'OrgHead') {
         navigate('/org-head/dashboard');
-      } else if (user.role === 'DeptAdmin') {
+      } else if (user.role === 'DeptHead') {
         navigate('/dept-dashboard');
       } else {
         logout();

@@ -170,7 +170,7 @@ const ComplaintDetail = () => {
     navigate('/complaints');
   };
 
-  const isDeptAdmin = user?.role === 'DeptAdmin';
+  const isDeptHead = user?.role === 'DeptHead';
   const isOrgComplaint = complaint ? isOrganizationComplaint(complaint) : false;
 
   useEffect(() => {
@@ -404,7 +404,7 @@ const ComplaintDetail = () => {
 
   const handleUpdateStatus = async () => {
     if (!id) return;
-    if (!isDeptAdmin) return;
+    if (!isDeptHead) return;
     if (isOrgComplaint) return;
     if (newStatus === 'Rejected' && !comment.trim()) {
       toast.error(t('dept_complaints.detail.comment_required'));
@@ -473,7 +473,7 @@ const ComplaintDetail = () => {
                 </span>
                 <h1 className="text-2xl font-bold text-slate-800 mt-3">{complaint.title}</h1>
              </div>
-             {isDeptAdmin && !isOrgComplaint && (
+             {isDeptHead && !isOrgComplaint && (
                <div className="flex flex-col gap-3 w-full max-w-sm">
                  <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">

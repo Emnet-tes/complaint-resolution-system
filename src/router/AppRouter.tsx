@@ -108,7 +108,7 @@ const AppRouter = () => {
             <Route
               path="dept-dashboard"
               element={
-                <ProtectedRoute allowedRoles={['DeptAdmin']}>
+                <ProtectedRoute allowedRoles={['DeptHead']}>
                   <DeptDashboard />
                 </ProtectedRoute>
               }
@@ -142,7 +142,7 @@ const AppRouter = () => {
             <Route
               path="complaints"
               element={
-                <ProtectedRoute allowedRoles={['DeptAdmin', 'OrgHead']}>
+                <ProtectedRoute allowedRoles={['DeptHead', 'OrgHead']}>
                   <RoleBasedComplaints />
                 </ProtectedRoute>
               }
@@ -150,7 +150,7 @@ const AppRouter = () => {
             <Route
               path="complaints/:id"
               element={
-                <ProtectedRoute allowedRoles={['OrgAdmin', 'DeptAdmin', 'OrgHead']}>
+                <ProtectedRoute allowedRoles={['OrgAdmin', 'DeptHead', 'OrgHead']}>
                   <ComplaintDetail />
                 </ProtectedRoute>
               }
@@ -160,7 +160,7 @@ const AppRouter = () => {
             <Route
               path="settings"
               element={
-                <ProtectedRoute allowedRoles={['SysAdmin', 'OrgAdmin', 'OrgHead', 'DeptAdmin']}>
+                <ProtectedRoute allowedRoles={['SysAdmin', 'OrgAdmin', 'OrgHead', 'DeptHead']}>
                   <Settings />
                 </ProtectedRoute>
               }
