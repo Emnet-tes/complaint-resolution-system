@@ -14,6 +14,19 @@ interface NotificationContextType {
   markAllAsRead: () => void;
 }
 
+const normalizeNotifications = (payload: unknown): Notification[] => {
+  if (Array.isArray(payload)) return payload;
+
+  if (payload && typeof payload === 'object') {
+    const value = payload as { notifications?: unknown; data?: unknown; items?: unknown };
+    if (Array.isArray(value.notifications)) return value.notifications as Notification[];
+    if (Array.isArray(value.data)) return value.data as Notification[];
+    if (Array.isArray(value.items)) return value.items as Notification[];
+  }
+
+  return [];
+};
+
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -21,13 +34,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const { user } = useAuth();
   const token = Cookies.get('token');
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = Array.isArray(notifications) ? notifications.filter((n) => !n.read).length : 0;
 
   const fetchNotifications = async () => {
     if (!token) return;
     try {
       const res = await notificationApi.getNotifications();
-      setNotifications(res.data);
+      setNotifications(normalizeNotifications(res.data));
     } catch (err) {
       console.error("Error fetching notifications", err);
     }

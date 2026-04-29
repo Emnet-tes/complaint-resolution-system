@@ -20,93 +20,48 @@
   },
   "org_dashboard": {
     "nav_path": "ድርጅት / አጠቃላይ እይታ",
-    "title": "የዳሽቦርድ መለኪያዎች",
-    "subtitle": "የክፍሎች ማጠቃለያ፣ የሰራተኞች ድምር እና ለመላክ የሚችሉ የአፈፃፀም መረጃዎች።",
+    "title": "የክፍል ሽፋን እና የቅሬታ መጠን",
+    "subtitle": "የኃላፊ ሽፋንን እና የቅሬታ መጠንን ለእያንዳንዱ ክፍል በአንድ ቦታ ይመልከቱ።",
+    "loading": "በስራ ላይ...",
     "stats": {
-      "total_depts": "ጠቅላላ ክፍሎች",
-      "dept_heads": "የክፍል ኃላፊዎች",
-      "total_resolved": "ተፈትተዋል",
-      "total_pending": "በሂደት ላይ",
-      "sub_active": "ንቁ ክፍሎች",
-      "sub_staff": "ሰራተኞች",
-      "sub_pending": "ምላሽ የሚጠባበቁ",
-      "sub_resolved": "የተፈቱ ጉዳዮች"
+      "total_depts_heads": "ጠቅላላ ክፍሎች",
+      "total_heads": "{{count}} የክፍል ኃላፊዎች",
+      "active_inactive_heads": "ንቁ ኃላፊዎች",
+      "inactive_heads": "{{count}} የማይንቁ ኃላፊዎች",
+      "covered_uncovered": "ኃላፊ ያላቸው ክፍሎች",
+      "not_covered": "{{count}} ያልተመደቡ",
+      "active_inactive_coverage": "ንቁ ኃላፊ ያላቸው ክፍሎች",
+      "inactive_coverage": "{{count}} የማይንቁ ኃላፊ ያላቸው"
     },
     "table": {
-      "title": "የክፍሎች ማጠቃለያ",
+      "title": "የክፍል ሽፋን እና የቅሬታ መጠን",
       "col_dept": "ክፍል",
-      "col_total": "ጠቅላላ",
-      "col_resolved": "ተፈትተዋል",
-      "col_pending": "በሂደት ላይ",
-      "col_success": "ውጤታማነት",
-      "no_data": "ምንም የክፍል መረጃ የለም"
+      "col_head": "ኃላፊ",
+      "col_status": "ሁኔታ",
+      "col_assigned": "የተመደበ",
+      "col_recent": "አዲስ (30 ቀን)",
+      "col_coverage": "ሽፋን",
+      "covered": "ተሸፍኗል",
+      "unassigned": "ያልተመደበ",
+      "no_data": "ምንም የክፍል ሽፋን መረጃ የለም"
     },
     "chart": {
-      "title": "የክፍሎች አፈፃፀም",
-      "total": "ጠቅላላ",
-      "resolved": "ተፈትተዋል",
-      "pending": "በሂደት ላይ"
+      "title": "የሽፋን እና የቅሬታ መጠን",
+      "subtitle": "ኃላፊ ከተመደበ 100% ሽፋን፣ ካልተመደበ 0% ሽፋን ይታያል።",
+      "summary": "ጠቅላላ የተመደቡ ቅሬታዎች",
+      "volume_label": "ቅሬታዎች",
+      "new_30d": "በ30 ቀናት ውስጥ {{count}} አዲስ",
+      "coverage": "ሽፋን",
+      "volume": "የቅሬታ መጠን"
     },
     "export": {
-      "title": "የመላክ ማዕከል",
-      "subtitle": "የክፍሎችን ማጠቃለያ እንደ CSV ወይም PDF ያውርዱ።",
-      "csv": "CSV ላክ",
-      "pdf": "PDF ላክ"
-    },
-    "pdf": {
-      "title": "የOrgHead ክፍሎች ሪፖርት",
-      "generated": "ተፈጥሯል",
-      "summary_title": "ማጠቃለያ",
-      "department_title": "የክፍሎች ዝርዝር",
-      "summary_table_title": "የክፍሎች ማጠቃለያ ሰንጠረዥ"
-    },
-    "csv": {
-      "section": "ክፍል",
-      "label": "መለያ",
-      "value": "እሴት",
-      "note": "ማስታወሻ",
-      "total_departments": "ጠቅላላ ክፍሎች",
-      "total_heads": "ጠቅላላ ኃላፊዎች",
-      "total_resolved": "ጠቅላላ ተፈትተዋል",
-      "total_pending": "ጠቅላላ በሂደት ላይ",
-      "department_name": "የክፍል ስም",
-      "total": "ጠቅላላ",
-      "resolved": "ተፈትተዋል",
-      "pending": "በሂደት ላይ",
-      "resolved_percentage": "የተፈታ %"
-    }
-  },
-  "org_head_departments": {
-    "nav": "OrgHead / ክፍሎች",
-    "title": "ክፍሎች",
-    "subtitle": "ለድርጅታዊ ክትትል የሚያገለግል የክፍሎች ዝርዝር።",
-    "search_placeholder": "በክፍል ስም፣ ኮድ ወይም መግለጫ ይፈልጉ...",
-    "no_data": "ምንም ክፍል አልተገኘም"
-  },
-  "org_head_complaints": {
-    "nav": "OrgHead / ቅሬታዎች",
-    "title": "የድርጅት ቅሬታዎች",
-    "subtitle": "የቅሬታ መመደብ፣ ሁኔታ እና ቅድሚያ ይከልሱ እና ያስተካክሉ።",
-    "list_view": "ዝርዝር",
-    "map_view": "ካርታ",
-    "search_placeholder": "በመለያ፣ በርዕስ፣ በመግለጫ፣ በላኪ ይፈልጉ...",
-    "status_label": "ሁኔታ",
-    "all": "ሁሉም",
-    "no_data": "ምንም ቅሬታ አልተገኘም",
-    "no_location": "በተጣራው ቅሬታ ውስጥ የቦታ መረጃ የለም",
-    "override": "አስተካክል",
-    "override_title": "ቅሬታ አስተካክል",
-    "override_note": "ይህ ማስተካከያ የቅሬታ መመደብን/ምደባን ያዘምናል እና የታሪክ ማስታወሻ ያስገባል።",
-    "department": "ክፍል",
-    "priority": "ቅድሚያ",
-    "mark_spam": "እንደ ስፓም ምልክት አድርግ",
-    "comment": "አስተያየት",
-    "comment_placeholder": "ይህን ማስተካከያ ለምን እንደሚያስፈልግ ያብራሩ",
-    "apply_override": "ማስተካከያን ተግብር",
-    "popup": {
-      "status": "ሁኔታ",
-      "priority": "ቅድሚያ",
-      "department": "ክፍል"
+      "title": "ላክ",
+      "subtitle": "የአሁኑን ማጠቃለያ እና የክፍል መረጃ እንደ CSV ፋይል ያውርዱ።",
+      "csv": "CSV አውጣ",
+      "pdf": "PDF አውጣ",
+      "pdf_summary": "የማጠቃለያ እይታ",
+      "pdf_departments": "የክፍሎች ዝርዝር",
+      "note": "ማጠቃለያ እና የክፍሎች ዝርዝር ይጨምራል"
     }
   },
   "dept_mgmt": {
