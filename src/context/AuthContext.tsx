@@ -10,6 +10,7 @@ export interface User {
   fullname: string;
   email: string;
   role: Role;
+  profilePicture?: string;
 }
 
 interface AuthContextType {
@@ -17,6 +18,7 @@ interface AuthContextType {
   loading: boolean;
   login: (credentials: any) => Promise<User>;
   logout: () => void;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,6 +26,31 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const refreshProfile = async () => {
+    const token = Cookies.get('token');
+    if (!token) return;
+    try {
+      const response = await authApi.getProfile();
+      const data = response.data;
+      const profileData = data.user || data;
+      
+      if (profileData) {
+        setUser((prev) => {
+          const updatedUser: User = {
+            fullname: profileData.fullname || (profileData.firstName ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : prev?.fullname || ''),
+            email: profileData.email || prev?.email || '',
+            role: (profileData.role as Role) || prev?.role || null,
+            profilePicture: profileData.profilePicture || profileData.avatar || prev?.profilePicture,
+          };
+          Cookies.set('user', JSON.stringify(updatedUser), { expires: 7 });
+          return updatedUser;
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch user profile", error);
+    }
+  };
 
   useEffect(() => {
     const initAuth = async () => {
@@ -34,27 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(JSON.parse(savedUser));
       }
       
-      if (token) {
-        try {
-          const response = await authApi.getProfile();
-          const data = response.data;
-          const profileData = data.user || data;
-          
-          if (profileData) {
-            setUser((prev) => {
-              const updatedUser: User = {
-                fullname: profileData.fullname || (profileData.firstName ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : prev?.fullname || ''),
-                email: profileData.email || prev?.email || '',
-                role: (profileData.role as Role) || prev?.role || null,
-              };
-              Cookies.set('user', JSON.stringify(updatedUser), { expires: 7 });
-              return updatedUser;
-            });
-          }
-        } catch (error) {
-          console.error("Failed to fetch user profile", error);
-        }
-      }
+      await refreshProfile();
       setLoading(false);
     };
 
@@ -94,7 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
