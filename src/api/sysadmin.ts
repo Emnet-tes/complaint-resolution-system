@@ -83,19 +83,64 @@ export interface UpdateOrgAdminPayload {
 // --- Types for Analytics ---
 
 export interface SysAdminAnalytics {
-  overall: {
+  overview: {
     total: number;
     resolved: number;
     pending: number;
     resolvedPercentage: number;
+    avgResolutionTimeHours: number;
+    staleComplaints: number;
+    inactiveDepartmentHeads: number;
+    monthlyGrowthRate: number;
+  };
+  trends: {
+    monthly: {
+      month: string;
+      year: number;
+      count: number;
+    }[];
   };
   organizations: {
-    organizationId: string;
-    name: string;
-    total: number;
-    resolved: number;
-    pending: number;
-    resolvedPercentage: number;
+    all: {
+      organizationId: string;
+      name: string;
+      total: number;
+      resolved: number;
+      pending: number;
+      resolvedPercentage: number;
+      avgResolutionTimeHours: number;
+      staleComplaints: number;
+      inactiveDepartmentHeads: number;
+      performanceScore: number;
+    }[];
+    topPerformers: {
+      organizationId: string;
+      name: string;
+      total: number;
+      resolved: number;
+      pending: number;
+      resolvedPercentage: number;
+      avgResolutionTimeHours: number;
+      staleComplaints: number;
+      inactiveDepartmentHeads: number;
+      performanceScore: number;
+    }[];
+    needsImprovement: {
+      name: string;
+      resolutionRate: number;
+      avgTime: number;
+    }[];
+  };
+  alerts: {
+    severity: 'low' | 'medium' | 'high' | string;
+    message: string;
+  }[];
+  recommendations: {
+    type: string;
+    priority: string;
+    message: string;
+    organizations?: string[];
+    suggestedAction?: string;
   }[];
 }
 

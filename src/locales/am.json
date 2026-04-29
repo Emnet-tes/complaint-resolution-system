@@ -181,26 +181,46 @@
     "loading": "በስራ ላይ...",
     "stats": {
       "complaints": "አጠቃላይ ቅሬታዎች",
-      "sub_orgs": "ሁሉም ድርጅቶች",
+      "sub_growth": "{{rate}}% ወርሃዊ እድገት",
       "pending": "ምላሽ የሚጠባበቁ",
-      "sub_rate": "{{rate}}% አጠቃላይ ፍጥነት",
-      "resolved": "የተፈቱ ቅሬታዎች",
-      "sub_cases": "የተጠናቀቁ ጉዳዮች"
+      "sub_stale": "{{count}} የቆዩ ቅሬታዎች",
+      "avg_time": "አማካይ የመፍትሄ ሰዓታት",
+      "sub_inactive_heads": "{{count}} የማይንቁ የክፍል ኃላፊዎች"
     },
     "chart": {
       "title": "የድርጅቶች ስርጭት",
-      "subtitle": "የቅሬታ መጠን እና የመፍትሄ ክፍፍል",
+      "subtitle": "የቅሬታ መጠን እና የመፍትሄ ክፍፍል | {{rate}}% ተፈትቷል",
       "total": "ጠቅላላ",
       "resolved": "የተፈታ"
     },
+    "trends": {
+      "title": "ወርሃዊ አዝማሚያ",
+      "subtitle": "በቅርብ ወራት ያለ የቅሬታ መጠን ለውጥ",
+      "count": "ቅሬታዎች"
+    },
     "insights": {
-      "title": "የስርዓት ግንዛቤዎች",
-      "desc": "የአሁኑ የስርዓቱ መፍትሄ ፍጥነት <1>{{rate}}%</1> ነው። በስርጭት ሰንጠረዥ በኩል የእያንዳንዱን ድርጅት አፈፃፀም ይከታተሉ።",
-      "export": "ሪፖርት አውጣ"
+      "title": "የስርዓት ማስጠንቀቂያዎች",
+      "alerts": "ንቁ ማስጠንቀቂያዎች",
+      "no_alerts": "ምንም ንቁ ማስጠንቀቂያ የለም",
+      "action": "የተመከረ እርምጃ",
+      "export_csv": "CSV ላክ",
+      "export_pdf": "PDF ላክ"
+    },
+    "recommendations": {
+      "title": "ምክሮች",
+      "none": "ምንም ምክር የለም"
+    },
+    "export": {
+      "overview": "አጠቃላይ እይታ",
+      "top_performers": "ከፍተኛ አፈፃፀም ያላቸው",
+      "needs_improvement": "ማሻሻያ ያስፈልጋቸው",
+      "recommendations": "ምክሮች"
     },
     "summary": {
       "title": "የክትትል ማጠቃለያ",
-      "connected": "የተገናኙ ድርጅቶች"
+      "connected": "የተገናኙ ድርጅቶች",
+      "top_performer": "ከፍተኛ አፈፃፀም ያለው",
+      "needs_improvement": "ማሻሻያ ያስፈልጋቸው"
     }
   },
   "dept_dashboard": {
