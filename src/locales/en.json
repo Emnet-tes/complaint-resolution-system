@@ -181,26 +181,46 @@
     "loading": "loading...",
     "stats": {
       "complaints": "Global Complaints",
-      "sub_orgs": "All Organizations",
+      "sub_growth": "{{rate}}% Monthly Growth",
       "pending": "Pending Resolution",
-      "sub_rate": "{{rate}}% Global Rate",
-      "resolved": "System Resolved",
-      "sub_cases": "Completed Cases"
+      "sub_stale": "{{count}} Stale Complaints",
+      "avg_time": "Avg Resolution Hours",
+      "sub_inactive_heads": "{{count}} Inactive Dept Heads"
     },
     "chart": {
       "title": "Organization Distribution",
-      "subtitle": "Volume vs Resolution Breakdown",
+      "subtitle": "Volume vs Resolution Breakdown | {{rate}}% resolved",
       "total": "Total",
       "resolved": "Resolved"
     },
+    "trends": {
+      "title": "Monthly Trends",
+      "subtitle": "Complaint volume trend across recent months",
+      "count": "Complaints"
+    },
     "insights": {
-      "title": "System Insights",
-      "desc": "The current system resolution rate is <1>{{rate}}%</1>. Keep track of individual organization performance via the distribution chart.",
-      "export": "Export Report"
+      "title": "System Alerts",
+      "alerts": "Active Alerts",
+      "no_alerts": "No active alerts",
+      "action": "Suggested action",
+      "export_csv": "Export CSV",
+      "export_pdf": "Export PDF"
+    },
+    "recommendations": {
+      "title": "Recommendations",
+      "none": "No recommendations available"
+    },
+    "export": {
+      "overview": "Overview",
+      "top_performers": "Top Performers",
+      "needs_improvement": "Needs Improvement",
+      "recommendations": "Recommendations"
     },
     "summary": {
       "title": "Monitoring Summary",
-      "connected": "Connected Orgs"
+      "connected": "Connected Orgs",
+      "top_performer": "Top Performer",
+      "needs_improvement": "Needs Improvement"
     }
   },
   "dept_dashboard": {
