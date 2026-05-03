@@ -27,12 +27,12 @@ export interface ComplaintHistoryItem {
 
 export interface ComplaintComment {
   _id: string;
-  text: string;
+  commentText: string;
   author: {
-    _id: string;
-    fullName: string;
-    role: string;
-  };
+    _id?: string;
+    fullName?: string;
+    role?: string;
+  } | string | null;
   createdAt: string;
 }
 

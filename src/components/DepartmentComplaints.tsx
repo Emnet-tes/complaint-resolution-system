@@ -28,6 +28,10 @@ const DepartmentComplaints = () => {
   const knownIdsRef = useRef<Set<string>>(new Set());
   const firstLoadRef = useRef(true);
 
+  const getComplaintId = (c: AssignedComplaint) => {
+    return c._id || (c as any).id || '';
+  };
+
   const fetchAssigned = async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) {
       setLoading(true);
@@ -48,10 +52,11 @@ const DepartmentComplaints = () => {
 
       // New assignment notification
       const incoming = allData;
-      const incomingIds = new Set(incoming.map((c) => c._id));
+      const incomingIds = new Set(incoming.map((c) => getComplaintId(c)));
       if (!firstLoadRef.current) {
         for (const c of incoming) {
-          if (!knownIdsRef.current.has(c._id)) {
+          const cId = getComplaintId(c);
+          if (!knownIdsRef.current.has(cId)) {
             toast(t('dept_complaints.notifications.assigned_title'), {
               position: 'bottom-right',
             });
@@ -86,7 +91,7 @@ const DepartmentComplaints = () => {
         header: t('dept_complaints.table.id'),
         key: '_id',
         className: 'font-bold text-[#006B5D]',
-        render: (row) => `#${row._id?.slice(-6)?.toUpperCase() || 'UNKNOWN'}`,
+        render: (row) => `#${getComplaintId(row).slice(-6)?.toUpperCase() || 'UNKNOWN'}`,
       },
       {
         header: t('dept_complaints.table.title_desc'),
@@ -132,7 +137,7 @@ const DepartmentComplaints = () => {
         headerClassName: 'text-right',
         render: (row) => (
           <button
-            onClick={() => navigate(`/complaints/${row._id}`, { state: { complaint: row } })}
+            onClick={() => navigate(`/complaints/${getComplaintId(row)}`, { state: { complaint: row } })}
             className="text-[#006B5D] font-black text-[10px] uppercase tracking-widest hover:underline cursor-pointer"
           >
             {t('dept_complaints.table.view_details')}
@@ -146,7 +151,7 @@ const DepartmentComplaints = () => {
     if (!complaints.length) return;
     const headers = ['id', 'title', 'status', 'priority', 'createdAt'];
     const rows = complaints.map((c) => [
-      c._id,
+      getComplaintId(c),
       (c.title || '').replaceAll(',', ' '),
       c.status,
       c.priority || '',

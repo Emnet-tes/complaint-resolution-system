@@ -222,10 +222,10 @@ const ComplaintDetail = () => {
   const [saving, setSaving] = useState(false);
   const [newStatus, setNewStatus] = useState<ComplaintStatus>('Submitted');
   const [comment, setComment] = useState('');
-  const [orgComments, setOrgComments] = useState<ComplaintComment[]>([]);
+  const [comments, setComments] = useState<ComplaintComment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
-  const [newOrgComment, setNewOrgComment] = useState('');
-  const [postingOrgComment, setPostingOrgComment] = useState(false);
+  const [newCommentInput, setNewCommentInput] = useState('');
+  const [postingComment, setPostingComment] = useState(false);
   const [selectedAttachment, setSelectedAttachment] = useState<{
     url: string;
     label: string;
@@ -248,6 +248,7 @@ const ComplaintDetail = () => {
 
   const isDeptHead = user?.role === 'DeptHead';
   const isOrgComplaint = complaint ? isOrganizationComplaint(complaint) : false;
+  const showComments = isOrgComplaint || isDeptHead;
 
   useEffect(() => {
     if (complaint) {
@@ -258,7 +259,7 @@ const ComplaintDetail = () => {
     }
 
     const fetchOne = async () => {
-      if (!id) return;
+      if (!id || id === 'undefined') return;
       try {
         setLoading(true);
         let found: AssignedComplaint | OrgHeadComplaint | null = null;
@@ -518,9 +519,9 @@ const ComplaintDetail = () => {
     : '-';
 
   useEffect(() => {
-    if (!complaint || !isOrgComplaint) {
-      setOrgComments([]);
-      setNewOrgComment('');
+    if (!complaint || !showComments) {
+      setComments([]);
+      setNewCommentInput('');
       return;
     }
 
@@ -529,9 +530,14 @@ const ComplaintDetail = () => {
     const loadComments = async () => {
       setCommentsLoading(true);
       try {
-        const res = await orgHeadApi.getComments(complaint._id);
+        const complaintId = getComplaintId(complaint);
+        if (!complaintId || complaintId === 'undefined') {
+          setCommentsLoading(false);
+          return;
+        }
+        const res = await orgHeadApi.getComments(complaintId);
         if (isActive) {
-          setOrgComments(res.data || []);
+          setComments(res.data || []);
         }
       } catch (err: any) {
         if (isActive) {
@@ -549,28 +555,34 @@ const ComplaintDetail = () => {
     return () => {
       isActive = false;
     };
-  }, [complaint?._id, isOrgComplaint, t]);
+  }, [complaint?._id, showComments, t]);
 
-  const handleAddOrgComment = async () => {
-    if (!complaint || !isOrgComplaint || !newOrgComment.trim()) return;
+  const handleAddComment = async () => {
+    if (!complaint || !showComments || !newCommentInput.trim()) return;
 
-    setPostingOrgComment(true);
+    const complaintId = getComplaintId(complaint);
+    if (!complaintId || complaintId === 'undefined') {
+      toast.error(t('dept_complaints.detail.not_found'));
+      return;
+    }
+
+    setPostingComment(true);
     const loadId = toast.loading(t('org_head_complaints.comments.posting', 'Posting comment...'));
     try {
-      await orgHeadApi.addComment(complaint._id, { commentText: newOrgComment.trim() });
-      const res = await orgHeadApi.getComments(complaint._id);
-      setOrgComments(res.data || []);
-      setNewOrgComment('');
+      await orgHeadApi.addComment(complaintId, { commentText: newCommentInput.trim() });
+      const res = await orgHeadApi.getComments(complaintId);
+      setComments(res.data || []);
+      setNewCommentInput('');
       toast.success(t('org_head_complaints.comments.posted', 'Comment posted'), { id: loadId });
     } catch (err: any) {
       toast.error(err.response?.data?.message || t('org_head_complaints.comments.post_error', 'Failed to post comment'), { id: loadId });
     } finally {
-      setPostingOrgComment(false);
+      setPostingComment(false);
     }
   };
 
   const handleUpdateStatus = async () => {
-    if (!id) return;
+    if (!id || id === 'undefined') return;
     if (!isDeptHead) return;
     if (isOrgComplaint) return;
     if (newStatus === 'Rejected' && !comment.trim()) {
@@ -863,7 +875,7 @@ const ComplaintDetail = () => {
               </div>
            </div>
 
-             {isOrgComplaint && (
+             {showComments && (
                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                  <div className="flex items-center justify-between gap-3 mb-4">
                    <h4 className="font-bold text-slate-800 flex items-center gap-2">
@@ -871,15 +883,15 @@ const ComplaintDetail = () => {
                      {t('org_head_complaints.comments.title', 'Comments')}
                    </h4>
                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                     {orgComments.length}
+                     {comments.length}
                    </span>
                  </div>
 
                  <div className="space-y-3 max-h-72 overflow-auto pr-1">
                    {commentsLoading ? (
                      <div className="text-xs text-slate-400 font-medium">{t('org_head_complaints.comments.loading', 'Loading comments...')}</div>
-                   ) : orgComments.length ? (
-                     orgComments.map((item) => (
+                   ) : comments.length ? (
+                     comments.map((item) => (
                        <div key={item._id} className="rounded-xl border border-gray-100 bg-slate-50 p-3">
                          <div className="flex items-center justify-between gap-3">
                            <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest">
@@ -901,18 +913,18 @@ const ComplaintDetail = () => {
 
                  <div className="mt-4 space-y-2">
                    <textarea
-                     value={newOrgComment}
-                     onChange={(e) => setNewOrgComment(e.target.value)}
+                     value={newCommentInput}
+                     onChange={(e) => setNewCommentInput(e.target.value)}
                      placeholder={t('org_head_complaints.comments.placeholder', 'Write a comment...')}
                      className="w-full min-h-[96px] rounded-xl border border-gray-100 bg-gray-50 px-3 py-3 text-sm text-slate-700 outline-none"
                    />
                    <button
                      type="button"
-                     onClick={handleAddOrgComment}
-                     disabled={postingOrgComment || !newOrgComment.trim()}
+                     onClick={handleAddComment}
+                     disabled={postingComment || !newCommentInput.trim()}
                      className="w-full rounded-xl bg-[#006B5D] px-4 py-3 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-[#005a4e] disabled:cursor-not-allowed disabled:opacity-50"
                    >
-                     {postingOrgComment ? (
+                     {postingComment ? (
                        <Loader2 className="mx-auto animate-spin" size={14} />
                      ) : (
                        t('org_head_complaints.comments.post_button', 'Post Comment')

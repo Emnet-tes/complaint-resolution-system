@@ -5,11 +5,11 @@ export type ComplaintStatus = "Submitted" | "In Progress" | "Resolved" | "Reject
 export interface ComplaintComment {
   _id: string;
   commentText: string;
-  createdBy: {
-    _id: string;
-    fullName: string;
-    role: string;
-  };
+  author: {
+    _id?: string;
+    fullName?: string;
+    role?: string;
+  } | string | null;
   createdAt: string;
 }
 
