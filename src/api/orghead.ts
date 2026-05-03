@@ -1,5 +1,5 @@
 import api from './api';
-import type { Department } from './orgadmin';
+import type { Department, DeptAdmin } from './orgadmin';
 
 export type OrgHeadComplaintPriority = 'Low' | 'Medium' | 'High' | 'Critical';
 
@@ -138,6 +138,8 @@ export interface ComplaintComment {
   createdAt: string;
 }
 
+export type OrgHeadDeptHead = DeptAdmin;
+
 export const orgHeadApi = {
   getOrganizationComplaints: () =>
     api.get<OrgHeadComplaint[]>('/complaints/organization'),
@@ -156,6 +158,8 @@ export const orgHeadApi = {
     api.post<{ message: string }>(`/complaints/${id}/comments`, payload),
 
   listDepartments: () => api.get<Department[]>('/departments'),
+
+  listDeptHeads: () => api.get<OrgHeadDeptHead[]>('/users/dept-heads'),
 };
 
 export default orgHeadApi;
