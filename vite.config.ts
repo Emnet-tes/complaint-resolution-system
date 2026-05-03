@@ -18,10 +18,14 @@ export default defineConfig({
     },
   },
   build: {
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (!id.includes("node_modules")) return;
+          if (id.includes("react-dom") || id.includes("react/")) return "vendor-react";
+          if (id.includes("leaflet") || id.includes("react-leaflet")) return "vendor-maps";
+          if (id.includes("jspdf")) return "vendor-pdf";
           if (id.includes("react-router")) return "vendor-router";
           if (id.includes("react-redux") || id.includes("@reduxjs/toolkit")) return "vendor-redux";
           if (id.includes("recharts") || id.includes("d3")) return "vendor-charts";

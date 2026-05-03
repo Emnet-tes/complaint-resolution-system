@@ -2,21 +2,21 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FileText, Clock, CheckCircle, Loader2 } from 'lucide-react';
 import StatCard from '../components/StatCard';
-import { deptAdminApi, type DeptAdminAnalytics } from '../api/deptadmin';
+import { deptHeadApi, type DeptHeadAnalytics } from '../api/depthead';
 
 const DeptDashboard = () => {
   const { t } = useTranslation();
-  const [stats, setStats] = useState<DeptAdminAnalytics | null>(null);
+  const [stats, setStats] = useState<DeptHeadAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setLoading(true);
-        const res = await deptAdminApi.getAnalytics();
+        const res = await deptHeadApi.getAnalytics();
         setStats(res.data);
       } catch (err) {
-        console.error('Failed to fetch DeptAdmin analytics', err);
+        console.error('Failed to fetch DeptHead analytics', err);
       } finally {
         setLoading(false);
       }
