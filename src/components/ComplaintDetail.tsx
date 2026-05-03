@@ -10,6 +10,8 @@ import {
   MessageSquare,
   ArrowLeft,
   Loader2,
+  ExternalLink,
+  X,
 } from 'lucide-react';
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -152,6 +154,60 @@ const getComplaintId = (complaint: AssignedComplaint | OrgHeadComplaint) => {
   return record._id || record.id || '';
 };
 
+const isImageUrl = (url?: string) => {
+  if (!url) return false;
+  const cleaned = url.split('?')[0].toLowerCase();
+  if (cleaned.startsWith('data:image/')) return true;
+  return /\.(jpe?g|png|gif|bmp|webp|svg)$/i.test(cleaned);
+};
+
+// ─── Attachment card with inline preview ────────────────────────────────────
+const AttachmentCard = ({
+  url,
+  index,
+  label,
+  onOpen,
+}: {
+  url: string;
+  index: number;
+  label: string;
+  onOpen: () => void;
+}) => {
+  const [errored, setErrored] = useState(false);
+
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className=" cursor-pointer group relative block aspect-video w-full rounded-xl overflow-hidden border border-gray-200 bg-slate-100 hover:border-[#006B5D] transition-colors text-left"
+    >
+      {!errored ? (
+        <>
+          <img
+            src={url}
+            alt={`${label} ${index + 1}`}
+            onError={() => setErrored(true)}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+            <ExternalLink
+              size={20}
+              className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow"
+            />
+          </div>
+        </>
+      ) : (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-2 text-center bg-white/60">
+          <ExternalLink size={16} className="text-slate-400" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            {label} {index + 1}
+          </span>
+        </div>
+      )}
+    </button>
+  );
+};
+
 const ComplaintDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -170,6 +226,13 @@ const ComplaintDetail = () => {
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [newOrgComment, setNewOrgComment] = useState('');
   const [postingOrgComment, setPostingOrgComment] = useState(false);
+  const [selectedAttachment, setSelectedAttachment] = useState<{
+    url: string;
+    label: string;
+    index: number;
+    isImage: boolean;
+  } | null>(null);
+  const [selectedAttachmentErrored, setSelectedAttachmentErrored] = useState(false);
   const [resolvedLocation, setResolvedLocation] = useState<{
     woreda: string;
     street: string;
@@ -204,8 +267,6 @@ const ComplaintDetail = () => {
           const res = await orgHeadApi.getOrganizationComplaints();
           found = res.data.find((c) => getComplaintId(c) === id) || null;
         } else {
-          // No dedicated "GET /complaints/:id" endpoint provided for DeptAdmin,
-          // so we fetch from assigned list and find the complaint by id.
           const res = await deptAdminApi.getAssignedComplaints();
           found = res.data.find((c) => getComplaintId(c) === id) || null;
         }
@@ -396,8 +457,6 @@ const ComplaintDetail = () => {
     woredaFeaturesLoaded,
   ]);
 
- 
-
   const complaintIsSpam = complaint
     ? isOrganizationComplaint(complaint)
       ? complaint.isSpam
@@ -416,7 +475,6 @@ const ComplaintDetail = () => {
       : null
     : null;
 
-
   const complaintAttachments = complaint
     ? isOrganizationComplaint(complaint)
       ? complaint.attachments
@@ -425,6 +483,33 @@ const ComplaintDetail = () => {
 
   const getAttachmentUrl = (attachment: { url?: string; path?: string }) =>
     attachment.url || attachment.path || '';
+
+  const openAttachment = (url: string, label: string, index: number) => {
+    setSelectedAttachmentErrored(false);
+    setSelectedAttachment({
+      url,
+      label,
+      index,
+      isImage: isImageUrl(url),
+    });
+  };
+
+  const closeAttachment = () => {
+    setSelectedAttachment(null);
+  };
+
+  useEffect(() => {
+    if (!selectedAttachment) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [selectedAttachment]);
 
   const complaintAssigneeName = complaint
     ? isOrganizationComplaint(complaint)
@@ -594,52 +679,55 @@ const ComplaintDetail = () => {
                </div>
              )}
           </div>
-   {/* Description & Images */}
+
+          {/* Description & Attachments */}
           <section className="bg-white p-6 rounded-xl border border-gray-100 space-y-6 shadow-sm">
-             <div>
-                <h3 className="font-bold text-slate-800 mb-3">{t('dept_complaints.detail.description')}</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">{complaint.description}</p>
-             </div>
-             <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">
-                  {t('dept_complaints.detail.attachments', { count: complaintAttachments.length })}
-                </p>
-                <div className="grid grid-cols-3 gap-4">
-                  {complaintAttachments.length === 0 ? (
-                    <div className="col-span-3 p-4 rounded-lg border border-gray-200 bg-slate-50 text-xs text-slate-400 font-bold uppercase tracking-widest text-center">
-                      {noAttachmentsLabel}
-                    </div>
-                  ) : (
-                    complaintAttachments.slice(0, 6).map((img, idx) => {
-                      const attachmentUrl = getAttachmentUrl(img);
+            <div>
+              <h3 className="font-bold text-slate-800 mb-3">{t('dept_complaints.detail.description')}</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">{complaint.description}</p>
+            </div>
 
-                      if (!attachmentUrl) {
-                        return (
-                          <div
-                            key={`missing-${idx}`}
-                            className="aspect-video bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 font-bold text-[10px] uppercase tracking-widest border border-gray-200"
-                          >
-                            {t('dept_complaints.detail.attachment')} {idx + 1}
-                          </div>
-                        );
-                      }
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">
+                {t('dept_complaints.detail.attachments', { count: complaintAttachments.length })}
+              </p>
 
+              {complaintAttachments.length === 0 ? (
+                <div className="p-4 rounded-lg border border-gray-200 bg-slate-50 text-xs text-slate-400 font-bold uppercase tracking-widest text-center">
+                  {noAttachmentsLabel}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {complaintAttachments.slice(0, 6).map((img, idx) => {
+                    const attachmentUrl = getAttachmentUrl(img);
+                    const attachmentLabel = t('dept_complaints.detail.attachment');
+
+                    if (!attachmentUrl) {
                       return (
-                        <a
-                          key={`${attachmentUrl}-${idx}`}
-                          href={attachmentUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="aspect-video bg-slate-100 rounded-lg flex items-center justify-center text-slate-500 font-bold text-[10px] uppercase tracking-widest border border-gray-200 hover:border-[#006B5D] hover:text-[#006B5D] transition-colors"
+                        <div
+                          key={`missing-${idx}`}
+                          className="aspect-video bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 font-bold text-[10px] uppercase tracking-widest border border-gray-200"
                         >
                           {t('dept_complaints.detail.attachment')} {idx + 1}
-                        </a>
+                        </div>
                       );
-                    })
-                  )}
+                    }
+
+                    return (
+                      <AttachmentCard
+                        key={`${attachmentUrl}-${idx}`}
+                        url={attachmentUrl}
+                        index={idx}
+                        label={attachmentLabel}
+                        onOpen={() => openAttachment(attachmentUrl, attachmentLabel, idx)}
+                      />
+                    );
+                  })}
                 </div>
-             </div>
+              )}
+            </div>
           </section>
+
           {/* AI Analysis */}
           <div className="bg-white border border-gray-100 p-6 rounded-xl relative overflow-hidden">
              <div className="absolute right-4 top-4 text-blue-200 opacity-50 rotate-12"><MessageSquare size={80}/></div>
@@ -676,8 +764,6 @@ const ComplaintDetail = () => {
                 )}
              </div>
           </div>
-
-       
 
           {/* Location */}
           <section className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
@@ -775,7 +861,6 @@ const ComplaintDetail = () => {
                       <div className="text-xs font-bold text-slate-700">{complaintUpdatedAt}</div>
                     </div>
               </div>
-
            </div>
 
              {isOrgComplaint && (
@@ -838,6 +923,48 @@ const ComplaintDetail = () => {
              )}
         </div>
       </div>
+
+      {selectedAttachment && (
+        <div className="fixed inset-0 z-[5000] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm" onClick={closeAttachment} />
+          <div className="relative z-10 w-full max-w-6xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between gap-4 border-b border-gray-100 bg-gray-50 px-6 py-4">
+              <div>
+                <h3 className="font-bold text-slate-800">
+                  {selectedAttachment.label} {selectedAttachment.index + 1}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={closeAttachment}
+                className="rounded-full cursor-pointer p-2 text-slate-400 transition-colors hover:bg-white hover:text-slate-700"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="h-[80vh] overflow-hidden p-3 sm:p-4 bg-slate-100">
+              {selectedAttachment.isImage || !selectedAttachmentErrored ? (
+                <div className="flex h-full items-center justify-center overflow-hidden rounded-2xl bg-white p-2 sm:p-4 shadow-sm">
+                  <img
+                    src={selectedAttachment.url}
+                    alt={`${selectedAttachment.label} ${selectedAttachment.index + 1}`}
+                    onError={() => setSelectedAttachmentErrored(true)}
+                    className="h-full w-full object-contain rounded-xl"
+                  />
+                </div>
+              ) : (
+                <div className="flex h-full items-center justify-center overflow-hidden rounded-2xl bg-white shadow-sm">
+                  <iframe
+                    src={selectedAttachment.url}
+                    title={`${selectedAttachment.label} ${selectedAttachment.index + 1}`}
+                    className="h-full w-full border-0"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
