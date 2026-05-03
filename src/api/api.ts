@@ -26,7 +26,11 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       Cookies.remove("token");
       Cookies.remove("user");
-      window.location.href = "/login";
+      const requestUrl = error.config?.url || '';
+      // Avoid forcing a navigation when the login request itself failed
+      if (!requestUrl.includes('/auth/login')) {
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   },

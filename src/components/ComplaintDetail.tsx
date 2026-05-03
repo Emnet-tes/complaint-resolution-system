@@ -10,12 +10,14 @@ import {
   MessageSquare,
   ArrowLeft,
   Loader2,
+  ExternalLink,
+  X,
 } from 'lucide-react';
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useAuth } from '../context/AuthContext';
-import { deptAdminApi, type AssignedComplaint, type ComplaintStatus, type ComplaintComment } from '../api/deptadmin';
-import { orgHeadApi, type OrgHeadComplaint } from '../api/orghead';
+import { deptAdminApi, type AssignedComplaint, type ComplaintStatus } from '../api/deptadmin';
+import { orgHeadApi, type OrgHeadComplaint, type ComplaintComment } from '../api/orghead';
 
 type ComplaintDetailState = {
   complaint?: AssignedComplaint | OrgHeadComplaint;
@@ -147,6 +149,65 @@ const isOrganizationComplaint = (
   complaint: AssignedComplaint | OrgHeadComplaint,
 ): complaint is OrgHeadComplaint => 'submittedBy' in complaint && 'attachments' in complaint;
 
+const getComplaintId = (complaint: AssignedComplaint | OrgHeadComplaint) => {
+  const record = complaint as AssignedComplaint & { id?: string };
+  return record._id || record.id || '';
+};
+
+const isImageUrl = (url?: string) => {
+  if (!url) return false;
+  const cleaned = url.split('?')[0].toLowerCase();
+  if (cleaned.startsWith('data:image/')) return true;
+  return /\.(jpe?g|png|gif|bmp|webp|svg)$/i.test(cleaned);
+};
+
+// ─── Attachment card with inline preview ────────────────────────────────────
+const AttachmentCard = ({
+  url,
+  index,
+  label,
+  onOpen,
+}: {
+  url: string;
+  index: number;
+  label: string;
+  onOpen: () => void;
+}) => {
+  const [errored, setErrored] = useState(false);
+
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className=" cursor-pointer group relative block aspect-video w-full rounded-xl overflow-hidden border border-gray-200 bg-slate-100 hover:border-[#006B5D] transition-colors text-left"
+    >
+      {!errored ? (
+        <>
+          <img
+            src={url}
+            alt={`${label} ${index + 1}`}
+            onError={() => setErrored(true)}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+            <ExternalLink
+              size={20}
+              className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow"
+            />
+          </div>
+        </>
+      ) : (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-2 text-center bg-white/60">
+          <ExternalLink size={16} className="text-slate-400" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            {label} {index + 1}
+          </span>
+        </div>
+      )}
+    </button>
+  );
+};
+
 const ComplaintDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -161,6 +222,17 @@ const ComplaintDetail = () => {
   const [saving, setSaving] = useState(false);
   const [newStatus, setNewStatus] = useState<ComplaintStatus>('Submitted');
   const [comment, setComment] = useState('');
+  const [orgComments, setOrgComments] = useState<ComplaintComment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [newOrgComment, setNewOrgComment] = useState('');
+  const [postingOrgComment, setPostingOrgComment] = useState(false);
+  const [selectedAttachment, setSelectedAttachment] = useState<{
+    url: string;
+    label: string;
+    index: number;
+    isImage: boolean;
+  } | null>(null);
+  const [selectedAttachmentErrored, setSelectedAttachmentErrored] = useState(false);
   const [resolvedLocation, setResolvedLocation] = useState<{
     woreda: string;
     street: string;
@@ -169,10 +241,6 @@ const ComplaintDetail = () => {
   const [isResolvingLocation, setIsResolvingLocation] = useState(false);
   const [woredaFeatures, setWoredaFeatures] = useState<WoredaFeature[]>([]);
   const [woredaFeaturesLoaded, setWoredaFeaturesLoaded] = useState(false);
-  const [comments, setComments] = useState<ComplaintComment[]>([]);
-  const [loadingComments, setLoadingComments] = useState(false);
-  const [newComment, setNewComment] = useState('');
-  const [submittingComment, setSubmittingComment] = useState(false);
 
   const handleBack = () => {
     navigate('/complaints');
@@ -197,12 +265,10 @@ const ComplaintDetail = () => {
 
         if (routeState?.source === 'org' || user?.role === 'OrgHead' || user?.role === 'OrgAdmin') {
           const res = await orgHeadApi.getOrganizationComplaints();
-          found = res.data.find((c) => c._id === id) || null;
+          found = res.data.find((c) => getComplaintId(c) === id) || null;
         } else {
-          // No dedicated "GET /complaints/:id" endpoint provided for DeptAdmin,
-          // so we fetch from assigned list and find the complaint by id.
           const res = await deptAdminApi.getAssignedComplaints();
-          found = res.data.find((c) => c._id === id) || null;
+          found = res.data.find((c) => getComplaintId(c) === id) || null;
         }
 
         setComplaint(found);
@@ -213,23 +279,7 @@ const ComplaintDetail = () => {
         setLoading(false);
       }
     };
-
-    const fetchComments = async () => {
-      if (!id) return;
-      try {
-        setLoadingComments(true);
-        const apiToUse = (user?.role === 'OrgHead' || user?.role === 'OrgAdmin') ? orgHeadApi : deptAdminApi;
-        const res = await apiToUse.getComments(id);
-        setComments(res.data);
-      } catch (err: any) {
-        console.error('Failed to fetch comments', err);
-      } finally {
-        setLoadingComments(false);
-      }
-    };
-
     fetchOne();
-    fetchComments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, complaint, routeState?.source, user?.role]);
 
@@ -407,8 +457,6 @@ const ComplaintDetail = () => {
     woredaFeaturesLoaded,
   ]);
 
- 
-
   const complaintIsSpam = complaint
     ? isOrganizationComplaint(complaint)
       ? complaint.isSpam
@@ -427,7 +475,6 @@ const ComplaintDetail = () => {
       : null
     : null;
 
-
   const complaintAttachments = complaint
     ? isOrganizationComplaint(complaint)
       ? complaint.attachments
@@ -437,11 +484,90 @@ const ComplaintDetail = () => {
   const getAttachmentUrl = (attachment: { url?: string; path?: string }) =>
     attachment.url || attachment.path || '';
 
+  const openAttachment = (url: string, label: string, index: number) => {
+    setSelectedAttachmentErrored(false);
+    setSelectedAttachment({
+      url,
+      label,
+      index,
+      isImage: isImageUrl(url),
+    });
+  };
+
+  const closeAttachment = () => {
+    setSelectedAttachment(null);
+  };
+
+  useEffect(() => {
+    if (!selectedAttachment) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [selectedAttachment]);
+
   const complaintAssigneeName = complaint
     ? isOrganizationComplaint(complaint)
       ? complaint.assignedTo || '-'
       : complaint.assignedTo?.fullName || '-'
     : '-';
+
+  useEffect(() => {
+    if (!complaint || !isOrgComplaint) {
+      setOrgComments([]);
+      setNewOrgComment('');
+      return;
+    }
+
+    let isActive = true;
+
+    const loadComments = async () => {
+      setCommentsLoading(true);
+      try {
+        const res = await orgHeadApi.getComments(complaint._id);
+        if (isActive) {
+          setOrgComments(res.data || []);
+        }
+      } catch (err: any) {
+        if (isActive) {
+          toast.error(err.response?.data?.message || t('org_head_complaints.comments.fetch_error', 'Failed to load comments'));
+        }
+      } finally {
+        if (isActive) {
+          setCommentsLoading(false);
+        }
+      }
+    };
+
+    loadComments();
+
+    return () => {
+      isActive = false;
+    };
+  }, [complaint?._id, isOrgComplaint, t]);
+
+  const handleAddOrgComment = async () => {
+    if (!complaint || !isOrgComplaint || !newOrgComment.trim()) return;
+
+    setPostingOrgComment(true);
+    const loadId = toast.loading(t('org_head_complaints.comments.posting', 'Posting comment...'));
+    try {
+      await orgHeadApi.addComment(complaint._id, { commentText: newOrgComment.trim() });
+      const res = await orgHeadApi.getComments(complaint._id);
+      setOrgComments(res.data || []);
+      setNewOrgComment('');
+      toast.success(t('org_head_complaints.comments.posted', 'Comment posted'), { id: loadId });
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || t('org_head_complaints.comments.post_error', 'Failed to post comment'), { id: loadId });
+    } finally {
+      setPostingOrgComment(false);
+    }
+  };
 
   const handleUpdateStatus = async () => {
     if (!id) return;
@@ -464,25 +590,6 @@ const ComplaintDetail = () => {
       toast.error(err.response?.data?.message || t('dept_mgmt.toasts.fetch_error'));
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleAddComment = async () => {
-    if (!id || !newComment.trim()) return;
-    try {
-      setSubmittingComment(true);
-      const apiToUse = (user?.role === 'OrgHead' || user?.role === 'OrgAdmin') ? orgHeadApi : deptAdminApi;
-      await apiToUse.addComment(id, { commentText: newComment });
-      toast.success(t('dept_mgmt.toasts.add_success') || 'Comment added');
-      setNewComment('');
-      
-      // Re-fetch comments
-      const res = await apiToUse.getComments(id);
-      setComments(res.data);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to add comment');
-    } finally {
-      setSubmittingComment(false);
     }
   };
 
@@ -572,54 +679,57 @@ const ComplaintDetail = () => {
                </div>
              )}
           </div>
-   {/* Description & Images */}
+
+          {/* Description & Attachments */}
           <section className="bg-white p-6 rounded-xl border border-gray-100 space-y-6 shadow-sm">
-             <div>
-                <h3 className="font-bold text-slate-800 mb-3">{t('dept_complaints.detail.description')}</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">{complaint.description}</p>
-             </div>
-             <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">
-                  {t('dept_complaints.detail.attachments', { count: complaintAttachments.length })}
-                </p>
-                <div className="grid grid-cols-3 gap-4">
-                  {complaintAttachments.length === 0 ? (
-                    <div className="col-span-3 p-4 rounded-lg border border-gray-200 bg-slate-50 text-xs text-slate-400 font-bold uppercase tracking-widest text-center">
-                      {noAttachmentsLabel}
-                    </div>
-                  ) : (
-                    complaintAttachments.slice(0, 6).map((img, idx) => {
-                      const attachmentUrl = getAttachmentUrl(img);
+            <div>
+              <h3 className="font-bold text-slate-800 mb-3">{t('dept_complaints.detail.description')}</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">{complaint.description}</p>
+            </div>
 
-                      if (!attachmentUrl) {
-                        return (
-                          <div
-                            key={`missing-${idx}`}
-                            className="aspect-video bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 font-bold text-[10px] uppercase tracking-widest border border-gray-200"
-                          >
-                            {t('dept_complaints.detail.attachment')} {idx + 1}
-                          </div>
-                        );
-                      }
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">
+                {t('dept_complaints.detail.attachments', { count: complaintAttachments.length })}
+              </p>
 
+              {complaintAttachments.length === 0 ? (
+                <div className="p-4 rounded-lg border border-gray-200 bg-slate-50 text-xs text-slate-400 font-bold uppercase tracking-widest text-center">
+                  {noAttachmentsLabel}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {complaintAttachments.slice(0, 6).map((img, idx) => {
+                    const attachmentUrl = getAttachmentUrl(img);
+                    const attachmentLabel = t('dept_complaints.detail.attachment');
+
+                    if (!attachmentUrl) {
                       return (
-                        <a
-                          key={`${attachmentUrl}-${idx}`}
-                          href={attachmentUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="aspect-video bg-slate-100 rounded-lg flex items-center justify-center text-slate-500 font-bold text-[10px] uppercase tracking-widest border border-gray-200 hover:border-[#006B5D] hover:text-[#006B5D] transition-colors"
+                        <div
+                          key={`missing-${idx}`}
+                          className="aspect-video bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 font-bold text-[10px] uppercase tracking-widest border border-gray-200"
                         >
                           {t('dept_complaints.detail.attachment')} {idx + 1}
-                        </a>
+                        </div>
                       );
-                    })
-                  )}
+                    }
+
+                    return (
+                      <AttachmentCard
+                        key={`${attachmentUrl}-${idx}`}
+                        url={attachmentUrl}
+                        index={idx}
+                        label={attachmentLabel}
+                        onOpen={() => openAttachment(attachmentUrl, attachmentLabel, idx)}
+                      />
+                    );
+                  })}
                 </div>
-             </div>
+              )}
+            </div>
           </section>
+
           {/* AI Analysis */}
-          <div className="bg-blue-50/50 border border-blue-100 p-6 rounded-xl relative overflow-hidden">
+          <div className="bg-white border border-gray-100 p-6 rounded-xl relative overflow-hidden">
              <div className="absolute right-4 top-4 text-blue-200 opacity-50 rotate-12"><MessageSquare size={80}/></div>
              <h4 className="text-sm font-bold text-blue-900 mb-4 uppercase tracking-wider flex items-center"><Info size={16} className="mr-2"/> {aiAnalysisLabel}</h4>
              <div className="flex flex-wrap gap-3">
@@ -654,8 +764,6 @@ const ComplaintDetail = () => {
                 )}
              </div>
           </div>
-
-       
 
           {/* Location */}
           <section className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
@@ -713,64 +821,6 @@ const ComplaintDetail = () => {
               </div>
             )}
           </section>
-
-          {/* Comments Section */}
-          <section className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-6">
-             <h3 className="font-bold text-slate-800 flex items-center">
-                <MessageSquare size={18} className="mr-2 text-slate-400" />
-                {t('dept_complaints.detail.comments', 'Comments')}
-             </h3>
-             <div className="space-y-4">
-                {loadingComments ? (
-                  <div className="flex justify-center p-4"><Loader2 className="animate-spin text-slate-400" size={24} /></div>
-                ) : comments.length === 0 ? (
-                  <div className="p-4 bg-slate-50 text-slate-500 text-xs font-medium rounded-xl text-center border border-slate-100">
-                    No comments yet.
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {comments.map((c) => (
-                      <div key={c._id} className="p-4 bg-gray-50 border border-gray-100 rounded-xl">
-                        <div className="flex justify-between items-start mb-2">
-                           <div className="flex items-center gap-2">
-                             <div className="w-6 h-6 bg-[#006B5D]/10 text-[#006B5D] rounded-full flex items-center justify-center text-[10px] font-bold">
-                               {c.createdBy?.fullName?.charAt(0) || 'U'}
-                             </div>
-                             <div>
-                               <p className="text-xs font-bold text-slate-700">{c.createdBy?.fullName}</p>
-                               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{c.createdBy?.role}</p>
-                             </div>
-                           </div>
-                           <span className="text-[10px] text-slate-400 font-medium">
-                             {new Date(c.createdAt).toLocaleString()}
-                           </span>
-                        </div>
-                        <p className="text-sm text-slate-600 pl-8">{c.commentText}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-             </div>
-             
-             {/* Add Comment */}
-             <div className="pt-4 border-t border-gray-100">
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Add a comment..."
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 outline-none min-h-[100px] resize-y"
-                />
-                <div className="flex justify-end mt-3">
-                  <button
-                    onClick={handleAddComment}
-                    disabled={submittingComment || !newComment.trim()}
-                    className="bg-[#006B5D] text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center hover:bg-[#005a4e] transition-all disabled:opacity-70"
-                  >
-                    {submittingComment ? <Loader2 size={16} className="animate-spin" /> : 'Post Comment'}
-                  </button>
-                </div>
-             </div>
-          </section>
         </div>
 
         {/* Detail Sidebar */}
@@ -811,10 +861,110 @@ const ComplaintDetail = () => {
                       <div className="text-xs font-bold text-slate-700">{complaintUpdatedAt}</div>
                     </div>
               </div>
-
            </div>
+
+             {isOrgComplaint && (
+               <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                 <div className="flex items-center justify-between gap-3 mb-4">
+                   <h4 className="font-bold text-slate-800 flex items-center gap-2">
+                     <MessageSquare size={16} className="text-[#006B5D]" />
+                     {t('org_head_complaints.comments.title', 'Comments')}
+                   </h4>
+                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                     {orgComments.length}
+                   </span>
+                 </div>
+
+                 <div className="space-y-3 max-h-72 overflow-auto pr-1">
+                   {commentsLoading ? (
+                     <div className="text-xs text-slate-400 font-medium">{t('org_head_complaints.comments.loading', 'Loading comments...')}</div>
+                   ) : orgComments.length ? (
+                     orgComments.map((item) => (
+                       <div key={item._id} className="rounded-xl border border-gray-100 bg-slate-50 p-3">
+                         <div className="flex items-center justify-between gap-3">
+                           <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest">
+                             {typeof item.author === 'string' ? item.author : item.author?.fullName || '—'}
+                           </p>
+                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                             {new Date(item.createdAt).toLocaleString()}
+                           </p>
+                         </div>
+                         <p className="mt-2 text-sm text-slate-700 leading-relaxed">{item.commentText}</p>
+                       </div>
+                     ))
+                   ) : (
+                     <div className="rounded-xl border border-dashed border-gray-200 bg-slate-50 p-4 text-xs font-bold uppercase tracking-widest text-slate-400">
+                       {t('org_head_complaints.comments.empty', 'No comments yet')}
+                     </div>
+                   )}
+                 </div>
+
+                 <div className="mt-4 space-y-2">
+                   <textarea
+                     value={newOrgComment}
+                     onChange={(e) => setNewOrgComment(e.target.value)}
+                     placeholder={t('org_head_complaints.comments.placeholder', 'Write a comment...')}
+                     className="w-full min-h-[96px] rounded-xl border border-gray-100 bg-gray-50 px-3 py-3 text-sm text-slate-700 outline-none"
+                   />
+                   <button
+                     type="button"
+                     onClick={handleAddOrgComment}
+                     disabled={postingOrgComment || !newOrgComment.trim()}
+                     className="w-full rounded-xl bg-[#006B5D] px-4 py-3 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-[#005a4e] disabled:cursor-not-allowed disabled:opacity-50"
+                   >
+                     {postingOrgComment ? (
+                       <Loader2 className="mx-auto animate-spin" size={14} />
+                     ) : (
+                       t('org_head_complaints.comments.post_button', 'Post Comment')
+                     )}
+                   </button>
+                 </div>
+               </div>
+             )}
         </div>
       </div>
+
+      {selectedAttachment && (
+        <div className="fixed inset-0 z-[5000] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm" onClick={closeAttachment} />
+          <div className="relative z-10 w-full max-w-6xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between gap-4 border-b border-gray-100 bg-gray-50 px-6 py-4">
+              <div>
+                <h3 className="font-bold text-slate-800">
+                  {selectedAttachment.label} {selectedAttachment.index + 1}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={closeAttachment}
+                className="rounded-full cursor-pointer p-2 text-slate-400 transition-colors hover:bg-white hover:text-slate-700"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="h-[80vh] overflow-hidden p-3 sm:p-4 bg-slate-100">
+              {selectedAttachment.isImage || !selectedAttachmentErrored ? (
+                <div className="flex h-full items-center justify-center overflow-hidden rounded-2xl bg-white p-2 sm:p-4 shadow-sm">
+                  <img
+                    src={selectedAttachment.url}
+                    alt={`${selectedAttachment.label} ${selectedAttachment.index + 1}`}
+                    onError={() => setSelectedAttachmentErrored(true)}
+                    className="h-full w-full object-contain rounded-xl"
+                  />
+                </div>
+              ) : (
+                <div className="flex h-full items-center justify-center overflow-hidden rounded-2xl bg-white shadow-sm">
+                  <iframe
+                    src={selectedAttachment.url}
+                    title={`${selectedAttachment.label} ${selectedAttachment.index + 1}`}
+                    className="h-full w-full border-0"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -257,7 +257,7 @@ const OrgHeadDashboard = () => {
         <div className="xl:col-span-8 space-y-4">
           
 
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-4 md:p-6 h-[420px]">
+          <div className="bg-white rounded-3xl border border-gray-100  shadow-sm p-4 md:p-6 h-[420px]">
             <div className="flex items-center gap-2 mb-4">
             <BarChart3 size={18} className="text-[#006B5D]" />
             <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">
@@ -297,7 +297,7 @@ const OrgHeadDashboard = () => {
             )}
           </div>
 
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-4 md:p-6 h-[320px]">
+          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-4 md:p-6 h-[320px]">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp size={18} className="text-[#006B5D]" />
               <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">
@@ -332,7 +332,7 @@ const OrgHeadDashboard = () => {
         </div>
 
         <div className="xl:col-span-4 space-y-6">
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
             <div className="flex items-center gap-2 mb-4">
               <AlertTriangle size={18} className="text-amber-500" />
               <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">
@@ -342,7 +342,7 @@ const OrgHeadDashboard = () => {
             {recommendations.length ? (
               <div className="space-y-3">
                 {recommendations.slice(0, 2).map((item) => (
-                  <div key={`${item.type}-${item.message}`} className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4">
+                  <div key={`${item.type}-${item.message}`} className="rounded-2xl border border-amber-100  p-4">
                     <p className="text-[10px] uppercase tracking-[0.2em] text-amber-700 font-black">{item.priority}</p>
                     <p className="mt-2 text-sm font-semibold text-slate-700">{item.message}</p>
                     {item.suggestedAction ? (

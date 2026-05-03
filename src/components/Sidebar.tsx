@@ -101,10 +101,10 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
                   if (window.innerWidth < 768) setIsMobileOpen(false);
                 }}
                 className={`w-full flex items-center py-3 transition-all rounded-xl group mb-1 cursor-pointer ${
-                  isActive ? 'bg-[#006B5D]/5 text-[#006B5D]' : 'text-slate-500 hover:bg-gray-50'
+                  isActive ? 'bg-[#006B5D] text-slate-300' : 'text-[#006B5D] hover:bg-gray-50 dark:text-slate-500 dark:hover:bg-[#006B5D]/10 dark:hover:text-slate-5 00'
                 } ${isCollapsed ? 'md:justify-center' : 'px-4'}`}
               >
-                <div className={`shrink-0 flex items-center justify-center ${isActive ? 'text-[#006B5D]' : 'text-slate-400'} ${!isCollapsed && 'mr-3'}`}>
+                <div className={`shrink-0 flex items-center justify-center ${!isActive ? 'text-[#006B5D]' : 'text-slate-300'} ${!isCollapsed && 'mr-3'}`}>
                   <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
                 </div>
                 

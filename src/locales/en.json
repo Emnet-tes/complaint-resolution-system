@@ -272,7 +272,8 @@
       "Submitted": "Submitted",
       "In Progress": "In Progress",
       "Resolved": "Resolved",
-      "Rejected": "Rejected"
+      "Rejected": "Rejected",
+      "Manual Review": "Manual Review"
     },
     "stats": {
       "total": "Total",
@@ -364,6 +365,18 @@
       "confirming": "Confirming...",
       "overridden": "Complaint overridden successfully",
       "error": "Action failed."
+    }
+    ,
+    "comments": {
+      "title": "Comments",
+      "placeholder": "Write a comment...",
+      "post_button": "Post Comment",
+      "loading": "Loading comments...",
+      "empty": "No comments yet",
+      "posting": "Posting comment...",
+      "posted": "Comment posted",
+      "post_error": "Failed to post comment",
+      "fetch_error": "Failed to load comments"
     }
   },
   "org_head_departments": {

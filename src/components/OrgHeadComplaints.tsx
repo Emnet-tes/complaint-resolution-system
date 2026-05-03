@@ -53,7 +53,6 @@ const OrgHeadComplaints = () => {
     priority: 'Medium' as OrgHeadComplaintPriority,
     status: 'Submitted' as OrgHeadComplaintStatus,
     isSpam: false,
-    comment: '',
   });
 
   const fetchData = async () => {
@@ -123,7 +122,6 @@ const OrgHeadComplaints = () => {
       priority: (complaint.priority as OrgHeadComplaintPriority) || 'Medium',
       status: complaint.status || 'Submitted',
       isSpam: complaint.isSpam,
-      comment: '',
     });
     setIsOverrideModalOpen(true);
   };
@@ -140,7 +138,6 @@ const OrgHeadComplaints = () => {
         priority: overrideForm.priority,
         status: overrideForm.status,
         isSpam: overrideForm.isSpam,
-        comment: overrideForm.comment || undefined,
       });
 
       const selectedDept = departments.find((d) => d._id === overrideForm.department);
@@ -188,7 +185,7 @@ const OrgHeadComplaints = () => {
       render: (row) => (
         <div>
           <p className="font-bold text-slate-800">{row.title}</p>
-          <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1 font-medium">{row.description}</p>
+          <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1 font-medium">{row.description}</p>
         </div>
       ),
     },
@@ -416,17 +413,6 @@ const OrgHeadComplaints = () => {
               className="w-4 h-4 accent-[#006B5D]"
             />
             <label className="text-xs font-bold text-slate-600">{t('org_head_complaints.mark_spam')}</label>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('org_head_complaints.comment')}</label>
-            <textarea
-              required
-              className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm min-h-[100px] outline-none"
-              placeholder={t('org_head_complaints.comment_placeholder')}
-              value={overrideForm.comment}
-              onChange={(e) => setOverrideForm({ ...overrideForm, comment: e.target.value })}
-            />
           </div>
 
           <button

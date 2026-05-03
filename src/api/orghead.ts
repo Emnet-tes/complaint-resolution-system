@@ -1,5 +1,5 @@
 import api from './api';
-import type { Department } from './orgadmin';
+import type { Department, DeptAdmin } from './orgadmin';
 
 export type OrgHeadComplaintPriority = 'Low' | 'Medium' | 'High' | 'Critical';
 
@@ -131,6 +131,15 @@ export interface OrgHeadAnalytics {
   recentComplaints?: OrgHeadComplaint[];
 }
 
+export interface ComplaintComment {
+  _id: string;
+  commentText: string;
+  author: { _id?: string; fullName?: string } | string | null;
+  createdAt: string;
+}
+
+export type OrgHeadDeptHead = DeptAdmin;
+
 export const orgHeadApi = {
   getOrganizationComplaints: () =>
     api.get<OrgHeadComplaint[]>('/complaints/organization'),
@@ -140,12 +149,14 @@ export const orgHeadApi = {
   overrideComplaint: (id: string, data: OverrideComplaintPayload) =>
     api.put<{ message: string }>(`/complaints/${id}/override`, data),
 
+  addComment: (id: string, data: { commentText: string }) =>
+    api.post<{ message: string }>(`/complaints/${id}/comments`, data),
+
+  getComments: (id: string) => api.get<ComplaintComment[]>(`/complaints/${id}/comments`),
+
   listDepartments: () => api.get<Department[]>('/departments'),
 
-  getComments: (id: string) => api.get<any[]>(`/complaints/${id}/comments`),
-  
-  addComment: (id: string, data: { commentText: string }) => 
-    api.post<{ message: string }>(`/complaints/${id}/comments`, data),
+  listDeptHeads: () => api.get<OrgHeadDeptHead[]>('/users/dept-heads'),
 };
 
 export default orgHeadApi;
