@@ -25,7 +25,7 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
     if (hour >= 12 && hour < 18) return t('nav.good_afternoon');
     return t('nav.good_evening');
   };
-
+  console.log(notifications, 'Current notifications in Navbar');
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -111,26 +111,45 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
                       notifications.map((n) => (
                         <div 
                           key={n._id} 
-                          onClick={() => !n.read && markAsRead(n._id)}
-                          className={`p-4 border-b border-gray-50 flex gap-3 transition-colors cursor-pointer ${!n.read ? 'bg-[#006B5D]/5 hover:bg-[#006B5D]/10' : 'hover:bg-gray-50'}`}
+                          className={`p-4 border-b border-gray-50 flex gap-3 transition-colors ${!n.read ? 'bg-[#006B5D]/5 hover:bg-[#006B5D]/10' : 'hover:bg-gray-50'}`}
                         >
                           <div className={`mt-1 h-2 w-2 shrink-0 rounded-full ${!n.read ? 'bg-[#006B5D]' : 'bg-transparent'}`} />
-                          <div className="space-y-1">
+                          <div className="space-y-1 flex-1 min-w-0">
                             <p className={`text-xs font-bold leading-tight ${!n.read ? 'text-slate-900' : 'text-slate-500'}`}>{n.title}</p>
                             <p className="text-[11px] text-slate-500 leading-relaxed">{n.message}</p>
                             <div className="flex items-center gap-1 text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
                               <Clock size={10} /> {new Date(n.createdAt).toLocaleDateString()}
                             </div>
+                            <div className="pt-1 flex items-center justify-between gap-2">
+                              <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                <input
+                                  type="checkbox"
+                                  checked={n.read}
+                                  onChange={() => !n.read && markAsRead(n._id)}
+                                  disabled={n.read}
+                                  className="h-3.5 w-3.5 accent-[#006B5D] cursor-pointer disabled:cursor-not-allowed"
+                                />
+                                Read
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const complaintId = n?.data?.complaintId;
+                                  if (!complaintId) return;
+                                  if (!n.read) markAsRead(n._id);
+                                  setIsNotifOpen(false);
+                                  navigate(`/complaints/${complaintId}`);
+                                }}
+                                disabled={!n?.data?.complaintId}
+                                className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider border border-[#006B5D]/20 text-[#006B5D] hover:bg-[#006B5D]/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                              >
+                                Detail
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))
                     )}
-                  </div>
-
-                  <div className="p-3 bg-gray-50 text-center border-t border-gray-100">
-                    <button className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[#006B5D] cursor-pointer">
-                      {t('notifications.view_all')}
-                    </button>
                   </div>
                 </div>
               )}
