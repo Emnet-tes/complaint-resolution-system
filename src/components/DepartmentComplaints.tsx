@@ -11,6 +11,8 @@ import {
   Loader2,
   Clock,
 } from 'lucide-react';
+import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 import { Table, type Column } from '../components/Table';
 import StatCard from './StatCard';
 import { deptAdminApi, type AssignedComplaint, type ComplaintStatus } from '../api/deptadmin';
@@ -31,6 +33,29 @@ const DepartmentComplaints = () => {
   const getComplaintId = (c: AssignedComplaint) => {
     return c._id || (c as any).id || '';
   };
+
+  const mapPoints = useMemo(() => {
+    return complaints
+      .map((complaint) => {
+        const coords = complaint.location?.coordinates;
+        if (!coords || coords.length < 2) return null;
+
+        const [lng, lat] = coords;
+        if (typeof lat !== 'number' || typeof lng !== 'number') return null;
+
+        return {
+          complaint,
+          lat,
+          lng,
+        };
+      })
+      .filter((point): point is { complaint: AssignedComplaint; lat: number; lng: number } => !!point);
+  }, [complaints]);
+
+  const mapCenter = useMemo<[number, number]>(() => {
+    if (mapPoints.length > 0) return [mapPoints[0].lat, mapPoints[0].lng];
+    return [9.03, 38.74];
+  }, [mapPoints]);
 
   const fetchAssigned = async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) {
@@ -272,11 +297,50 @@ const DepartmentComplaints = () => {
       ) : viewMode === 'list' ? (
         <Table data={complaints} columns={columns} noDataMessage={t('dept_complaints.table.no_data')} />
       ) : (
-        <div className="bg-slate-100 h-96 rounded-3xl flex flex-col items-center justify-center border-2 border-dashed border-slate-200">
-          <MapIcon size={48} className="text-slate-300 mb-4" />
-          <p className="text-slate-400 font-black uppercase tracking-widest text-sm text-center">
-            {t('dept_complaints.map_view')}
-          </p>
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden h-[560px]">
+          <MapContainer center={mapCenter} zoom={12} className="h-full w-full" scrollWheelZoom>
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+
+            {mapPoints.map((point) => (
+              <CircleMarker
+                key={getComplaintId(point.complaint)}
+                center={[point.lat, point.lng]}
+                radius={8}
+                pathOptions={{ color: '#006B5D', fillColor: '#0f766e', fillOpacity: 0.7 }}
+              >
+                <Popup>
+                  <div className="space-y-1 min-w-[180px]">
+                    <p className="font-bold text-slate-800">{point.complaint.title}</p>
+                    <p className="text-xs text-slate-500">
+                      {t('org_head_complaints.popup.status', 'Status')}: {point.complaint.status}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {t('org_head_complaints.popup.priority', 'Priority')}: {point.complaint.priority}
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">
+                      <button
+                        onClick={() => navigate(`/complaints/${getComplaintId(point.complaint)}`, { state: { complaint: point.complaint } })}
+                        className="text-[#006B5D] hover:underline cursor-pointer"
+                      >
+                        {t('dept_complaints.table.view_details')}
+                      </button>
+                    </p>
+                  </div>
+                </Popup>
+              </CircleMarker>
+            ))}
+          </MapContainer>
+
+          {!mapPoints.length && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="bg-white/90 border border-gray-100 rounded-xl px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                {t('org_head_complaints.no_location', 'No location data available')}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
