@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, Lock, Loader2, Languages } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -18,9 +18,17 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    const stored = sessionStorage.getItem('loginError');
+    if (stored) setError(stored);
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (error) setError('');
+    if (error) {
+      setError('');
+      sessionStorage.removeItem('loginError');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,7 +62,9 @@ const Login = () => {
         navigate('/login', { replace: true });
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || t('dept_mgmt.toasts.fetch_error'));
+      const msg = err.response?.data?.message || t('dept_mgmt.toasts.fetch_error');
+      setError(msg);
+      try { sessionStorage.setItem('loginError', msg); } catch (_e) {}
     } finally {
       setLoading(false);
     }

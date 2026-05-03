@@ -58,7 +58,6 @@ const OrgDashboard = () => {
   }
 
   const summary = stats?.summary || EMPTY_SUMMARY;
-  console.log("Analytics Data:", summary); 
   const departments = stats?.departments || [];
   const totalAssignedComplaints = departments.reduce((total, department) => {
     return total + department.metrics.totalComplaintsAssigned;

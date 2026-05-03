@@ -147,6 +147,11 @@ const isOrganizationComplaint = (
   complaint: AssignedComplaint | OrgHeadComplaint,
 ): complaint is OrgHeadComplaint => 'submittedBy' in complaint && 'attachments' in complaint;
 
+const getComplaintId = (complaint: AssignedComplaint | OrgHeadComplaint) => {
+  const record = complaint as AssignedComplaint & { id?: string };
+  return record._id || record.id || '';
+};
+
 const ComplaintDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -197,12 +202,12 @@ const ComplaintDetail = () => {
 
         if (routeState?.source === 'org' || user?.role === 'OrgHead' || user?.role === 'OrgAdmin') {
           const res = await orgHeadApi.getOrganizationComplaints();
-          found = res.data.find((c) => c._id === id) || null;
+          found = res.data.find((c) => getComplaintId(c) === id) || null;
         } else {
           // No dedicated "GET /complaints/:id" endpoint provided for DeptAdmin,
           // so we fetch from assigned list and find the complaint by id.
           const res = await deptAdminApi.getAssignedComplaints();
-          found = res.data.find((c) => c._id === id) || null;
+          found = res.data.find((c) => getComplaintId(c) === id) || null;
         }
 
         setComplaint(found);
