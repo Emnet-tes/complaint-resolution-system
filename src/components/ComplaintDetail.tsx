@@ -14,7 +14,7 @@ import {
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useAuth } from '../context/AuthContext';
-import { deptAdminApi, type AssignedComplaint, type ComplaintStatus } from '../api/deptadmin';
+import { deptAdminApi, type AssignedComplaint, type ComplaintStatus, type ComplaintComment } from '../api/deptadmin';
 import { orgHeadApi, type OrgHeadComplaint } from '../api/orghead';
 
 type ComplaintDetailState = {
@@ -169,6 +169,10 @@ const ComplaintDetail = () => {
   const [isResolvingLocation, setIsResolvingLocation] = useState(false);
   const [woredaFeatures, setWoredaFeatures] = useState<WoredaFeature[]>([]);
   const [woredaFeaturesLoaded, setWoredaFeaturesLoaded] = useState(false);
+  const [comments, setComments] = useState<ComplaintComment[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [submittingComment, setSubmittingComment] = useState(false);
 
   const handleBack = () => {
     navigate('/complaints');
@@ -209,7 +213,23 @@ const ComplaintDetail = () => {
         setLoading(false);
       }
     };
+
+    const fetchComments = async () => {
+      if (!id) return;
+      try {
+        setLoadingComments(true);
+        const apiToUse = (user?.role === 'OrgHead' || user?.role === 'OrgAdmin') ? orgHeadApi : deptAdminApi;
+        const res = await apiToUse.getComments(id);
+        setComments(res.data);
+      } catch (err: any) {
+        console.error('Failed to fetch comments', err);
+      } finally {
+        setLoadingComments(false);
+      }
+    };
+
     fetchOne();
+    fetchComments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, complaint, routeState?.source, user?.role]);
 
@@ -447,6 +467,25 @@ const ComplaintDetail = () => {
     }
   };
 
+  const handleAddComment = async () => {
+    if (!id || !newComment.trim()) return;
+    try {
+      setSubmittingComment(true);
+      const apiToUse = (user?.role === 'OrgHead' || user?.role === 'OrgAdmin') ? orgHeadApi : deptAdminApi;
+      await apiToUse.addComment(id, { commentText: newComment });
+      toast.success(t('dept_mgmt.toasts.add_success') || 'Comment added');
+      setNewComment('');
+      
+      // Re-fetch comments
+      const res = await apiToUse.getComments(id);
+      setComments(res.data);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to add comment');
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
@@ -673,6 +712,64 @@ const ComplaintDetail = () => {
                 </div>
               </div>
             )}
+          </section>
+
+          {/* Comments Section */}
+          <section className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-6">
+             <h3 className="font-bold text-slate-800 flex items-center">
+                <MessageSquare size={18} className="mr-2 text-slate-400" />
+                {t('dept_complaints.detail.comments', 'Comments')}
+             </h3>
+             <div className="space-y-4">
+                {loadingComments ? (
+                  <div className="flex justify-center p-4"><Loader2 className="animate-spin text-slate-400" size={24} /></div>
+                ) : comments.length === 0 ? (
+                  <div className="p-4 bg-slate-50 text-slate-500 text-xs font-medium rounded-xl text-center border border-slate-100">
+                    No comments yet.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {comments.map((c) => (
+                      <div key={c._id} className="p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                        <div className="flex justify-between items-start mb-2">
+                           <div className="flex items-center gap-2">
+                             <div className="w-6 h-6 bg-[#006B5D]/10 text-[#006B5D] rounded-full flex items-center justify-center text-[10px] font-bold">
+                               {c.createdBy?.fullName?.charAt(0) || 'U'}
+                             </div>
+                             <div>
+                               <p className="text-xs font-bold text-slate-700">{c.createdBy?.fullName}</p>
+                               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{c.createdBy?.role}</p>
+                             </div>
+                           </div>
+                           <span className="text-[10px] text-slate-400 font-medium">
+                             {new Date(c.createdAt).toLocaleString()}
+                           </span>
+                        </div>
+                        <p className="text-sm text-slate-600 pl-8">{c.commentText}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+             </div>
+             
+             {/* Add Comment */}
+             <div className="pt-4 border-t border-gray-100">
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Add a comment..."
+                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 outline-none min-h-[100px] resize-y"
+                />
+                <div className="flex justify-end mt-3">
+                  <button
+                    onClick={handleAddComment}
+                    disabled={submittingComment || !newComment.trim()}
+                    className="bg-[#006B5D] text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center hover:bg-[#005a4e] transition-all disabled:opacity-70"
+                  >
+                    {submittingComment ? <Loader2 size={16} className="animate-spin" /> : 'Post Comment'}
+                  </button>
+                </div>
+             </div>
           </section>
         </div>
 

@@ -86,7 +86,7 @@ const DepartmentComplaints = () => {
         header: t('dept_complaints.table.id'),
         key: '_id',
         className: 'font-bold text-[#006B5D]',
-        render: (row) => `#${row._id.slice(-6).toUpperCase()}`,
+        render: (row) => `#${row._id?.slice(-6)?.toUpperCase() || 'UNKNOWN'}`,
       },
       {
         header: t('dept_complaints.table.title_desc'),

@@ -141,6 +141,11 @@ export const orgHeadApi = {
     api.put<{ message: string }>(`/complaints/${id}/override`, data),
 
   listDepartments: () => api.get<Department[]>('/departments'),
+
+  getComments: (id: string) => api.get<any[]>(`/complaints/${id}/comments`),
+  
+  addComment: (id: string, data: { commentText: string }) => 
+    api.post<{ message: string }>(`/complaints/${id}/comments`, data),
 };
 
 export default orgHeadApi;

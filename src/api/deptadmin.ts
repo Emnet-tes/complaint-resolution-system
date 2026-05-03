@@ -2,6 +2,18 @@ import api from "./api";
 
 export type ComplaintStatus = "Submitted" | "In Progress" | "Resolved" | "Rejected";
 
+export interface ComplaintComment {
+  _id: string;
+  commentText: string;
+  createdBy: {
+    _id: string;
+    fullName: string;
+    role: string;
+  };
+  createdAt: string;
+}
+
+
 export interface AssignedComplaintsSummary {
   total: number;
   resolved: number;
@@ -65,6 +77,11 @@ export const deptAdminApi = {
   ) => api.put<{ message: string }>(`/complaints/${id}/status`, data),
 
   getAnalytics: () => api.get<DeptAdminAnalytics>("/analytics/dept-admin"),
+
+  getComments: (id: string) => api.get<ComplaintComment[]>(`/complaints/${id}/comments`),
+  
+  addComment: (id: string, data: { commentText: string }) => 
+    api.post<{ message: string; comment?: ComplaintComment }>(`/complaints/${id}/comments`, data),
 };
 
 export default deptAdminApi;

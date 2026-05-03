@@ -83,7 +83,7 @@ const Settings = () => {
                      <input
                        className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 cursor-not-allowed"
                        placeholder={user?.role === 'DeptHead' ? (t('sidebar.dept_portal') || 'Department') : 'First Name'}
-                       value={user?.fullname?.split(' ')[0] || ''}
+                       value={user?.role === 'DeptHead' ? (user?.fullname?.split(' ')[0] || '') : (user?.firstName || user?.fullname?.split(' ')[0] || '')}
                        readOnly
                      />
                   </div>
@@ -94,7 +94,7 @@ const Settings = () => {
                      <input 
                        className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 cursor-not-allowed" 
                        placeholder="Last Name"
-                       value={user?.fullname?.split(' ').slice(1).join(' ') || ''}
+                       value={user?.role === 'DeptHead' ? (user?.fullname?.split(' ').slice(1).join(' ') || '') : (user?.lastName || user?.fullname?.split(' ').slice(1).join(' ') || '')}
                        readOnly
                      />
                   </div>
