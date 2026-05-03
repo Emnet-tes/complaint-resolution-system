@@ -18,6 +18,8 @@ interface TableProps<T> {
   onRowClick?: (row: T) => void;
 }
 
+import { ErrorBoundary } from './ErrorBoundary';
+
 export function Table<T>({ 
   data, 
   columns, 
@@ -26,6 +28,7 @@ export function Table<T>({
   onRowClick 
 }: TableProps<T>) {
   return (
+    <ErrorBoundary>
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden ">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm border-collapse">
@@ -70,5 +73,6 @@ export function Table<T>({
         </table>
       </div>
     </div>
+    </ErrorBoundary>
   );
 }

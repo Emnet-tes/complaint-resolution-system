@@ -7,6 +7,8 @@ import { authApi } from '../api/api';
 export type Role = 'SysAdmin' | 'OrgAdmin' | 'OrgHead' | 'DeptHead' | null;
 
 export interface User {
+  firstName?: string;
+  lastName?: string;
   fullname: string;
   email: string;
   role: Role;
@@ -38,6 +40,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (profileData) {
         setUser((prev) => {
           const updatedUser: User = {
+            firstName: profileData.firstName || prev?.firstName,
+            lastName: profileData.lastName || prev?.lastName,
             fullname: profileData.fullname || (profileData.firstName ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : prev?.fullname || ''),
             email: profileData.email || prev?.email || '',
             role: (profileData.role as Role) || prev?.role || null,

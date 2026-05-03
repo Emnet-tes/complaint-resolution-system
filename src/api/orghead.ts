@@ -154,9 +154,6 @@ export const orgHeadApi = {
 
   getComments: (id: string) => api.get<ComplaintComment[]>(`/complaints/${id}/comments`),
 
-  postComment: (id: string, payload: { commentText: string }) =>
-    api.post<{ message: string }>(`/complaints/${id}/comments`, payload),
-
   listDepartments: () => api.get<Department[]>('/departments'),
 
   listDeptHeads: () => api.get<OrgHeadDeptHead[]>('/users/dept-heads'),

@@ -46,6 +46,10 @@ const OrgHeadComplaints = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
 
+  const getComplaintId = (c: OrgHeadComplaint) => {
+    return c._id || (c as any).id || '';
+  };
+
   const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
   const [selectedComplaint, setSelectedComplaint] = useState<OrgHeadComplaint | null>(null);
   const [overrideForm, setOverrideForm] = useState({
@@ -86,7 +90,7 @@ const OrgHeadComplaints = () => {
       return (
         c.title.toLowerCase().includes(normalizedSearch) ||
         c.description.toLowerCase().includes(normalizedSearch) ||
-        c._id.toLowerCase().includes(normalizedSearch) ||
+        getComplaintId(c).toLowerCase().includes(normalizedSearch) ||
         (c.submittedBy?.fullName || '').toLowerCase().includes(normalizedSearch)
       );
     });
@@ -133,7 +137,7 @@ const OrgHeadComplaints = () => {
     setSubmitting(true);
     const loadId = toast.loading(t('org_head_complaints.toasts.confirming', 'Confirming...'));
     try {
-      await orgHeadApi.overrideComplaint(selectedComplaint._id, {
+      await orgHeadApi.overrideComplaint(getComplaintId(selectedComplaint), {
         department: overrideForm.department || undefined,
         priority: overrideForm.priority,
         status: overrideForm.status,
@@ -144,7 +148,7 @@ const OrgHeadComplaints = () => {
 
       setComplaints((prev) =>
         prev.map((c) =>
-          c._id === selectedComplaint._id
+          getComplaintId(c) === getComplaintId(selectedComplaint)
             ? {
                 ...c,
                 department: selectedDept
@@ -234,7 +238,7 @@ const OrgHeadComplaints = () => {
             {t('org_head_complaints.override')}
           </button>
           <button
-            onClick={() => navigate(`/complaints/${row._id}`, { state: { complaint: row, source: 'org' } })}
+            onClick={() => navigate(`/complaints/${getComplaintId(row)}`, { state: { complaint: row, source: 'org' } })}
             className="text-[#006B5D] font-black text-[10px] uppercase tracking-widest hover:underline cursor-pointer"
           >
             {t('complaints.table.view_details')}
@@ -321,7 +325,7 @@ const OrgHeadComplaints = () => {
 
             {mapPoints.map((point) => (
               <CircleMarker
-                key={point.complaint._id}
+                key={getComplaintId(point.complaint)}
                 center={[point.lat, point.lng]}
                 radius={8}
                 pathOptions={{ color: '#006B5D', fillColor: '#0f766e', fillOpacity: 0.7 }}
