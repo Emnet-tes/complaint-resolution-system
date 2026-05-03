@@ -207,7 +207,6 @@ const ComplaintDetail = () => {
           // No dedicated "GET /complaints/:id" endpoint provided for DeptAdmin,
           // so we fetch from assigned list and find the complaint by id.
           const res = await deptAdminApi.getAssignedComplaints();
-          console.log('Fetched complaints for DeptAdmin:', res.data);
           found = res.data.find((c) => getComplaintId(c) === id) || null;
         }
 

@@ -25,7 +25,6 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
     if (hour >= 12 && hour < 18) return t('nav.good_afternoon');
     return t('nav.good_evening');
   };
-  console.log(notifications, 'Current notifications in Navbar');
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
