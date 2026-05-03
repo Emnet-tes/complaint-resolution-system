@@ -22,9 +22,6 @@ const ThemeToggle = ({ className }: Props) => {
       type="button"
     >
       {isDark ? <Sun className="w-4 h-4 text-[#006B5D]" /> : <Moon className="w-4 h-4 text-[#006B5D]" />}
-      <span className="text-[10px] font-black uppercase tracking-tighter">
-        {isDark ? t('theme.dark', 'Dark') : t('theme.light', 'Light')}
-      </span>
     </button>
   );
 };

@@ -1,0 +1,497 @@
+{
+  "nav": {
+    "dashboard_title": "Gara Daashboorditti Baga Nagaan Dhuftan",
+    "global_search": "barbaadaa jira...",
+    "good_morning": "Ganama Gaarii",
+    "good_afternoon": "Waaree Gaarii",
+    "good_evening": "Galgala Gaarii"
+  },
+  "sidebar": {
+    "sys_overview": "Cuunfaa Sirna",
+    "organizations": "Dhaabbilee",
+    "dashboard": "Daashboordii",
+    "departments": "Waajjiraalee",
+    "complaints": "Komii",
+    "profile": "Profaayilii",
+    "logout": "Ba'i",
+    "sys_portal": "Portaala Sirna",
+    "org_portal": "Portaala Dhaabbata",
+    "dept_portal": "Portaala Waajjira"
+  },
+  "org_dashboard": {
+    "nav_path": "Dhaabbata / Cuunfaa",
+    "title": "Haguuggii Waajjirawwanii fi Baay'ina Komii",
+    "subtitle": "Haguuggii muudama hooggansa fi baay'ina komii waajjira hunda ilaali.",
+    "loading": "fe'aa jira...",
+    "stats": {
+      "total_depts": "Waajjiraalee Waliigalaa",
+      "total_depts_heads": "Waajjiraalee Waliigalaa",
+      "total_heads": "Hooggansa Waajjira {{count}}",
+      "active_inactive_heads": "Hooggansa Hojii Irra Jiran",
+      "inactive_heads": "Hooggansa {{count}} Hojii Ala",
+      "complaints_assigned": "Komii Waliigalaa",
+      "total_resolved": "Komii Furaman",
+      "total_pending": "Komii Eeggatan",
+      "avg_time": "Yeroo Furmaataa Gidduugaleessaa",
+      "sub_active": "Waajjiraalee daangaa keessa jiran",
+      "sub_stale": "komii duubatti hafe",
+      "covered_uncovered": "Waajjiraalee Hooggansa Qaban",
+      "not_covered": "{{count}} hooggansa hin qabu",
+      "active_inactive_coverage": "Waajjiraalee Hooggansa Hojii Irra Jiran Qaban",
+      "inactive_coverage": "{{count}} hooggansa hojii ala qaban"
+    },
+    "table": {
+      "title": "Haguuggii Waajjirawwanii fi Baay'ina Komii",
+      "col_dept": "Waajjira",
+      "col_head": "Hooggansa",
+      "col_status": "Haala",
+      "col_assigned": "Ramadame",
+      "col_recent": "Haaraa Guyyaa 30",
+      "col_coverage": "Haguuggii",
+      "covered": "Haguugame",
+      "unassigned": "Hin Ramadamne",
+      "no_data": "Deetaa haguuggii waajjiraa argamu hin jiru"
+    },
+    "chart": {
+      "title": "Haguuggii wal bira qabsiisuun Baay'ina Komii",
+      "subtitle": "Haguuggiin %100 yeroo hooggansni waajjiraaf muudamu, %0 yeroo hin muudamne agarsiifama.",
+      "summary": "Komii ramadaman waliigalaa",
+      "volume_label": "komii",
+      "new_30d": "Haaraa {{count}} guyyaa 30 keessatti",
+      "coverage": "Haguuggii",
+      "volume": "Baay'ina Komii",
+      "pending": "Eeggata",
+      "resolved": "Furaman"
+    },
+    "trends": {
+      "title": "Tarkaanfii Komii Ji'a Ji'aan",
+      "count": "Komii"
+    },
+    "export": {
+      "title": "Ergii",
+      "subtitle": "Cuunfaa fi tarree waajjira ammaa gara faayilii CSV tti buufadhu.",
+      "csv": "CSV Ergii",
+      "pdf": "PDF Ergii",
+      "pdf_summary": "Cuunfaa eerga",
+      "pdf_departments": "Hiikkaa waajjiraa",
+      "recommendations": "Gorsa",
+      "note": "Mallattoowwan cuunfaa fi hiikkaa waajjiraa of keessaa qabata"
+    },
+    "pdf": {
+      "title": "Daashboordii Hooggansa Dhaabbata",
+      "generated": "Uumame",
+      "summary_title": "Cuunfaa",
+      "department_title": "Hiikkaa Waajjiraa",
+      "summary_table_title": "Gabatee Cuunfaa Waajjiraa"
+    }
+  },
+  "dept_mgmt": {
+    "nav": "Dhaabbata / Bulchiinsa",
+    "title": "Inifraastiraakchara",
+    "tabs": {
+      "depts": "Waajjiraalee",
+      "admins": "Bulchitoota Hojjetaa"
+    },
+    "filters": {
+      "search_name": "Maqaa guutuu barbaadi...",
+      "search_unit": "Yuniitidhaan barbaadi..."
+    },
+    "table": {
+      "dept": "Waajjira",
+      "code": "Koodii",
+      "head": "Hooggansa Waajjiraa",
+      "status": "Haala",
+      "name": "Maqaa Guutuu",
+      "email": "Teessoo Imeelii",
+      "unit": "Yuuniitidhaan Ramadame",
+      "role": "Gahee",
+      "active": "Hojii Irra",
+      "inactive": "Dhaabbatame",
+      "unassigned": "Hin Ramadamne",
+      "actions": "Tarkaanfiiwwan",
+      "no_data": "Galmeewwan cuunfaa kee wajjin wal simu hin argamne"
+    },
+    "modals": {
+      "new_dept": "Waajjira Haaraa",
+      "new_admin": "Bulchaa Waajjiraa Haaraa",
+      "edit_dept": "Waajjira Gulaali",
+      "edit_admin": "Hooggansa Waajjiraa Gulaali",
+      "deactivate_title": "Dhaabsisa Mirkaneessi",
+      "deactivate_dept_msg": "Mirkantaa'umaan waajjira kana dhaabsisuuf murteessitee?",
+      "deactivate_head_msg": "Mirkantaa'umaan akkaawuntii hooggansa waajjiraa kana dhaabsisuuf murteessitee?",
+      "labels": {
+        "name": "Maqaa Waajjiraa",
+        "code": "Koodii Netwarkii",
+        "head": "Maqaa Hooggansa Ramadame",
+        "desc": "Cuunfaa",
+        "full_name": "Maqaa Guutuu",
+        "email": "Teessoo Imeelii",
+        "password": "Jecha Darbii Sirna",
+        "unit": "Yuuniitidhaan Ramadame",
+        "status_active": "Hojii Irra"
+      },
+      "placeholders": {
+        "name": "fkn. Maallaqaa",
+        "code": "fkn. FIN_01",
+        "head": "fkn. Abebe Girma",
+        "desc": "Itti gaafatamummaa...",
+        "holder": "Abbaa Akkaawuntii",
+        "choose": "Yuuniitidhaan Filadhu"
+      }
+    },
+    "buttons": {
+      "add_dept": "Waajjira Ida'i",
+      "add_admin": "Bulchaa Ida'i",
+      "submit_dept": "Waajjira Xumuuri",
+      "submit_admin": "Seensa Mirkaneessi",
+      "update_dept": "Waajjira Haaromsi",
+      "update_admin": "Hooggansa Waajjiraa Haaromsi",
+      "deactivate": "Dhaabsi"
+    },
+    "toasts": {
+      "fetch_error": "Deetaa sirna wajjin wal qabsiisuu hin dandeenye",
+      "creating_dept": "Waajjira uumaa jira...",
+      "dept_success": "Waajjirri milkaa'inaan uumame!",
+      "dept_updated": "Waajjirri milkaa'inaan haaromfame!",
+      "registering_admin": "Bulchaa galmeessaa jira...",
+      "admin_success": "Bulchaan milkaa'inaan galmeeffame!",
+      "admin_updated": "Hooggansni waajjiraa milkaa'inaan haaromfame!",
+      "deactivating": "Dhaabsisaa jira...",
+      "deactivated": "Milkaa'inaan dhaabsifame",
+      "generic_error": "Dogoggora"
+    }
+  },
+  "complaints": {
+    "nav": "Daashboordii / Komii Dhaabbata",
+    "title": "Komii Dhaabbata",
+    "subtitle": "Komii sadarkaa dhaabbataatti bulchi.",
+    "list_view": "Tarree",
+    "map_view": "Kaartaa",
+    "export": "Ergii",
+    "new_btn": "Komii Haaraa",
+    "search_placeholder": "ID, Mata-duree, ykn Jechadhaan barbaadi...",
+    "assignee": "Ramadamaa...",
+    "bulk_actions": "Tarkaanfii Gurguddoo",
+    "filters": "Ceegii",
+    "clear_all": "Hunda Haqi",
+    "table": {
+      "id": "ID",
+      "title_desc": "Mata-duree / Ibsa",
+      "type": "Gosa",
+      "org": "Dhaabbata",
+      "status": "Haala",
+      "priority": "Dursa",
+      "date": "Guyyaa",
+      "action": "Tarkaanfii",
+      "view_details": "Bal'inaan Ilaali"
+    },
+    "modal": {
+      "title": "Komii Dhaabbata Haaraa Gali",
+      "subject": "Mata-duree",
+      "subject_placeholder": "Ibsa gabaabaa rakkoo",
+      "desc": "Ibsa Bal'aa",
+      "desc_placeholder": "Odeeffannoo bal'aa kenni...",
+      "category": "Gosa",
+      "select_cat": "Gosa filadhu...",
+      "submit": "Komii Dhiyeessi"
+    }
+  },
+  "sys_dashboard": {
+    "breadcrumb": "Bulchiinsa Sirna / Cuunfaa",
+    "title": "Xiinxala Addunyaa",
+    "loading": "fe'aa jira...",
+    "stats": {
+      "complaints": "Komii Addunyaa",
+      "sub_growth": "Guddinni Ji'aa {{rate}}%",
+      "pending": "Furmaata Eeggata",
+      "sub_stale": "Komii Duubatti Hafe {{count}}",
+      "avg_time": "Saatii Furmaataa Gidduugaleessaa",
+      "sub_inactive_heads": "Hooggansa Waajjiraa Hojii Ala {{count}}"
+    },
+    "chart": {
+      "title": "Raabsa Dhaabbilee",
+      "subtitle": "Baay'ina wal bira qabsiisuun Hiikkaa Furmaataa | {{rate}}% furaman",
+      "total": "Waliigalaa",
+      "resolved": "Furaman"
+    },
+    "trends": {
+      "title": "Tarkaanfii Ji'a Ji'aan",
+      "subtitle": "Tarkaanfii baay'ina komii ji'oota dhiyoo",
+      "count": "Komii"
+    },
+    "insights": {
+      "title": "Hubachiisawwan Sirna",
+      "alerts": "Hubachiisawwan Hojii Irra Jiran",
+      "no_alerts": "Hubachiisawwan hojii irra jiran hin jiran",
+      "action": "Tarkaanfii gorfame",
+      "export_csv": "CSV Ergii",
+      "export_pdf": "PDF Ergii"
+    },
+    "recommendations": {
+      "title": "Gorsa",
+      "none": "Gorsi argamu hin jiru"
+    },
+    "export": {
+      "overview": "Cuunfaa",
+      "top_performers": "Hojjettoota Ol'aanoo",
+      "needs_improvement": "Fooyya'iinsa Barbaada",
+      "recommendations": "Gorsa"
+    },
+    "summary": {
+      "title": "Cuunfaa Hordoffii",
+      "connected": "Dhaabbilee Walquunnamsiifaman",
+      "top_performer": "Hojjettoo Ol'aanaa",
+      "needs_improvement": "Fooyya'iinsa Barbaada"
+    }
+  },
+  "dept_dashboard": {
+    "breadcrumb": "Bulchiinsa Waajjiraa / Cuunfaa",
+    "title": "Xiinxala Waajjiraa",
+    "stats": {
+      "total": "Komii Ramadaman",
+      "pending": "Eeggata",
+      "resolved": "Furaman",
+      "sub_assigned": "Tartiiba Hojii",
+      "sub_rate": "Hamma Furmaataa {{rate}}%",
+      "sub_cases": "Dhimmoota Xumuran"
+    }
+  },
+  "dept_complaints": {
+    "nav": "Daashboordii / Komii",
+    "title": "Komii Ramadaman",
+    "subtitle": "Komii waajjira keessan ramadame hordofi fi furaa.",
+    "list_view": "Tarree",
+    "map_view": "Kaartaa",
+    "export": "Ergii",
+    "search_placeholder": "Barbaachuu dhufaa jira...",
+    "filters": {
+      "status": "Haala",
+      "all": "Hunda"
+    },
+    "status": {
+      "Submitted": "Dhiyaate",
+      "In Progress": "Hojii Irra",
+      "Resolved": "Furame",
+      "Rejected": "Diderame",
+      "Manual Review": "Ilaalcha Harkaa"
+    },
+    "stats": {
+      "total": "Waliigalaa",
+      "pending": "Haaraa / Eeggata",
+      "resolved": "Furaman",
+      "sub_assigned": "Ramadame",
+      "sub_rate": "Hamma {{rate}}%",
+      "sub_cases": "Xumurame"
+    },
+    "table": {
+      "id": "ID",
+      "title_desc": "Mata-duree / Ibsa",
+      "department": "Waajjira",
+      "status": "Haala",
+      "priority": "Dursa",
+      "date": "Guyyaa",
+      "action": "Tarkaanfii",
+      "view_details": "Bal'inaan Ilaali",
+      "no_data": "Komii ramadame hin argamne"
+    },
+    "detail": {
+      "nav": "Daashboordii / Komii",
+      "not_found": "Komiin hin argamne ykn siif ramadamne hin jiru.",
+      "submitted_by": "Kan dhiyeesse",
+      "update_status": "Haala haaromsi",
+      "save": "Olkaa'i",
+      "comment_placeholder": "Yaada ida'i (dhimmoota dideramaniif/furmaata dhabaniif dirqama)",
+      "comment_required": "Komii kana didan dura yaada ida'i.",
+      "description": "Ibsa",
+      "attachments": "Maxxanfamoo ({{count}})",
+      "attachment": "Maxxanfamoo",
+      "location": "Bakka",
+      "details": "Bal'ina",
+      "priority": "Dursa",
+      "category": "Gosa",
+      "department": "Waajjira",
+      "assignee": "Ramadamaa",
+      "reporter": "Gabaasaa",
+      "ai_analysis": "Xiinxala AI",
+      "ai_confidence": "Amanamummaa AI",
+      "spam": "Spam",
+      "yes": "Eeyyee",
+      "no": "Lakki",
+      "duplicate_of": "Walfakkaataa kan",
+      "status_value": "Haala",
+      "priority_value": "Dursa",
+      "no_attachments": "Maxxanfamoo hin jiru",
+      "woreda": "Aanaa",
+      "street_address": "Teessoo Daandii",
+      "no_location_coordinates": "Qindaa'ina bakka argamu hin jiru",
+      "created": "Uumame",
+      "updated": "Haaromfame",
+      "woreda_prefix": "Aanaa",
+      "country": "Itoophiyaa"
+    },
+    "toasts": {
+      "status_updated": "Haalli haaromfame"
+    },
+    "notifications": {
+      "assigned_title": "Komii haaraa ramadame"
+    }
+  },
+  "org_head_complaints": {
+    "nav": "Daashboordii / Komii Dhaabbata",
+    "title": "Komii Dhaabbata",
+    "subtitle": "Komii dhaabbata keessa kaafame ilaali.",
+    "list_view": "Tarree",
+    "map_view": "Kaartaa",
+    "search_placeholder": "Mata-duree, ibsa, ykn IDdhaan barbaadi...",
+    "status_label": "Haala",
+    "all": "Hunda",
+    "no_data": "Komii dhaabbata hin argamne",
+    "override": "Irra Aansi",
+    "override_title": "Komii Irra Aansi",
+    "override_note": "Tarkaanfii kana komiin fooyya'iinsa harkaa ykn irra ramadama barbaadu qofa fayyadami.",
+    "department": "Waajjira",
+    "priority": "Dursa",
+    "mark_spam": "Akka spam itti maaki",
+    "comment": "Yaada",
+    "comment_placeholder": "Sababaa irra ansisaatiif ida'i",
+    "apply_override": "Irra Ansisa Hojiirra Oolchi",
+    "no_location": "Bakka komii agarsiifamu hin jiru",
+    "popup": {
+      "status": "Haala",
+      "priority": "Dursa",
+      "department": "Waajjira"
+    },
+    "toasts": {
+      "confirming": "Mirkaneessaa jira...",
+      "overridden": "Komiin milkaa'inaan irra ansifame",
+      "error": "Tarkaanfiin kufee."
+    },
+    "comments": {
+      "title": "Yaadoowwan",
+      "placeholder": "Yaada barreessi...",
+      "post_button": "Yaada Maxxansi",
+      "loading": "Yaadoowwan fe'aa jira...",
+      "empty": "Yaadowwan ammaatti hin jiran",
+      "posting": "Yaada maxxansaa jira...",
+      "posted": "Yaadni maxxanfame",
+      "post_error": "Yaada maxxansuuf hin dandeenye",
+      "fetch_error": "Yaadoowwan fe'uuf hin dandeenye"
+    }
+  },
+  "org_head_departments": {
+    "nav": "Daashboordii / Waajjiraalee",
+    "title": "Waajjiraalee",
+    "subtitle": "Waajjiraalee hooggansa dhaabbataatiif argamu ilaali.",
+    "search_placeholder": "Waajjiraalee barbaadi...",
+    "no_data": "Waajjiraalee hin argamne"
+  },
+  "orgs": {
+    "title": "Dhaabbilee",
+    "subtitle": "To'annoo Qaamota Addunyaa",
+    "btn_new": "Dhaabbata Haaraa",
+    "table": {
+      "name": "Dhaabbata",
+      "code": "Koodii",
+      "status": "Haala",
+      "actions": "Tarkaanfiiwwan",
+      "details": "Bal'ina",
+      "active": "Hojii Irra",
+      "inactive": "Hojii Ala"
+    },
+    "side": {
+      "admins": "Akkaawuntiiwwan Bulchaa",
+      "accounts": "Akkaawuntiiwwan",
+      "create": "Uumi",
+      "create_admin": "Bulchaa",
+      "create_head": "Hooggansa",
+      "filter_all": "Hunda",
+      "filter_admin": "Bulchitoota",
+      "filter_head": "Hooggansa",
+      "head_readonly": "Tarkaanfii akkaawuntii hooggansaa uumamutti daangeffame.",
+      "edit": "Gulaali",
+      "suspend": "Dhaabsi"
+    },
+    "modals": {
+      "org_new": "Dhaabbata Haaraa",
+      "org_edit": "Dhaabbata Gulaali",
+      "admin_new": "Bulchaa Haaraa",
+      "head_new": "Hooggansa Haaraa",
+      "admin_edit": "Bulchaa Gulaali",
+      "deactivate_title": "Dhaabsisa Mirkaneessi",
+      "warning": "Akeekkachiisa: {{type}} kana dhaabsisuun seensa hatattamaan daangessa. Sababa armaan gaditti kenni.",
+      "type_org": "Dhaabbata",
+      "type_admin": "Bulchaa"
+    },
+    "labels": {
+      "name": "Maqaa",
+      "code": "Koodii",
+      "status_active": "Dhaabbatni Hojii Irra Jira",
+      "full_name": "Maqaa Guutuu",
+      "email": "Imeelii",
+      "password": "Jecha Darbii",
+      "reason": "Sababaa Dhaabsisaatiif",
+      "reason_placeholder": "Haalawwan dabalataa..."
+    },
+    "btns": {
+      "save": "Jijjiirama Olkaa'i",
+      "confirm": "Mirkaneessi",
+      "deactivate": "Dhaabsisa Mirkaneessi"
+    },
+    "toasts": {
+      "head_created": "Hooggansni milkaa'inaan uumame!"
+    }
+  },
+  "settings": {
+    "title": "Qindeessituu Akkaawuntii",
+    "subtitle": "Odeeffannoo dhuunfaa fi filannoo nageenya kee bulchi.",
+    "profile": {
+      "title": "Suuraa Profaayilii",
+      "subtitle": "Suuraa fi maqaa dhuunfaa kee haaromsi.",
+      "change": "Jijjiiri",
+      "first_name": "Maqaa Jalqabaa",
+      "last_name": "Maqaa Abaa",
+      "email": "Teessoo Imeelii"
+    },
+    "security": {
+      "title": "Nageenyi Jecha Darbii",
+      "subtitle": "Jecha darbii jabaa fayyadamuudhaan akkaawuntii kee nagaha turi.",
+      "current_password": "Jecha Darbii Ammaa",
+      "new_password": "Jecha Darbii Haaraa",
+      "confirm_password": "Jecha Darbii Haaraa Mirkaneessi",
+      "placeholder_new": "Jecha darbii haaraa galchi",
+      "placeholder_confirm": "Jecha darbii haaraa mirkaneessi"
+    },
+    "actions": {
+      "discard": "Jijjiirama Haqii",
+      "update": "Akkaawuntii Haaromsi"
+    }
+  },
+  "notifications": {
+    "title": "Beeksisawwan",
+    "mark_all": "Hunda akka dubbifametti maaki",
+    "empty": "Beeksisawwan ammaatti hin jiran",
+    "view_all": "Hojii Hunda Ilaali",
+    "new_alert": "Beeksisa Haaraa"
+  },
+  "theme": {
+    "toggle": "Teemaa jijjiiri",
+    "light": "Ifaa",
+    "dark": "Dukkana"
+  },
+  "auth": {
+    "forgot_password_title": "Jecha Darbii Dagatte?",
+    "forgot_password_subtitle": "Jecha darbii kee dagatte yoo ta'e deebi'i argadhu!",
+    "otp_sent": "OTP imeelii kee ergameera.",
+    "missing_email": "Imeelii dhabame. Tartiiba deebi'umsaa irra jalqabi.",
+    "missing_otp": "OTP dhabame. Tartiiba deebi'umsaa irra jalqabi.",
+    "reset_success": "Jecha darbii deebi'uumsi milkaa'e. Maaloo seeni.",
+    "submit": "Dhiyeessi",
+    "login": "Seeni",
+    "reset_password_title": "Jecha Darbii Deebi'i",
+    "reset_password_subtitle": "Jecha darbii haaraa kee qindeessi akkaawuntiitti seenuuf!",
+    "verify_code_title": "Koodii Mirkaneessi",
+    "verify_code_subtitle": "Koodii mirkaneessaa qabate imeelii akkaawuntii kee ergineerra!",
+    "verify_code_label": "Koodii Mirkaneessaa",
+    "not_allowed": "Sirnatti seenuuf eeyyama hin qabdu."
+  }
+}
