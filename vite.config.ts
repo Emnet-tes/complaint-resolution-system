@@ -23,7 +23,7 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (!id.includes("node_modules")) return;
-          if (id.includes("react-dom") || id.includes("react/")) return "vendor-react";
+          if (id.includes("react-dom") || id.includes("react/") || id.includes("scheduler")) return "vendor-react"; // scheduler must travel with react-dom
           if (id.includes("leaflet") || id.includes("react-leaflet")) return "vendor-maps";
           if (id.includes("jspdf")) return "vendor-pdf";
           if (id.includes("react-router")) return "vendor-router";
