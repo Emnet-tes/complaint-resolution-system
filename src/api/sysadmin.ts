@@ -80,6 +80,62 @@ export interface UpdateOrgAdminPayload {
   organizationId?: string;
 }
 
+// --- Types for Audit Logs ---
+
+export interface AuditLogUser {
+  _id: string;
+  fullName: string;
+  email: string;
+  role?: string;
+}
+
+export interface AuditLogActivity {
+  _id: string;
+  user: AuditLogUser;
+  action: string;
+  description: string;
+  targetType: string | null;
+  targetId: string | null;
+  oldValue: unknown;
+  newValue: unknown;
+  orgId: string | null;
+  status: string;
+  errorMessage: string | null;
+  ip: string | null;
+  adminRole: string | null;
+  createdAt: string;
+  updatedAt: string;
+  __v?: number;
+}
+
+export interface AuditLogPagination {
+  page: number;
+  limit: number;
+  total: number;
+  pages: number;
+}
+
+export interface AuditLogsResponse {
+  success: boolean;
+  data: AuditLogActivity[];
+  pagination: AuditLogPagination;
+}
+
+export interface AuditLogSummary {
+  totalActiveAdmins: number;
+  last30Days: {
+    userManagementActions: number;
+    organizationChanges: number;
+    departmentChanges: number;
+  };
+  recentActivities: AuditLogActivity[];
+}
+
+export interface AuditLogSummaryResponse {
+  success: boolean;
+  summary: AuditLogSummary;
+}
+
 // --- Types for Analytics ---
 
 export interface SysAdminAnalytics {
@@ -214,6 +270,14 @@ export const sysAdminApi = {
   // Get dashboard statistics for SysAdmin
   getAnalytics: () => 
     api.get<SysAdminAnalytics>("/analytics/sys-admin"),
+
+  // Get audit log activities for SysAdmin
+  getAuditActivities: (page = 1, limit = 20) =>
+    api.get<AuditLogsResponse>("/audit-logs/activities", { params: { page, limit } }),
+
+  // Get audit log summary for SysAdmin
+  getAuditSummary: () =>
+    api.get<AuditLogSummaryResponse>("/audit-logs/summary"),
 };
 
 export default sysAdminApi;

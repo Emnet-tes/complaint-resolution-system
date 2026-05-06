@@ -86,7 +86,7 @@ const Login = () => {
       } else if (user.role === 'DeptHead') {
         navigate('/dept-dashboard');
       } else {
-        logout();
+        await logout();
         toast.error(t('auth.not_allowed', 'You are not allowed to access this system.'));
         navigate('/login', { replace: true });
       }

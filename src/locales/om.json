@@ -16,7 +16,38 @@
     "logout": "Ba'i",
     "sys_portal": "Portaala Sirna",
     "org_portal": "Portaala Dhaabbata",
-    "dept_portal": "Portaala Waajjira"
+    "dept_portal": "Portaala Waajjira",
+    "audit_logs": "Galmeewwan Audit"
+  },
+  "audit_logs": {
+    "breadcrumb": "Bulchiinsa Sirna / Galmeewwan Audit",
+    "title": "Galmeewwan Audit",
+    "subtitle": "Tarkaanfiiwwan bulchaa ilaali, jijjiirama hordofi, fi hojii sirnaa to'achi.",
+    "page_size": "Hammi fuulaa",
+    "refresh": "Haaromsi",
+    "cards": {
+      "active_admins": "Bulchitoota Hojii Irra",
+      "active_admins_sub": "Bulchitoota sirna yeroo ammaa hojii irra jiran",
+      "user_actions": "Tarkaanfiiwwan Fayyadamaa",
+      "org_changes": "Jijjiirama Dhaabbataa",
+      "dept_changes": "Jijjiirama Waajjiraa",
+      "last_30_days": "Guyyoota 30 darban"
+    },
+    "table_title": "Galaa Hojii",
+    "table_subtitle": "{{total}} galmee keessaa {{count}} agarsiifamaa jiru",
+    "live": "Hordoffii audit kallattiin",
+    "no_data": "Tarkaanfii audit hin argamne",
+    "pagination": "Fuula {{page}} / {{pages}}",
+    "previous": "Kan dura",
+    "next": "Kan itti aanu",
+    "table": {
+      "time": "Yeroo",
+      "user": "Fayyadamaa",
+      "action": "Tarkaanfii",
+      "target": "Kaayyoo",
+      "status": "Haala",
+      "ip": "IP"
+    }
   },
   "org_dashboard": {
     "nav_path": "Dhaabbata / Cuunfaa",
