@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const updatedUser: User = {
             firstName: profileData.firstName || prev?.firstName,
             lastName: profileData.lastName || prev?.lastName,
-            fullname: profileData.fullname || (profileData.firstName ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : prev?.fullname || ''),
+            fullname: profileData.fullName ?? profileData.fullname ?? (profileData.firstName ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : prev?.fullname || ''),
             email: profileData.email || prev?.email || '',
             role: (profileData.role as Role) || prev?.role || null,
             profilePicture: profileData.profilePicture || profileData.avatar || prev?.profilePicture,
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Backend sample response:
     // { message: string, _id: string, role: 'SysAdmin' | 'OrgAdmin' | 'DeptAdmin', token: string }
     const user: User = {
-      fullname: data.fullname ?? '',
+      fullname: data.fullName ?? data.fullname ?? '',
       email: data.email ?? credentials.email ?? '',
       role: (data.role as Role) ?? null,
     };

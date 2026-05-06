@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mail, Lock, Loader2, Languages, ChevronDown } from 'lucide-react';
+import { Mail, Lock, Loader2, Languages, ChevronDown, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
@@ -17,6 +17,7 @@ const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
 
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const languageRef = useRef<HTMLDivElement>(null);
@@ -194,12 +195,19 @@ const Login = () => {
               <input
                 required
                 name="password"
-                type="password"
+                type={showPwd ? 'text' : 'password'}
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="........."
-                className="w-full py-4 pl-12 pr-4 border-2 border-[#005a43] rounded-2xl focus:outline-none bg-transparent"
+                className="w-full py-4 pl-12 pr-12 border-2 border-[#005a43] rounded-2xl focus:outline-none bg-transparent"
               />
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); setShowPwd((s) => !s); }}
+                className="absolute right-4 text-slate-400 hover:text-slate-600"
+              >
+                {showPwd ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
 

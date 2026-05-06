@@ -463,7 +463,8 @@
     },
     "actions": {
       "discard": "Jijjiirama Haqii",
-      "update": "Akkaawuntii Haaromsi"
+      "update": "Akkaawuntii Haaromsi",
+      "update_password": "Jecha Darbii Haaromsi"
     }
   },
   "notifications": {
