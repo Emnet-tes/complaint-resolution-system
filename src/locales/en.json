@@ -464,7 +464,8 @@
     },
     "actions": {
       "discard": "Discard Changes",
-      "update": "Update Account"
+      "update": "Update Account",
+      "update_password": "Update Password"
     }
   },
   "notifications": {

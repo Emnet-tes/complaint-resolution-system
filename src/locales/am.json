@@ -464,7 +464,8 @@
     },
     "actions": {
       "discard": "ለውጦቹን ሰርዝ",
-      "update": "መለያውን አዘምን"
+      "update": "መለያውን አዘምን",
+      "update_password": "የይለፍ ቃል አዘምን"
     }
   },
   "notifications": {
