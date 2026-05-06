@@ -40,6 +40,7 @@ export const authApi = {
   login: (data: any) => api.post("/auth/login", data),
   register: (data: any) => api.post("/auth/register", data), // Used by Org Admin to add employees
   getProfile: () => api.get("/auth/profile"),
+  logout: () => api.post("/auth/logout"),
   forgotPassword: (email: string) => api.post("/auth/forgot-password", { email }),
   forgotPasswordOtp: (email: string) => api.post("/auth/forgot-password-otp", { email }),
   resetPassword: (data: { token: string; email: string; password: string }) =>

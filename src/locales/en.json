@@ -16,7 +16,38 @@
     "logout": "Log Out",
     "sys_portal": "System Portal",
     "org_portal": "Org Portal",
-    "dept_portal": "Dept Portal"
+    "dept_portal": "Dept Portal",
+    "audit_logs": "Audit Logs"
+  },
+  "audit_logs": {
+    "breadcrumb": "System Administration / Audit Logs",
+    "title": "Audit Logs",
+    "subtitle": "Review administrative activity, trace changes, and monitor system actions.",
+    "page_size": "Page size",
+    "refresh": "Refresh",
+    "cards": {
+      "active_admins": "Active Admins",
+      "active_admins_sub": "active system adminis",
+      "user_actions": "User Actions",
+      "org_changes": "Organization Changes",
+      "dept_changes": "Department Changes",
+      "last_30_days": "Last 30 days"
+    },
+    "table_title": "Activity Feed",
+    "table_subtitle": "Showing {{count}} of {{total}} records",
+    "live": "Live audit trail",
+    "no_data": "No audit activity found",
+    "pagination": "Page {{page}} of {{pages}}",
+    "previous": "Previous",
+    "next": "Next",
+    "table": {
+      "time": "Time",
+      "user": "User",
+      "action": "Action",
+      "target": "Target",
+      "status": "Status",
+      "ip": "IP"
+    }
   },
   "org_dashboard": {
     "nav_path": "Organization / Overview",

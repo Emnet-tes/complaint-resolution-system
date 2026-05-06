@@ -16,7 +16,38 @@
     "logout": "ውጣ",
     "sys_portal": "የስርዓት ፖርታል",
     "org_portal": "የድርጅት ፖርታል",
-    "dept_portal": "የክፍል ፖርታል"
+    "dept_portal": "የክፍል ፖርታል",
+    "audit_logs": "የኦዲት መዝገቦች"
+  },
+  "audit_logs": {
+    "breadcrumb": "የስርዓት አስተዳደር / የኦዲት መዝገቦች",
+    "title": "የኦዲት መዝገቦች",
+    "subtitle": "የአስተዳዳሪ እንቅስቃሴዎችን ይመልከቱ፣ ለውጦችን ይከታተሉ እና የስርዓቱን እርምጃዎች ያስተዳድሩ።",
+    "page_size": "የገፅ መጠን",
+    "refresh": "አዘምን",
+    "cards": {
+      "active_admins": "ንቁ አስተዳዳሪዎች",
+      "active_admins_sub": "በአሁኑ ጊዜ ንቁ የሆኑ የስርዓት አስተዳዳሪዎች",
+      "user_actions": "የተጠቃሚ እርምጃዎች",
+      "org_changes": "የድርጅት ለውጦች",
+      "dept_changes": "የክፍል ለውጦች",
+      "last_30_days": "ያለፉት 30 ቀናት"
+    },
+    "table_title": "የእንቅስቃሴ ሰንሰለት",
+    "table_subtitle": "{{total}} መዝገቦች ውስጥ {{count}} እየታዩ ናቸው",
+    "live": "ቀጥታ የኦዲት መከታተያ",
+    "no_data": "ምንም የኦዲት እንቅስቃሴ አልተገኘም",
+    "pagination": "ገጽ {{page}} / {{pages}}",
+    "previous": "ቀዳሚ",
+    "next": "ቀጣይ",
+    "table": {
+      "time": "ሰዓት",
+      "user": "ተጠቃሚ",
+      "action": "እርምጃ",
+      "target": "ዒላማ",
+      "status": "ሁኔታ",
+      "ip": "IP"
+    }
   },
   "org_dashboard": {
     "nav_path": "ድርጅት / አጠቃላይ እይታ",

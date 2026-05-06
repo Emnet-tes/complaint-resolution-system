@@ -19,7 +19,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (credentials: any) => Promise<User>;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -88,8 +88,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     if (token) {
-      // Store token in cookie (Expires in 7 days, Secure, SameSite)
-      Cookies.set('token', token, { expires: 7, secure: true, sameSite: 'strict' });
+      const isSecureContext = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      // Store token in a cookie that works on local HTTP and production HTTPS.
+      Cookies.set('token', token, { expires: 7, secure: isSecureContext, sameSite: 'strict' });
     }
 
     Cookies.set('user', JSON.stringify(user), { expires: 7 });
@@ -98,10 +99,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return user;
   };
 
-  const logout = () => {
-    Cookies.remove('token');
-    Cookies.remove('user');
-    setUser(null);
+  const logout = async () => {
+    try {
+      await authApi.logout();
+    } catch (error) {
+      console.error('Failed to notify backend about logout', error);
+    } finally {
+      Cookies.remove('token');
+      Cookies.remove('user');
+      setUser(null);
+    }
   };
 
   return (
