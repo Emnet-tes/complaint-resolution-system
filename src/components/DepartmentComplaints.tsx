@@ -13,14 +13,17 @@ import {
 } from 'lucide-react';
 import { Table, type Column } from '../components/Table';
 import StatCard from './StatCard';
-import { deptAdminApi, type AssignedComplaint, type ComplaintStatus } from '../api/deptadmin';
+import type { AssignedComplaint, ComplaintStatus } from '../api/deptadmin';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { fetchDeptAdminComplaints, selectDeptAdmin } from '../store/slices/deptAdminSlice';
 
 const DepartmentComplaints = () => {
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
+  const { complaints: allComplaints, loading, error: storeError } = useAppSelector(selectDeptAdmin);
   const [viewMode, setViewMode] = useState('list');
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<ComplaintStatus | ''>('');
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [summary, setSummary] = useState({ total: 0, resolved: 0, pending: 0, resolvedPercentage: 0 });
   const [complaints, setComplaints] = useState<AssignedComplaint[]>([]);
@@ -32,14 +35,9 @@ const DepartmentComplaints = () => {
     return c._id || (c as any).id || '';
   };
 
-  const fetchAssigned = async (opts?: { silent?: boolean }) => {
-    if (!opts?.silent) {
-      setLoading(true);
-      setError('');
-    }
+  const fetchAssigned = async () => {
     try {
-      const res = await deptAdminApi.getAssignedComplaints();
-      const allData = res.data || [];
+      const allData = await dispatch(fetchDeptAdminComplaints()).unwrap();
       
       const total = allData.length;
       const resolved = allData.filter(c => c.status === 'Resolved').length;
@@ -69,21 +67,34 @@ const DepartmentComplaints = () => {
       firstLoadRef.current = false;
     } catch (err: any) {
       setError(err.response?.data?.message || t('dept_mgmt.toasts.fetch_error'));
-    } finally {
-      if (!opts?.silent) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAssigned();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter]);
+    const allData = allComplaints || [];
+    const total = allData.length;
+    const resolved = allData.filter((c) => c.status === 'Resolved').length;
+    const pending = allData.filter((c) => c.status !== 'Resolved' && c.status !== 'Rejected').length;
+    const resolvedPercentage = total === 0 ? 0 : Math.round((resolved / total) * 100);
+    setSummary({ total, resolved, pending, resolvedPercentage });
+
+    const filtered = statusFilter ? allData.filter((c) => c.status === statusFilter) : allData;
+    setComplaints(filtered);
+    if (storeError) setError(storeError);
+  }, [allComplaints, statusFilter, storeError]);
 
   useEffect(() => {
-    const id = window.setInterval(() => fetchAssigned({ silent: true }), 15000);
+    if (allComplaints.length === 0) {
+      void fetchAssigned();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const id = window.setInterval(() => fetchAssigned(), 15000);
     return () => window.clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter]);
+  }, []);
 
   const columns: Column<AssignedComplaint>[] = useMemo(() => {
     return [

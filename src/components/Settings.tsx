@@ -1,18 +1,21 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { User, Lock, Eye, EyeOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { authApi } from '../api/api';
 import { useAuth } from '../context/AuthContext';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { changePasswordThunk, selectAuthError, selectAuthSubmitting } from '../store/slices/authSlice';
 
 const Settings = () => {
    const { t } = useTranslation();
-   const { user } = useAuth();
+   const dispatch = useAppDispatch();
+   const { user, refreshProfile } = useAuth();
+  const loading = useAppSelector(selectAuthSubmitting);
+  const authError = useAppSelector(selectAuthError);
   const [showPwd, setShowPwd] = useState(false);
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
    
@@ -28,19 +31,27 @@ const Settings = () => {
     }
 
     try {
-      setLoading(true);
-      await authApi.changePassword({ oldPassword, newPassword });
+      await dispatch(changePasswordThunk({ oldPassword, newPassword })).unwrap();
       setSuccess(t('dept_mgmt.toasts.add_success') || 'Password changed');
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: any) {
-      const msg = err.response?.data?.message || t('dept_mgmt.toasts.fetch_error');
+      const msg = err?.message || authError || t('dept_mgmt.toasts.fetch_error');
       setError(msg);
-    } finally {
-      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (authError) {
+      setError(authError);
+    }
+  }, [authError]);
+
+  useEffect(() => {
+    void refreshProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="mx-auto space-y-8 p-4 md:p-8">

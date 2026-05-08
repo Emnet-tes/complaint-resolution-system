@@ -3,8 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { Search, Loader2, Building2, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Table, type Column } from '../components/Table';
-import { orgHeadApi, type OrgHeadDeptHead } from '../api/orghead';
+import type { OrgHeadDeptHead } from '../api/orghead';
 import type { Department } from '../api/orgadmin';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { fetchOrgHeadDirectory, selectOrgHead } from '../store/slices/orgHeadSlice';
 
 type ActiveTab = 'departments' | 'deptHeads';
 
@@ -15,41 +17,23 @@ const getDepartmentLabel = (department: OrgHeadDeptHead['department']) => {
 
 const OrgHeadDepartments = () => {
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
+  const { loading, departments, deptHeads, error } = useAppSelector(selectOrgHead);
   const [activeTab, setActiveTab] = useState<ActiveTab>('departments');
-  const [departmentsLoading, setDepartmentsLoading] = useState(true);
-  const [deptHeadsLoading, setDeptHeadsLoading] = useState(true);
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [deptHeads, setDeptHeads] = useState<OrgHeadDeptHead[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const fetchDepartments = async () => {
-      setDepartmentsLoading(true);
-      try {
-        const res = await orgHeadApi.listDepartments();
-        setDepartments(res.data || []);
-      } catch (err: any) {
-        toast.error(err.response?.data?.message || t('dept_mgmt.toasts.fetch_error', 'Failed to fetch departments'));
-      } finally {
-        setDepartmentsLoading(false);
-      }
-    };
+    if (departments.length === 0 && deptHeads.length === 0) {
+      void dispatch(fetchOrgHeadDirectory());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch]);
 
-    const fetchDeptHeads = async () => {
-      setDeptHeadsLoading(true);
-      try {
-        const res = await orgHeadApi.listDeptHeads();
-        setDeptHeads(res.data || []);
-      } catch (err: any) {
-        toast.error(err.response?.data?.message || t('dept_mgmt.toasts.fetch_error', 'Failed to fetch department heads'));
-      } finally {
-        setDeptHeadsLoading(false);
-      }
-    };
-
-    fetchDepartments();
-    fetchDeptHeads();
-  }, [t]);
+  useEffect(() => {
+    if (error) {
+      toast.error(error || t('dept_mgmt.toasts.fetch_error', 'Failed to fetch org head directory'));
+    }
+  }, [error, t]);
 
   const filteredDepartments = useMemo(() => {
     const normalized = searchTerm.trim().toLowerCase();
@@ -132,7 +116,7 @@ const OrgHeadDepartments = () => {
   ];
 
   const isDepartmentsTab = activeTab === 'departments';
-  const currentLoading = isDepartmentsTab ? departmentsLoading : deptHeadsLoading;
+  const currentLoading = loading;
 
   return (
     <div className="p-4 md:p-8 space-y-6">

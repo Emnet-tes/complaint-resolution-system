@@ -16,12 +16,12 @@ import 'leaflet/dist/leaflet.css';
 import { Table, type Column } from './Table';
 import Modal from './Modal';
 import {
-  orgHeadApi,
   type OrgHeadComplaint,
   type OrgHeadComplaintPriority,
   type OrgHeadComplaintStatus,
 } from '../api/orghead';
-import type { Department } from '../api/orgadmin';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { fetchOrgHeadDirectory, overrideOrgHeadComplaintThunk, selectOrgHead } from '../store/slices/orgHeadSlice';
 
 const ORGHEAD_STATUS_OPTIONS: OrgHeadComplaintStatus[] = [
   'Submitted',
@@ -36,12 +36,10 @@ const ORGHEAD_PRIORITY_OPTIONS: OrgHeadComplaintPriority[] = ['Low', 'Medium', '
 const OrgHeadComplaints = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { complaints, departments, loading, submitting, error } = useAppSelector(selectOrgHead);
 
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [complaints, setComplaints] = useState<OrgHeadComplaint[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -60,25 +58,25 @@ const OrgHeadComplaints = () => {
   });
 
   const fetchData = async () => {
-    setLoading(true);
     try {
-      const [complaintsRes, departmentsRes] = await Promise.all([
-        orgHeadApi.getOrganizationComplaints(),
-        orgHeadApi.listDepartments(),
-      ]);
-      setComplaints(complaintsRes.data || []);
-      setDepartments(departmentsRes.data || []);
+      await dispatch(fetchOrgHeadDirectory()).unwrap();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || t('dept_mgmt.toasts.fetch_error', 'Failed to fetch data'));
-    } finally {
-      setLoading(false);
+      toast.error(err?.message || t('dept_mgmt.toasts.fetch_error', 'Failed to fetch data'));
     }
   };
 
   useEffect(() => {
-    fetchData();
+    if (complaints.length === 0) {
+      void fetchData();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error || t('dept_mgmt.toasts.fetch_error', 'Failed to fetch data'));
+    }
+  }, [error, t]);
 
   const filteredComplaints = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -134,45 +132,25 @@ const OrgHeadComplaints = () => {
     e.preventDefault();
     if (!selectedComplaint) return;
 
-    setSubmitting(true);
     const loadId = toast.loading(t('org_head_complaints.toasts.confirming', 'Confirming...'));
     try {
-      await orgHeadApi.overrideComplaint(getComplaintId(selectedComplaint), {
-        department: overrideForm.department || undefined,
-        priority: overrideForm.priority,
-        status: overrideForm.status,
-        isSpam: overrideForm.isSpam,
-      });
-
-      const selectedDept = departments.find((d) => d._id === overrideForm.department);
-
-      setComplaints((prev) =>
-        prev.map((c) =>
-          getComplaintId(c) === getComplaintId(selectedComplaint)
-            ? {
-                ...c,
-                department: selectedDept
-                  ? {
-                      _id: selectedDept._id,
-                      code: selectedDept.code,
-                      name: selectedDept.name,
-                    }
-                  : c.department,
-                priority: overrideForm.priority,
-                status: overrideForm.status,
-                isSpam: overrideForm.isSpam,
-              }
-            : c,
-        ),
-      );
+      await dispatch(
+        overrideOrgHeadComplaintThunk({
+          id: getComplaintId(selectedComplaint),
+          data: {
+            department: overrideForm.department || undefined,
+            priority: overrideForm.priority,
+            status: overrideForm.status,
+            isSpam: overrideForm.isSpam,
+          },
+        }),
+      ).unwrap();
 
       setIsOverrideModalOpen(false);
       setSelectedComplaint(null);
       toast.success(t('org_head_complaints.toasts.overridden', 'Complaint overridden successfully'), { id: loadId });
     } catch (err: any) {
       toast.error(err.response?.data?.message || t('org_head_complaints.toasts.error', 'Action failed.'), { id: loadId });
-    } finally {
-      setSubmitting(false);
     }
   };
   const STATUS_STYLES: Record<string, string> = {

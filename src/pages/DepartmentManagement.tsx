@@ -1,26 +1,33 @@
 
 import { useEffect, useState } from 'react';
 import { UserPlus, Shield, LayoutGrid, Users, Search, Filter, Edit3, Power, AlertTriangle, Loader2 } from 'lucide-react';
-import { orgAdminApi, type Department, type DeptAdmin } from '../api/orgadmin';
+import type { Department, DeptAdmin } from '../api/orgadmin';
 import { Table, type Column } from '../components/Table';
 import Modal from '../components/Modal';
 import { toast } from 'react-hot-toast'; 
 import { useTranslation } from 'react-i18next';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import {
+  createDepartmentThunk,
+  createDeptHeadThunk,
+  deactivateDepartmentThunk,
+  deactivateDeptHeadThunk,
+  fetchOrgAdminDirectory,
+  selectOrgAdmin,
+  updateDepartmentThunk,
+  updateDeptHeadThunk,
+} from '../store/slices/orgAdminSlice';
 
 const DepartmentManagement = () => {
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
+  const { departments, deptHeads: admins, loading, submitting, error } = useAppSelector(selectOrgAdmin);
   
   // UI State
   const [activeTab, setActiveTab] = useState<'depts' | 'admins'>('depts');
   const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-
-  // Data State
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [admins, setAdmins] = useState<DeptAdmin[]>([]);
 
   // Tracking State
   const [editingDeptId, setEditingDeptId] = useState<string | null>(null);
@@ -35,23 +42,18 @@ const DepartmentManagement = () => {
   const [deptForm, setDeptForm] = useState({ name: '', code: '', description: '', head: '' });
   const [adminForm, setAdminForm] = useState({ fullName: '', email: '', password: '', departmentId: '', isActive: true });
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [deptRes, adminRes] = await Promise.all([
-        orgAdminApi.listDepartments(),
-        orgAdminApi.listDeptHeads()
-      ]);
-      setDepartments(deptRes.data);
-      setAdmins(adminRes.data);
-    } catch (err: any) {
-      toast.error(t('dept_mgmt.toasts.fetch_error')); 
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (departments.length === 0 && admins.length === 0) {
+      void dispatch(fetchOrgAdminDirectory());
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch]);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    if (error) {
+      toast.error(error || t('dept_mgmt.toasts.fetch_error'));
+    }
+  }, [error, t]);
 
   // --- Filtering Logic ---
   const filteredDepartments = departments.filter(d => 
@@ -74,19 +76,21 @@ const DepartmentManagement = () => {
   // --- Handlers ---
   const handleCreateDept = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
     const loadId = toast.loading(t('dept_mgmt.toasts.creating_dept'));
     try {
       if (editingDeptId) {
-        const res = await orgAdminApi.updateDepartment(editingDeptId, {
-          name: deptForm.name,
-          code: deptForm.code,
-          description: deptForm.description
-        });
-        setDepartments(departments.map((d) => d._id === editingDeptId ? res.data : d));
+        await dispatch(
+          updateDepartmentThunk({
+            id: editingDeptId,
+            data: {
+              name: deptForm.name,
+              code: deptForm.code,
+              description: deptForm.description,
+            },
+          }),
+        ).unwrap();
       } else {
-        const res = await orgAdminApi.createDepartment(deptForm);
-        setDepartments([res.data, ...departments]);
+        await dispatch(createDepartmentThunk(deptForm)).unwrap();
       }
       setIsDeptModalOpen(false);
       setEditingDeptId(null);
@@ -94,32 +98,34 @@ const DepartmentManagement = () => {
       toast.success(editingDeptId ? t('dept_mgmt.toasts.dept_updated') : t('dept_mgmt.toasts.dept_success'), { id: loadId });
     } catch (err: any) {
       toast.error(err.response?.data?.message || t('dept_mgmt.toasts.generic_error'), { id: loadId });
-    } finally {
-      setSubmitting(false);
     }
   };
 
   const handleCreateAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
     const loadId = toast.loading(t('dept_mgmt.toasts.registering_admin'));
     try {
       if (editingHeadId) {
-        const res = await orgAdminApi.updateDeptHead(editingHeadId, {
-          fullName: adminForm.fullName,
-          email: adminForm.email,
-          departmentId: adminForm.departmentId,
-          isActive: adminForm.isActive
-        });
-        setAdmins(admins.map((a) => a._id === editingHeadId ? res.data : a));
+        await dispatch(
+          updateDeptHeadThunk({
+            id: editingHeadId,
+            data: {
+              fullName: adminForm.fullName,
+              email: adminForm.email,
+              departmentId: adminForm.departmentId,
+              isActive: adminForm.isActive,
+            },
+          }),
+        ).unwrap();
       } else {
-        const res = await orgAdminApi.createDeptHead({
-          fullName: adminForm.fullName,
-          email: adminForm.email,
-          password: adminForm.password,
-          departmentId: adminForm.departmentId
-        });
-        setAdmins([res.data, ...admins]);
+        await dispatch(
+          createDeptHeadThunk({
+            fullName: adminForm.fullName,
+            email: adminForm.email,
+            password: adminForm.password,
+            departmentId: adminForm.departmentId,
+          }),
+        ).unwrap();
       }
       setIsAdminModalOpen(false);
       setEditingHeadId(null);
@@ -127,8 +133,6 @@ const DepartmentManagement = () => {
       toast.success(editingHeadId ? t('dept_mgmt.toasts.admin_updated') : t('dept_mgmt.toasts.admin_success'), { id: loadId });
     } catch (err: any) {
       toast.error(err.response?.data?.message || t('dept_mgmt.toasts.generic_error'), { id: loadId });
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -136,23 +140,18 @@ const DepartmentManagement = () => {
     e.preventDefault();
     if (!deactivateTarget) return;
 
-    setSubmitting(true);
     const loadId = toast.loading(t('dept_mgmt.toasts.deactivating'));
     try {
       if (deactivateTarget.type === 'dept') {
-        await orgAdminApi.deactivateDepartment(deactivateTarget.id);
-        setDepartments(departments.map((d) => d._id === deactivateTarget.id ? { ...d, isActive: false } : d));
+        await dispatch(deactivateDepartmentThunk({ id: deactivateTarget.id })).unwrap();
       } else {
-        await orgAdminApi.deactivateDeptHead(deactivateTarget.id);
-        setAdmins(admins.map((a) => a._id === deactivateTarget.id ? { ...a, isActive: false } : a));
+        await dispatch(deactivateDeptHeadThunk({ id: deactivateTarget.id })).unwrap();
       }
       setIsDeactivateModalOpen(false);
       setDeactivateTarget(null);
       toast.success(t('dept_mgmt.toasts.deactivated'), { id: loadId });
     } catch (err: any) {
       toast.error(err.response?.data?.message || t('dept_mgmt.toasts.fetch_error'), { id: loadId });
-    } finally {
-      setSubmitting(false);
     }
   };
 
