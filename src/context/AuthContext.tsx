@@ -1,19 +1,10 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import Cookies from 'js-cookie';
 import { authApi } from '../api/api';
-
-// Roles as returned by backend: SysAdmin, OrgAdmin, OrgHead, DeptHead
-export type Role = 'SysAdmin' | 'OrgAdmin' | 'OrgHead' | 'DeptHead' | null;
-
-export interface User {
-  firstName?: string;
-  lastName?: string;
-  fullname: string;
-  email: string;
-  role: Role;
-  profilePicture?: string;
-}
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { setCredentials, setUser, setAuthLoading, clearAuth } from '../store/slices/authSlice';
+import type { Role, User } from '../types';
 
 interface AuthContextType {
   user: User | null;
@@ -26,8 +17,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const { user, loading } = useAppSelector((state) => state.auth);
 
   const refreshProfile = async () => {
     const token = Cookies.get('token');
@@ -38,18 +29,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const profileData = data.user || data;
       
       if (profileData) {
-        setUser((prev) => {
-          const updatedUser: User = {
-            firstName: profileData.firstName || prev?.firstName,
-            lastName: profileData.lastName || prev?.lastName,
-            fullname: profileData.fullName ?? profileData.fullname ?? (profileData.firstName ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : prev?.fullname || ''),
-            email: profileData.email || prev?.email || '',
-            role: (profileData.role as Role) || prev?.role || null,
-            profilePicture: profileData.profilePicture || profileData.avatar || prev?.profilePicture,
-          };
-          Cookies.set('user', JSON.stringify(updatedUser), { expires: 7 });
-          return updatedUser;
-        });
+        const updatedUser: User = {
+          firstName: profileData.firstName || user?.firstName,
+          lastName: profileData.lastName || user?.lastName,
+          fullname:
+            profileData.fullName ??
+            profileData.fullname ??
+            (profileData.firstName
+              ? `${profileData.firstName} ${profileData.lastName || ''}`.trim()
+              : user?.fullname || ''),
+          email: profileData.email || user?.email || '',
+          role: (profileData.role as Role) || user?.role || null,
+          profilePicture: profileData.profilePicture || profileData.avatar || user?.profilePicture,
+        };
+        Cookies.set('user', JSON.stringify(updatedUser), { expires: 7 });
+        dispatch(setUser(updatedUser));
       }
     } catch (error) {
       console.error("Failed to fetch user profile", error);
@@ -58,18 +52,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const initAuth = async () => {
+      dispatch(setAuthLoading(true));
       const savedUser = Cookies.get('user');
       const token = Cookies.get('token');
       
       if (savedUser && token) {
-        setUser(JSON.parse(savedUser));
+        const parsedUser = JSON.parse(savedUser) as User;
+        dispatch(setCredentials({ token, user: parsedUser }));
       }
       
       await refreshProfile();
-      setLoading(false);
+      dispatch(setAuthLoading(false));
     };
 
     initAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = async (credentials: any): Promise<User> => {
@@ -94,21 +91,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     Cookies.set('user', JSON.stringify(user), { expires: 7 });
-    setUser(user);
+    if (token) {
+      dispatch(setCredentials({ token, user }));
+    } else {
+      dispatch(setUser(user));
+      dispatch(setAuthLoading(false));
+    }
 
     return user;
   };
 
   const logout = async () => {
-    try {
-      await authApi.logout();
-    } catch (error) {
+    Cookies.remove('token');
+    Cookies.remove('user');
+    dispatch(clearAuth());
+    
+    // Fire and forget API
+    authApi.logout().catch(error => {
       console.error('Failed to notify backend about logout', error);
-    } finally {
-      Cookies.remove('token');
-      Cookies.remove('user');
-      setUser(null);
-    }
+    });
   };
 
   return (

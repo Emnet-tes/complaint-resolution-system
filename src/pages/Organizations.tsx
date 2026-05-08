@@ -4,16 +4,28 @@ import {
   Plus, Loader2, X, Edit3, Power, ChevronRight, AlertTriangle
 } from 'lucide-react';
 import Modal from '../components/Modal';
-import { sysAdminApi, type Organization, type OrgAdmin, type OrgHead } from '../api/sysadmin';
+import type { Organization } from '../api/sysadmin';
 import toast from 'react-hot-toast';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import {
+  createOrgAdminThunk,
+  createOrgHeadThunk,
+  createOrganizationThunk,
+  deactivateOrgAdminThunk,
+  deactivateOrgHeadThunk,
+  deactivateOrganizationThunk,
+  fetchSysAdminDirectory,
+  selectSysAdmin,
+  updateOrgAdminThunk,
+  updateOrgHeadThunk,
+  updateOrganizationThunk,
+} from '../store/slices/sysAdminSlice';
 
 const Organizations = () => {
   const { t } = useTranslation();
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [allAdmins, setAllAdmins] = useState<OrgAdmin[]>([]);
-  const [allHeads, setAllHeads] = useState<OrgHead[]>([]);
+  const dispatch = useAppDispatch();
+  const { organizations, orgAdmins: allAdmins, orgHeads: allHeads, loading, submitting, error } = useAppSelector(selectSysAdmin);
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
-  const [submitting, setSubmitting] = useState(false);
 
   // Modal Control
   const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
@@ -32,20 +44,18 @@ const Organizations = () => {
   const [adminForm, setAdminForm] = useState({ fullName: '', email: '', password: '' });
   const [deactivateReason, setDeactivateReason] = useState('');
 
-  const fetchData = async () => {
-    try {
-      const [orgRes, adminRes, headRes] = await Promise.all([
-        sysAdminApi.listOrganizations(),
-        sysAdminApi.listOrgAdmins(),
-        sysAdminApi.listOrgHeads()
-      ]);
-      setOrganizations(orgRes.data);
-      setAllAdmins(adminRes.data);
-      setAllHeads(headRes.data);
-    } catch (err) { toast.error(t('toasts.fetch_error', 'Failed to sync system data.')); }    
-  };
+  useEffect(() => {
+    if (organizations.length === 0) {
+      void dispatch(fetchSysAdminDirectory());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch]);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    if (error) {
+      toast.error(error || t('toasts.fetch_error', 'Failed to sync system data.'));
+    }
+  }, [error, t]);
 
   const selectedOrgAdmins = allAdmins.filter(a => a.organization?._id === selectedOrg?._id);
   const selectedOrgHeads = allHeads.filter(h => h.organization?._id === selectedOrg?._id);
@@ -63,82 +73,71 @@ const Organizations = () => {
   const handleAdminSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedOrg) return;
-    setSubmitting(true);
     try {
       if (editingAdminId) {
         if (accountModalRole === 'admin') {
-          const res = await sysAdminApi.updateOrgAdmin(editingAdminId, { fullName: adminForm.fullName, email: adminForm.email });
-          const updatedAdmin = { ...res.data, organization: typeof res.data.organization === 'string' ? selectedOrg : res.data.organization };
-          setAllAdmins(allAdmins.map(a => a._id === editingAdminId ? updatedAdmin : a));
+          await dispatch(
+            updateOrgAdminThunk({
+              id: editingAdminId,
+              data: { fullName: adminForm.fullName, email: adminForm.email, organizationId: selectedOrg._id },
+            }),
+          ).unwrap();
           toast.success(t('toasts.admin_updated', 'Admin updated successfully!'));
         } else {
-          const res = await sysAdminApi.updateOrgHead(editingAdminId, {
-            fullName: adminForm.fullName,
-            email: adminForm.email,
-            organizationId: selectedOrg._id
-          });
-          const updatedHead = { ...res.data, organization: typeof res.data.organization === 'string' ? selectedOrg : res.data.organization };
-          setAllHeads(allHeads.map(h => h._id === editingAdminId ? updatedHead : h));
+          await dispatch(
+            updateOrgHeadThunk({
+              id: editingAdminId,
+              data: { fullName: adminForm.fullName, email: adminForm.email, organizationId: selectedOrg._id },
+            }),
+          ).unwrap();
           toast.success(t('orgs.toasts.head_updated', 'Head updated successfully!'));
         }
       } else if (accountModalRole === 'head') {
-        const res = await sysAdminApi.createOrgHead({ ...adminForm, organizationId: selectedOrg._id });
-        const newHead = { ...res.data, organization: typeof res.data.organization === 'string' ? selectedOrg : res.data.organization };
-        setAllHeads([newHead, ...allHeads]);
+        await dispatch(createOrgHeadThunk({ ...adminForm, organizationId: selectedOrg._id })).unwrap();
         toast.success(t('orgs.toasts.head_created', 'Head created successfully!'));
       } else {
-        const res = await sysAdminApi.createOrgAdmin({ ...adminForm, organizationId: selectedOrg._id });
-        const newAdmin = { ...res.data, organization: typeof res.data.organization === 'string' ? selectedOrg : res.data.organization };
-        setAllAdmins([newAdmin, ...allAdmins]);
+        await dispatch(createOrgAdminThunk({ ...adminForm, organizationId: selectedOrg._id })).unwrap();
         toast.success(t('toasts.admin_created', 'Admin created successfully!'));
       }
       setIsAdminModalOpen(false);
       setEditingAdminId(null);
     } catch (err: any) { toast.error(err.response?.data?.message || t('toasts.error', 'Action failed.')); }
-    finally { setSubmitting(false); }
   };
 
   const handleOrgSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
     try {
       if (editingOrgId) {
-        const res = await sysAdminApi.updateOrganization(editingOrgId, orgForm);
-        setOrganizations(organizations.map(o => o._id === editingOrgId ? res.data : o));
-        if (selectedOrg?._id === editingOrgId) setSelectedOrg(res.data);
+        const updated = await dispatch(
+          updateOrganizationThunk({ id: editingOrgId, data: { name: orgForm.name, code: orgForm.code } }),
+        ).unwrap();
+        if (selectedOrg?._id === editingOrgId) setSelectedOrg(updated);
         toast.success(t('toasts.org_updated', 'Organization updated successfully!'));
       } else {
-        const res = await sysAdminApi.createOrganization({ name: orgForm.name, code: orgForm.code });
-        setOrganizations([res.data, ...organizations]);
+        await dispatch(createOrganizationThunk({ name: orgForm.name, code: orgForm.code })).unwrap();
         toast.success(t('toasts.org_created', 'Organization created successfully!'));
       }
       setIsOrgModalOpen(false);
       setEditingOrgId(null);
     } catch (err: any) { toast.error(err.response?.data?.message || t('toasts.error', 'Action failed.')); }
-    finally { setSubmitting(false); }
   };
 
   const handleDeactivateConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!deactivateTarget) return;
-    setSubmitting(true);
     try {
       if (deactivateTarget.type === 'org') {
-        await sysAdminApi.deactivateOrganization(deactivateTarget.id, { message: deactivateReason });
-        setOrganizations(organizations.map(o => o._id === deactivateTarget.id ? { ...o, isActive: false } : o));
+        await dispatch(deactivateOrganizationThunk({ id: deactivateTarget.id, message: deactivateReason })).unwrap();
         if (selectedOrg?._id === deactivateTarget.id) setSelectedOrg({ ...selectedOrg, isActive: false });
       } else if (deactivateTarget.type === 'admin') {
-        await sysAdminApi.deactivateOrgAdmin(deactivateTarget.id, { message: deactivateReason });
-        setAllAdmins(allAdmins.map(a => a._id === deactivateTarget.id ? { ...a, isActive: false } : a));
+        await dispatch(deactivateOrgAdminThunk({ id: deactivateTarget.id, message: deactivateReason })).unwrap();
       } else {
-        await sysAdminApi.deactivateOrgHead(deactivateTarget.id, { message: deactivateReason });
-        setAllHeads(allHeads.map(h => h._id === deactivateTarget.id ? { ...h, isActive: false } : h));
+        await dispatch(deactivateOrgHeadThunk({ id: deactivateTarget.id, message: deactivateReason })).unwrap();
       }
       setIsDeactivateModalOpen(false);
       setDeactivateReason('');
       toast.success(t('toasts.deactivated', 'Deactivated successfully'));
     } catch (err) { toast.error(t('toasts.error', 'Action failed.')); }
-    finally { setSubmitting(false); }
   };
 
   return (
@@ -154,7 +153,15 @@ const Organizations = () => {
           </button>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center h-[60vh] text-slate-400 gap-3">
+            <Loader2 className="animate-spin text-slate-400" size={40} />
+            <p className="font-black text-[10px] uppercase tracking-[0.2em] italic">
+              Loading Organizations...
+            </p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-50 text-[10px] font-black text-slate-400 uppercase tracking-tighter border-b border-gray-100">
               <tr>
@@ -188,6 +195,7 @@ const Organizations = () => {
             </tbody>
           </table>
         </div>
+        )}
       </div>
 
       {/* Side Detail Panel */}

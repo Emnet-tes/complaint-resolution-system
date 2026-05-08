@@ -1,28 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FileText, Clock, CheckCircle, Loader2 } from 'lucide-react';
 import StatCard from '../components/StatCard';
-import { deptHeadApi, type DeptHeadAnalytics } from '../api/depthead';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { fetchDeptHeadAnalytics, selectDeptHead } from '../store/slices/deptHeadSlice';
 
 const DeptDashboard = () => {
   const { t } = useTranslation();
-  const [stats, setStats] = useState<DeptHeadAnalytics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const { analytics: stats, loading } = useAppSelector(selectDeptHead);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoading(true);
-        const res = await deptHeadApi.getAnalytics();
-        setStats(res.data);
-      } catch (err) {
-        console.error('Failed to fetch DeptHead analytics', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, []);
+    if (!stats) {
+      void dispatch(fetchDeptHeadAnalytics());
+    }
+  }, [dispatch, stats]);
 
   if (loading) {
     return (

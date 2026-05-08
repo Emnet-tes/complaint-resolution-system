@@ -1,15 +1,19 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Lock, Languages } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
-import { authApi } from '../api/api';
 import ThemeToggle from '../components/ThemeToggle';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { resetPasswordThunk, selectAuthError, selectAuthSubmitting } from '../store/slices/authSlice';
 
 const ResetPassword = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useAppDispatch();
+  const loading = useAppSelector(selectAuthSubmitting);
+  const authError = useAppSelector(selectAuthError);
   
   const searchParams = new URLSearchParams(location.search);
   const tokenFromUrl = searchParams.get('token');
@@ -21,7 +25,6 @@ const ResetPassword = () => {
   const [email, setEmail] = useState(emailFromState || emailFromUrl || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -42,40 +45,49 @@ const ResetPassword = () => {
     }
 
     try {
-      setLoading(true);
       const finalEmail = email || emailFromState || emailFromUrl;
       if (!finalEmail) {
         setError(t('auth.missing_email', 'Missing email. Please restart the reset flow.'));
         return;
       }
-      
+
       if (tokenFromUrl) {
-        await authApi.resetPassword({
-          token: tokenFromUrl,
-          email: finalEmail,
-          password,
-        });
+        await dispatch(
+          resetPasswordThunk({
+            mode: 'token',
+            token: tokenFromUrl,
+            email: finalEmail,
+            password,
+          }),
+        ).unwrap();
       } else {
         if (!otpFromState) {
           setError(t('auth.missing_otp', 'Missing OTP. Please restart the reset flow.'));
           return;
         }
-        await authApi.resetPasswordOtp({
-          email: finalEmail,
-          otp: otpFromState,
-          password,
-        });
+        await dispatch(
+          resetPasswordThunk({
+            mode: 'otp',
+            email: finalEmail,
+            otp: otpFromState,
+            password,
+          }),
+        ).unwrap();
       }
-      
+
       setSuccess(t('auth.reset_success', 'Password reset successful. Please login.'));
       setTimeout(() => navigate('/login'), 2000);
     } catch (err: any) {
-      const msg = err.response?.data?.message || t('dept_mgmt.toasts.fetch_error');
+      const msg = err?.message || authError || t('dept_mgmt.toasts.fetch_error');
       setError(msg);
-    } finally {
-      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (authError) {
+      setError(authError);
+    }
+  }, [authError]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white p-4">

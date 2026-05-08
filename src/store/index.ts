@@ -1,10 +1,21 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slices/authSlice";
+import sysAdminReducer from "./slices/sysAdminSlice";
+import orgAdminReducer from "./slices/orgAdminSlice";
+import orgHeadReducer from "./slices/orgHeadSlice";
+import deptHeadReducer from "./slices/deptHeadSlice";
+import deptAdminReducer from "./slices/deptAdminSlice";
+import notificationsReducer from "./slices/notificationSlice";
 
-// Example slice can be added here and combined in reducer
 export const store = configureStore({
   reducer: {
     auth: authReducer,
+    sysAdmin: sysAdminReducer,
+    orgAdmin: orgAdminReducer,
+    orgHead: orgHeadReducer,
+    deptHead: deptHeadReducer,
+    deptAdmin: deptAdminReducer,
+    notifications: notificationsReducer,
   },
 });
 

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Building2, Users as UsersIcon, BarChart3, Loader2, Download, FileDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { orgAdminApi, type OrgAdminAnalytics } from '../api/orgadmin';
 import { StatCard } from '../components/OrgComponents';
 import jsPDF from 'jspdf';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { fetchOrgAdminAnalytics, selectOrgAdmin } from '../store/slices/orgAdminSlice';
 import {
   BarChart,
   Bar,
@@ -15,7 +16,7 @@ import {
   Legend,
 } from 'recharts';
 
-const EMPTY_SUMMARY: OrgAdminAnalytics['summary'] = {
+const EMPTY_SUMMARY = {
   totalDepartments: 0,
   totalDepartmentHeads: 0,
   activeDepartmentHeads: 0,
@@ -29,22 +30,14 @@ const EMPTY_SUMMARY: OrgAdminAnalytics['summary'] = {
 
 const OrgDashboard = () => {
   const { t } = useTranslation();
-  const [stats, setStats] = useState<OrgAdminAnalytics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const { analytics: stats, loading } = useAppSelector(selectOrgAdmin);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await orgAdminApi.getAnalytics();
-        setStats(res.data);
-      } catch (err) {
-        console.error("Failed to fetch analytics", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, []);
+    if (!stats) {
+      void dispatch(fetchOrgAdminAnalytics());
+    }
+  }, [dispatch, stats]);
 
   if (loading) {
     return (

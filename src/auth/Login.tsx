@@ -2,16 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Mail, Lock, Loader2, Languages, ChevronDown, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useDispatch } from 'react-redux';
 import { useAuth } from '../context/AuthContext';
-import { setCredentials } from '../store/slices/authSlice';
 import ThemeToggle from '../components/ThemeToggle';
 import toast from 'react-hot-toast';
 
 const Login = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { login, logout } = useAuth();
 
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -67,15 +64,6 @@ const Login = () => {
 
     try {
       const user = await login(formData);
-
-      const token = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('token='))
-        ?.split('=')[1];
-
-      if (token && user.role) {
-        dispatch(setCredentials({ token, role: user.role }));
-      }
 
       if (user.role === 'SysAdmin') {
         navigate('/dashboard');

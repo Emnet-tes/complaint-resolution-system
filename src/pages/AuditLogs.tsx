@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Activity, Building2, Clock3, RefreshCw, ShieldCheck, Users } from 'lucide-react';
-import { sysAdminApi, type AuditLogActivity, type AuditLogSummary } from '../api/sysadmin';
+import type { AuditLogActivity, AuditLogSummary } from '../api/sysadmin';
 import StatCard from '../components/StatCard';
 import { Table, type Column } from '../components/Table';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { fetchAuditLogsThunk, selectSysAdmin } from '../store/slices/sysAdminSlice';
 
 const EMPTY_SUMMARY: AuditLogSummary = {
   totalActiveAdmins: 0,
@@ -19,40 +21,40 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
 
 const AuditLogs = () => {
   const { t } = useTranslation();
-  const [activities, setActivities] = useState<AuditLogActivity[]>([]);
-  const [summary, setSummary] = useState<AuditLogSummary>(EMPTY_SUMMARY);
+  const dispatch = useAppDispatch();
+  const { auditActivities, auditSummary, auditPages, auditTotal, loading, error } = useAppSelector(selectSysAdmin);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalRecords, setTotalRecords] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchAuditData = useCallback(async (requestedPage = page, requestedLimit = limit) => {
-    try {
-      setLoading(true);
-      const [activitiesResponse, summaryResponse] = await Promise.all([
-        sysAdminApi.getAuditActivities(requestedPage, requestedLimit),
-        sysAdminApi.getAuditSummary(),
-      ]);
+    await dispatch(fetchAuditLogsThunk({ page: requestedPage, limit: requestedLimit }));
+    setRefreshing(false);
+  }, [dispatch, limit, page]);
 
-      setActivities(activitiesResponse.data.data);
-      setTotalRecords(activitiesResponse.data.pagination.total);
-      setTotalPages(activitiesResponse.data.pagination.pages || 1);
-      setSummary(summaryResponse.data.summary);
-    } catch (error) {
-      console.error('Failed to load audit logs', error);
-      setActivities([]);
-      setSummary(EMPTY_SUMMARY);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [limit, page]);
+  const prevPage = useRef(page);
+  const prevLimit = useRef(limit);
 
   useEffect(() => {
-    void fetchAuditData();
-  }, [fetchAuditData]);
+    if (auditActivities.length === 0) {
+      void fetchAuditData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (prevPage.current !== page || prevLimit.current !== limit) {
+      void fetchAuditData(page, limit);
+      prevPage.current = page;
+      prevLimit.current = limit;
+    }
+  }, [page, limit, fetchAuditData]);
+
+  useEffect(() => {
+    if (error) {
+      console.error('Failed to load audit logs', error);
+    }
+  }, [error]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -129,8 +131,10 @@ const AuditLogs = () => {
     },
   ];
 
-  const totalPagesSafe = Math.max(totalPages, 1);
-  const tableSubtitle = `Showing ${activities.length} of ${totalRecords} records`;
+  const activities = auditActivities;
+  const summary = auditSummary || EMPTY_SUMMARY;
+  const totalPagesSafe = Math.max(auditPages, 1);
+  const tableSubtitle = `Showing ${activities.length} of ${auditTotal} records`;
 
   return (
     <div className="p-4 md:p-8 space-y-8 max-w-7xl mx-auto min-h-screen bg-gray-50/50">

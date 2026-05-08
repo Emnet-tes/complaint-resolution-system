@@ -1,6 +1,8 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth, type Role } from '../context/AuthContext';
 import type { JSX } from 'react';
+import type { Role } from '../types';
+import { useAppSelector } from '../store/hooks';
+import { selectAuthLoading, selectIsAuthenticated, selectUserRole } from '../store/slices/authSlice';
 
 interface ProtectedRouteProps {
   children: JSX.Element;
@@ -8,11 +10,13 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
-  const { user, loading } = useAuth();
+  const loading = useAppSelector(selectAuthLoading);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const role = useAppSelector(selectUserRole);
   
   if (loading) return <div>Loading...</div>;
-  if (!user) return <Navigate to="/login" replace />;
-  if (!allowedRoles.includes(user.role)) return <Navigate to="/unauthorized" />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!allowedRoles.includes(role)) return <Navigate to="/unauthorized" />;
 
 
   return children;

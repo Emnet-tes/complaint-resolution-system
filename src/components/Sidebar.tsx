@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, X, LayoutDashboard, Building2, ShieldCheck, ClipboardList, Settings as SettingsIcon, ScrollText } from 'lucide-react';
-import { useAuth, type Role } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import type { Role } from '../types';
 import { useTranslation } from 'react-i18next';
 
 interface SidebarItem {

@@ -16,8 +16,20 @@ import {
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useAuth } from '../context/AuthContext';
-import { deptAdminApi, type AssignedComplaint, type ComplaintStatus } from '../api/deptadmin';
-import { orgHeadApi, type OrgHeadComplaint, type ComplaintComment } from '../api/orghead';
+import type { AssignedComplaint, ComplaintStatus } from '../api/deptadmin';
+import type { OrgHeadComplaint, ComplaintComment } from '../api/orghead';
+import { useAppDispatch } from '../store/hooks';
+import {
+  addDeptAdminCommentThunk,
+  fetchDeptAdminCommentsThunk,
+  fetchDeptAdminComplaints,
+  updateDeptAdminComplaintStatusThunk,
+} from '../store/slices/deptAdminSlice';
+import {
+  addOrgHeadCommentThunk,
+  fetchOrgHeadCommentsThunk,
+  fetchOrgHeadComplaints,
+} from '../store/slices/orgHeadSlice';
 
 type ComplaintDetailState = {
   complaint?: AssignedComplaint | OrgHeadComplaint;
@@ -214,6 +226,7 @@ const ComplaintDetail = () => {
   const location = useLocation();
   const { t } = useTranslation();
   const { user } = useAuth();
+  const dispatch = useAppDispatch();
 
   const routeState = location.state as ComplaintDetailState | null;
   const initialFromState = routeState?.complaint;
@@ -265,11 +278,11 @@ const ComplaintDetail = () => {
         let found: AssignedComplaint | OrgHeadComplaint | null = null;
 
         if (routeState?.source === 'org' || user?.role === 'OrgHead' || user?.role === 'OrgAdmin') {
-          const res = await orgHeadApi.getOrganizationComplaints();
-          found = res.data.find((c) => getComplaintId(c) === id) || null;
+          const all = await dispatch(fetchOrgHeadComplaints()).unwrap();
+          found = all.find((c) => getComplaintId(c) === id) || null;
         } else {
-          const res = await deptAdminApi.getAssignedComplaints();
-          found = res.data.find((c) => getComplaintId(c) === id) || null;
+          const all = await dispatch(fetchDeptAdminComplaints()).unwrap();
+          found = all.find((c) => getComplaintId(c) === id) || null;
         }
 
         setComplaint(found);
@@ -535,9 +548,13 @@ const ComplaintDetail = () => {
           setCommentsLoading(false);
           return;
         }
-        const res = await orgHeadApi.getComments(complaintId);
-        if (isActive) {
-          setComments(res.data || []);
+
+        if (isOrgComplaint) {
+          const payload = await dispatch(fetchOrgHeadCommentsThunk({ complaintId })).unwrap();
+          if (isActive) setComments(payload.comments || []);
+        } else {
+          const payload = await dispatch(fetchDeptAdminCommentsThunk({ complaintId })).unwrap();
+          if (isActive) setComments(payload.comments || []);
         }
       } catch (err: any) {
         if (isActive) {
@@ -569,9 +586,18 @@ const ComplaintDetail = () => {
     setPostingComment(true);
     const loadId = toast.loading(t('org_head_complaints.comments.posting', 'Posting comment...'));
     try {
-      await orgHeadApi.addComment(complaintId, { commentText: newCommentInput.trim() });
-      const res = await orgHeadApi.getComments(complaintId);
-      setComments(res.data || []);
+      if (isOrgComplaint) {
+        const payload = await dispatch(
+          addOrgHeadCommentThunk({ complaintId, commentText: newCommentInput.trim() }),
+        ).unwrap();
+        setComments(payload.comments || []);
+      } else {
+        const payload = await dispatch(
+          addDeptAdminCommentThunk({ complaintId, commentText: newCommentInput.trim() }),
+        ).unwrap();
+        setComments(payload.comments || []);
+      }
+
       setNewCommentInput('');
       toast.success(t('org_head_complaints.comments.posted', 'Comment posted'), { id: loadId });
     } catch (err: any) {
@@ -591,10 +617,13 @@ const ComplaintDetail = () => {
     }
     try {
       setSaving(true);
-      await deptAdminApi.updateComplaintStatus(id, {
-        status: newStatus,
-        comment: comment || undefined,
-      });
+      await dispatch(
+        updateDeptAdminComplaintStatusThunk({
+          id,
+          status: newStatus,
+          comment: comment || undefined,
+        }),
+      ).unwrap();
       toast.success(t('dept_complaints.toasts.status_updated'));
       setComplaint((prev) => (prev ? { ...prev, status: newStatus } : prev));
       setComment('');

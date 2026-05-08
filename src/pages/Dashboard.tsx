@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   FileText, Clock, CheckCircle, BarChart3, Share2,
@@ -8,29 +8,21 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend, AreaChart, Area
 } from 'recharts';
-import { sysAdminApi, type SysAdminAnalytics } from '../api/sysadmin';
 import StatCard from '../components/StatCard';
 import jsPDF from 'jspdf';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { fetchSysAdminAnalytics, selectSysAdmin } from '../store/slices/sysAdminSlice';
 
 const Dashboard = () => {
   const { t } = useTranslation();
-  const [analytics, setAnalytics] = useState<SysAdminAnalytics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const { analytics, loading } = useAppSelector(selectSysAdmin);
 
   useEffect(() => {
-    const fetchAnalytics = async () => {
-      try {
-        setLoading(true);
-        const res = await sysAdminApi.getAnalytics();
-        setAnalytics(res.data);
-      } catch (err: any) {
-        console.error('Failed to load system statistics.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAnalytics();
-  }, []);
+    if (!analytics) {
+      void dispatch(fetchSysAdminAnalytics());
+    }
+  }, [dispatch, analytics]);
 
   const escapeCsvValue = (value: string | number | boolean | null | undefined) => {
     const text = value == null ? '' : String(value);

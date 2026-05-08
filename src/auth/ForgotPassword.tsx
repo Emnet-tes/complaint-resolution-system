@@ -2,15 +2,18 @@ import { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Mail, Loader2, Languages, Link as LinkIcon, KeyRound, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { authApi } from '../api/api'; // Import your API
 import ThemeToggle from '../components/ThemeToggle';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { forgotPasswordThunk, selectAuthError, selectAuthSubmitting } from '../store/slices/authSlice';
 
 const ForgotPassword = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const loading = useAppSelector(selectAuthSubmitting);
+  const authError = useAppSelector(selectAuthError);
 
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -47,30 +50,28 @@ const ForgotPassword = () => {
       setError(t('settings.profile.email_required', 'Email is required'));
       return;
     }
-    setLoading(true);
     setError('');
     setSuccessMessage('');
 
     try {
+      await dispatch(forgotPasswordThunk({ email, mode: method })).unwrap();
       if (method === 'otp') {
-        const response = await authApi.forgotPasswordOtp(email);
-        if (response.status === 200) {
-          setSuccessMessage(t('auth.otp_sent', 'OTP has been sent to your email.'));
-          setTimeout(() => navigate('/verify-code', { state: { email } }), 800);
-        }
+        setSuccessMessage(t('auth.otp_sent', 'OTP has been sent to your email.'));
+        setTimeout(() => navigate('/verify-code', { state: { email } }), 800);
       } else {
-        const response = await authApi.forgotPassword(email);
-        if (response.status === 200) {
-          setSuccessMessage(t('auth.link_sent', 'Reset link has been sent to your email.'));
-        }
+        setSuccessMessage(t('auth.link_sent', 'Reset link has been sent to your email.'));
       }
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || t('dept_mgmt.toasts.fetch_error');
+      const errorMessage = err?.message || authError || t('dept_mgmt.toasts.fetch_error');
       setError(errorMessage);
-    } finally {
-      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (authError) {
+      setError(authError);
+    }
+  }, [authError]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white p-4 relative">
