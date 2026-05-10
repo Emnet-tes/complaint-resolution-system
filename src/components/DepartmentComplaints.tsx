@@ -15,17 +15,39 @@ import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Table, type Column } from '../components/Table';
 import StatCard from './StatCard';
-import { deptAdminApi, type AssignedComplaint, type ComplaintStatus } from '../api/deptadmin';
+import type { AssignedComplaint, ComplaintStatus } from '../api/deptadmin';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { fetchDeptAdminComplaints, selectDeptAdmin } from '../store/slices/deptAdminSlice';
 
 const DepartmentComplaints = () => {
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
+  const { complaints: allComplaints, loading, error: storeError } = useAppSelector(selectDeptAdmin);
   const [viewMode, setViewMode] = useState('list');
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<ComplaintStatus | ''>('');
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [summary, setSummary] = useState({ total: 0, resolved: 0, pending: 0, resolvedPercentage: 0 });
   const [complaints, setComplaints] = useState<AssignedComplaint[]>([]);
+  
+  const mapPoints = useMemo(() => {
+    return complaints
+      .filter((c) => c.location?.coordinates && c.location.coordinates.length === 2)
+      .map((c) => ({
+        lat: c.location!.coordinates[1],
+        lng: c.location!.coordinates[0],
+        complaint: c,
+      }));
+  }, [complaints]);
+
+  const mapCenter: [number, number] = useMemo(() => {
+    if (mapPoints.length > 0) {
+      const sumLat = mapPoints.reduce((acc, p) => acc + p.lat, 0);
+      const sumLng = mapPoints.reduce((acc, p) => acc + p.lng, 0);
+      return [sumLat / mapPoints.length, sumLng / mapPoints.length];
+    }
+    return [9.0192, 38.7525]; // Addis Ababa default
+  }, [mapPoints]);
 
   const knownIdsRef = useRef<Set<string>>(new Set());
   const firstLoadRef = useRef(true);
@@ -34,37 +56,9 @@ const DepartmentComplaints = () => {
     return c._id || (c as any).id || '';
   };
 
-  const mapPoints = useMemo(() => {
-    return complaints
-      .map((complaint) => {
-        const coords = complaint.location?.coordinates;
-        if (!coords || coords.length < 2) return null;
-
-        const [lng, lat] = coords;
-        if (typeof lat !== 'number' || typeof lng !== 'number') return null;
-
-        return {
-          complaint,
-          lat,
-          lng,
-        };
-      })
-      .filter((point): point is { complaint: AssignedComplaint; lat: number; lng: number } => !!point);
-  }, [complaints]);
-
-  const mapCenter = useMemo<[number, number]>(() => {
-    if (mapPoints.length > 0) return [mapPoints[0].lat, mapPoints[0].lng];
-    return [9.03, 38.74];
-  }, [mapPoints]);
-
-  const fetchAssigned = async (opts?: { silent?: boolean }) => {
-    if (!opts?.silent) {
-      setLoading(true);
-      setError('');
-    }
+  const fetchAssigned = async () => {
     try {
-      const res = await deptAdminApi.getAssignedComplaints();
-      const allData = res.data || [];
+      const allData = await dispatch(fetchDeptAdminComplaints()).unwrap();
       
       const total = allData.length;
       const resolved = allData.filter(c => c.status === 'Resolved').length;
@@ -94,21 +88,34 @@ const DepartmentComplaints = () => {
       firstLoadRef.current = false;
     } catch (err: any) {
       setError(err.response?.data?.message || t('dept_mgmt.toasts.fetch_error'));
-    } finally {
-      if (!opts?.silent) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAssigned();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter]);
+    const allData = allComplaints || [];
+    const total = allData.length;
+    const resolved = allData.filter((c) => c.status === 'Resolved').length;
+    const pending = allData.filter((c) => c.status !== 'Resolved' && c.status !== 'Rejected').length;
+    const resolvedPercentage = total === 0 ? 0 : Math.round((resolved / total) * 100);
+    setSummary({ total, resolved, pending, resolvedPercentage });
+
+    const filtered = statusFilter ? allData.filter((c) => c.status === statusFilter) : allData;
+    setComplaints(filtered);
+    if (storeError) setError(storeError);
+  }, [allComplaints, statusFilter, storeError]);
 
   useEffect(() => {
-    const id = window.setInterval(() => fetchAssigned({ silent: true }), 15000);
+    if (allComplaints.length === 0) {
+      void fetchAssigned();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const id = window.setInterval(() => fetchAssigned(), 15000);
     return () => window.clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter]);
+  }, []);
 
   const columns: Column<AssignedComplaint>[] = useMemo(() => {
     return [

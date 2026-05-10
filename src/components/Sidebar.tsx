@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, X, LayoutDashboard, Building2, ShieldCheck, ClipboardList, Settings as SettingsIcon } from 'lucide-react';
-import { useAuth, type Role } from '../context/AuthContext';
+import { LogOut, X, LayoutDashboard, Building2, ShieldCheck, ClipboardList, Settings as SettingsIcon, ScrollText } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import type { Role } from '../types';
 import { useTranslation } from 'react-i18next';
 
 interface SidebarItem {
@@ -28,7 +29,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
   const allItems: SidebarItem[] = [
     { id: 'dashboard', label: t('sidebar.sys_overview'), path: '/dashboard', roles: ['SysAdmin'], icon: LayoutDashboard },
     { id: 'organizations', label: t('sidebar.organizations'), path: '/organizations', roles: ['SysAdmin'], icon: Building2 },
-    { id: 'org-dashboard', label: t('sidebar.dashboard'), path: '/org-dashboard', roles: ['OrgAdmin'], icon: LayoutDashboard },
+    { id: 'audit-logs', label: t('sidebar.audit_logs', 'Audit Logs'), path: '/audit-logs', roles: ['SysAdmin'], icon: ScrollText },{ id: 'org-dashboard', label: t('sidebar.dashboard'), path: '/org-dashboard', roles: ['OrgAdmin'], icon: LayoutDashboard },
     { id: 'org-head-dashboard', label: t('sidebar.dashboard'), path: '/org-head/dashboard', roles: ['OrgHead'], icon: LayoutDashboard },
     { id: 'org-head-departments', label: t('sidebar.departments'), path: '/org-head/departments', roles: ['OrgHead'], icon: ShieldCheck },
     { id: 'dept-dashboard', label: t('sidebar.dashboard'), path: '/dept-dashboard', roles: ['DeptHead'], icon: LayoutDashboard },
@@ -119,7 +120,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
         {user && (
           <div className="p-4 mt-auto border-t border-gray-100">
             <button
-              onClick={logout}
+              onClick={() => { void logout(); }}
               className={`w-full flex items-center py-3 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer ${isCollapsed ? 'md:justify-center' : 'px-4'}`}
             >
               <LogOut size={20} className={!isCollapsed ? "mr-3" : ""} />

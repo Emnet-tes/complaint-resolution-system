@@ -44,3 +44,9 @@ html.dark select {
 html.dark ::placeholder {
   color: rgba(148, 163, 184, 0.8) !important;
 }
+
+/* Hide Edge password reveal icon */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}

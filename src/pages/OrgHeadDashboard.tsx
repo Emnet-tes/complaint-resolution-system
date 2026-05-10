@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { BarChart3, FileText, CheckCircle2, Clock, Loader2, Share2, FilePieChart, FileDown, TrendingUp, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { StatCard } from '../components/OrgComponents';
 import { jsPDF } from 'jspdf';
-import { orgHeadApi, type OrgHeadAnalytics } from '../api/orghead';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { fetchOrgHeadAnalytics, selectOrgHead } from '../store/slices/orgHeadSlice';
 import {
   BarChart,
   Bar,
@@ -25,24 +26,20 @@ const buildSafeFileName = (prefix: string, extension: string) => {
 
 const OrgHeadDashboard = () => {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<OrgHeadAnalytics | null>(null);
+  const dispatch = useAppDispatch();
+  const { loading, analytics: stats, error } = useAppSelector(selectOrgHead);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      setLoading(true);
-      try {
-        const res = await orgHeadApi.getAnalytics();
-        setStats(res.data || null);
-      } catch (err: any) {
-        toast.error(err.response?.data?.message || t('dept_mgmt.toasts.fetch_error', 'Failed to fetch dashboard data'));
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!stats) {
+      void dispatch(fetchOrgHeadAnalytics());
+    }
+  }, [dispatch, stats]);
 
-    fetchStats();
-  }, [t]);
+  useEffect(() => {
+    if (error) {
+      toast.error(error || t('dept_mgmt.toasts.fetch_error', 'Failed to fetch dashboard data'));
+    }
+  }, [error, t]);
 
   const departments = useMemo(
     () => stats?.departments || [],

@@ -1,10 +1,17 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { io } from 'socket.io-client';
-import { notificationApi } from '../api/notifications';
 import type { Notification } from '../api/notifications';
 import { useAuth } from './AuthContext';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import {
+  fetchNotificationsThunk,
+  markAllNotificationsReadThunk,
+  markNotificationReadThunk,
+  prependNotification,
+  selectNotifications,
+} from '../store/slices/notificationSlice';
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -14,24 +21,12 @@ interface NotificationContextType {
   markAllAsRead: () => void;
 }
 
-const normalizeNotifications = (payload: unknown): Notification[] => {
-  if (Array.isArray(payload)) return payload;
-
-  if (payload && typeof payload === 'object') {
-    const value = payload as { notifications?: unknown; data?: unknown; items?: unknown };
-    if (Array.isArray(value.notifications)) return value.notifications as Notification[];
-    if (Array.isArray(value.data)) return value.data as Notification[];
-    if (Array.isArray(value.items)) return value.items as Notification[];
-  }
-
-  return [];
-};
-
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
   const { user } = useAuth();
+  const dispatch = useAppDispatch();
+  const { notifications } = useAppSelector(selectNotifications);
   const token = Cookies.get('token');
 
   const unreadCount = Array.isArray(notifications) ? notifications.filter((n) => !n.read).length : 0;
@@ -39,26 +34,27 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const fetchNotifications = async () => {
     if (!token) return;
     try {
-      const res = await notificationApi.getNotifications();
-      setNotifications(normalizeNotifications(res.data));
-    } catch (err) {
-      console.error("Error fetching notifications", err);
+      await dispatch(fetchNotificationsThunk()).unwrap();
+    } catch (_err) {
+      console.error('Error fetching notifications');
     }
   };
 
   const markAsRead = async (id: string) => {
     try {
-      await notificationApi.markAsRead(id);
-      setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
-    } catch (err) { toast.error("Failed to mark as read"); }
+      await dispatch(markNotificationReadThunk({ id })).unwrap();
+    } catch (_err) {
+      toast.error('Failed to mark as read');
+    }
   };
 
   const markAllAsRead = async () => {
     try {
-      await notificationApi.markAllAsRead();
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-      toast.success("All caught up!");
-    } catch (err) { toast.error("Failed to mark all as read"); }
+      await dispatch(markAllNotificationsReadThunk()).unwrap();
+      toast.success('All caught up!');
+    } catch (_err) {
+      toast.error('Failed to mark all as read');
+    }
   };
 
   useEffect(() => {
@@ -71,7 +67,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       });
 
       newSocket.on('new-notification', (notification: Notification) => {
-        setNotifications(prev => [notification, ...prev]);
+        dispatch(prependNotification(notification));
         toast(notification.title, { icon: '🔔', position: 'bottom-right' });
       });
 

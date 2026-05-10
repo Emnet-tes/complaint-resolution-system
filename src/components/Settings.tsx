@@ -1,20 +1,24 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { User, Lock, Eye, EyeOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { authApi } from '../api/api';
 import { useAuth } from '../context/AuthContext';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { changePasswordThunk, selectAuthError, selectAuthSubmitting } from '../store/slices/authSlice';
 
 const Settings = () => {
-  const { t } = useTranslation();
-  const { user } = useAuth();
+   const { t } = useTranslation();
+   const dispatch = useAppDispatch();
+   const { user, refreshProfile } = useAuth();
+  const loading = useAppSelector(selectAuthSubmitting);
+  const authError = useAppSelector(selectAuthError);
   const [showPwd, setShowPwd] = useState(false);
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+   
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,19 +31,27 @@ const Settings = () => {
     }
 
     try {
-      setLoading(true);
-      await authApi.changePassword({ oldPassword, newPassword });
+      await dispatch(changePasswordThunk({ oldPassword, newPassword })).unwrap();
       setSuccess(t('dept_mgmt.toasts.add_success') || 'Password changed');
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: any) {
-      const msg = err.response?.data?.message || t('dept_mgmt.toasts.fetch_error');
+      const msg = err?.message || authError || t('dept_mgmt.toasts.fetch_error');
       setError(msg);
-    } finally {
-      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (authError) {
+      setError(authError);
+    }
+  }, [authError]);
+
+  useEffect(() => {
+    void refreshProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="mx-auto space-y-8 p-4 md:p-8">
@@ -76,38 +88,26 @@ const Settings = () => {
                </div>
 
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="space-y-1.5">
-                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        {user?.role === 'DeptHead' ? t('dept_complaints.table.department', 'Department') : t('settings.profile.first_name')}
-                     </label>
-                     <input
-                       className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 cursor-not-allowed"
-                       placeholder={user?.role === 'DeptHead' ? (t('sidebar.dept_portal') || 'Department') : 'First Name'}
-                       value={user?.role === 'DeptHead' ? (user?.fullname?.split(' ')[0] || '') : (user?.firstName || user?.fullname?.split(' ')[0] || '')}
-                       readOnly
-                     />
-                  </div>
-                  <div className="space-y-1.5">
-                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        {t('settings.profile.last_name')}
-                     </label>
-                     <input 
-                       className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 cursor-not-allowed" 
-                       placeholder="Last Name"
-                       value={user?.role === 'DeptHead' ? (user?.fullname?.split(' ').slice(1).join(' ') || '') : (user?.lastName || user?.fullname?.split(' ').slice(1).join(' ') || '')}
-                       readOnly
-                     />
-                  </div>
-                  <div className="space-y-1.5 sm:col-span-2">
-                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        {t('settings.profile.email')}
-                     </label>
-                     <input
-                       className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 cursor-not-allowed"
-                       value={user?.email || ''}
-                       readOnly
-                     />
-                  </div>
+                     <div className="space-y-1.5 sm:col-span-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                           {t('settings.profile.full_name', 'Full Name')}
+                        </label>
+                        <input
+                          className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 cursor-not-allowed"
+                          value={user?.fullname ?? ''}
+                          readOnly
+                        />
+                     </div>
+                     <div className="space-y-1.5 sm:col-span-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                           {t('settings.profile.email')}
+                        </label>
+                        <input
+                          className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 cursor-not-allowed"
+                          value={user?.email ?? ''}
+                          readOnly
+                        />
+                     </div>
                </div>
             </section>
 
@@ -148,8 +148,8 @@ const Settings = () => {
                           value={oldPassword}
                           onChange={(e) => setOldPassword(e.target.value)}
                         />
-                        <button onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-2.5 text-slate-400 cursor-pointer hover:text-slate-600">
-                            {showPwd ? <EyeOff size={18}/> : <Eye size={18}/>}
+                        <button type="button" onClick={(e) => { e.preventDefault(); setShowPwd(!showPwd); }} className="absolute right-3 top-2.5 text-slate-400 cursor-pointer hover:text-slate-600">
+                           {showPwd ? <EyeOff size={18}/> : <Eye size={18}/>}
                         </button>
                      </div>
                   </div>

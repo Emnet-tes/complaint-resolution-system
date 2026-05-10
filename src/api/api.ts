@@ -1,7 +1,7 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-const API_URL = import.meta.env.VITE_API_URL || "https://ai-complaint-backend-7xc5.onrender.com/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const api = axios.create({
   baseURL: API_URL,
@@ -10,9 +10,9 @@ const api = axios.create({
   },
 });
 
-// Request Interceptor: Attach token to headers
+// Request Interceptor: Attach access token to headers
 api.interceptors.request.use((config) => {
-  const token = Cookies.get("token");
+  const token = Cookies.get('accessToken');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -24,12 +24,13 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      Cookies.remove("token");
-      Cookies.remove("user");
+      Cookies.remove('accessToken');
+      Cookies.remove('refreshToken');
+      Cookies.remove('user');
       const requestUrl = error.config?.url || '';
       // Avoid forcing a navigation when the login request itself failed
       if (!requestUrl.includes('/auth/login')) {
-        window.location.href = "/login";
+        window.location.href = '/login';
       }
     }
     return Promise.reject(error);
@@ -37,17 +38,19 @@ api.interceptors.response.use(
 );
 
 export const authApi = {
-  login: (data: any) => api.post("/auth/login", data),
-  register: (data: any) => api.post("/auth/register", data), // Used by Org Admin to add employees
-  getProfile: () => api.get("/auth/profile"),
-  forgotPassword: (email: string) => api.post("/auth/forgot-password", { email }),
-  forgotPasswordOtp: (email: string) => api.post("/auth/forgot-password-otp", { email }),
+  login: (data: any) => api.post('/auth/login', data),
+  register: (data: any) => api.post('/auth/register', data), // Used by Org Admin to add employees
+  getProfile: () => api.get('/auth/profile'),
+  logout: () => api.post('/auth/logout'),
+  refreshToken: (refreshToken: string) => api.post('/auth/refresh', { refreshToken }),
+  forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }),
+  forgotPasswordOtp: (email: string) => api.post('/auth/forgot-password-otp', { email }),
   resetPassword: (data: { token: string; email: string; password: string }) =>
-    api.post("/auth/reset-password", data),
+    api.post('/auth/reset-password', data),
   resetPasswordOtp: (data: { email: string; otp: string; password: string }) =>
-    api.post("/auth/reset-password-otp", data),
+    api.post('/auth/reset-password-otp', data),
   changePassword: (data: { oldPassword: string; newPassword: string }) =>
-    api.post("/auth/change-password", data),
+    api.post('/auth/change-password', data),
 };
 
 export default api;

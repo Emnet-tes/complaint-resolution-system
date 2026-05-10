@@ -22,6 +22,7 @@ import { useState } from 'react';
 import DeptDashboard from '../pages/DeptDashboard';
 import OrgHeadDepartments from '../pages/OrgHeadDepartments';
 import OrgHeadDashboard from '../pages/OrgHeadDashboard';
+import AuditLogs from '../pages/AuditLogs';
 
 const MainLayout = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -91,6 +92,14 @@ const AppRouter = () => {
               element={
                 <ProtectedRoute allowedRoles={['SysAdmin']}>
                   <Organizations />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="audit-logs"
+              element={
+                <ProtectedRoute allowedRoles={['SysAdmin']}>
+                  <AuditLogs />
                 </ProtectedRoute>
               }
             />

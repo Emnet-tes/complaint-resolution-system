@@ -1,107 +1,123 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import Cookies from 'js-cookie';
 import { authApi } from '../api/api';
-
-// Roles as returned by backend: SysAdmin, OrgAdmin, OrgHead, DeptHead
-export type Role = 'SysAdmin' | 'OrgAdmin' | 'OrgHead' | 'DeptHead' | null;
-
-export interface User {
-  firstName?: string;
-  lastName?: string;
-  fullname: string;
-  email: string;
-  role: Role;
-  profilePicture?: string;
-}
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { setCredentials, setUser, setAuthLoading, clearAuth } from '../store/slices/authSlice';
+import type { Role, User } from '../types';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (credentials: any) => Promise<User>;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const { user, loading } = useAppSelector((state) => state.auth);
 
   const refreshProfile = async () => {
-    const token = Cookies.get('token');
+    // Read the new cookie key
+    const token = Cookies.get('accessToken');
     if (!token) return;
     try {
       const response = await authApi.getProfile();
       const data = response.data;
       const profileData = data.user || data;
-      
+
       if (profileData) {
-        setUser((prev) => {
-          const updatedUser: User = {
-            firstName: profileData.firstName || prev?.firstName,
-            lastName: profileData.lastName || prev?.lastName,
-            fullname: profileData.fullname || (profileData.firstName ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : prev?.fullname || ''),
-            email: profileData.email || prev?.email || '',
-            role: (profileData.role as Role) || prev?.role || null,
-            profilePicture: profileData.profilePicture || profileData.avatar || prev?.profilePicture,
-          };
-          Cookies.set('user', JSON.stringify(updatedUser), { expires: 7 });
-          return updatedUser;
-        });
+        const updatedUser: User = {
+          firstName: profileData.firstName || user?.firstName,
+          lastName: profileData.lastName || user?.lastName,
+          fullname:
+            profileData.fullName ??
+            profileData.fullname ??
+            (profileData.firstName
+              ? `${profileData.firstName} ${profileData.lastName || ''}`.trim()
+              : user?.fullname || ''),
+          email: profileData.email || user?.email || '',
+          role: (profileData.role as Role) || user?.role || null,
+          profilePicture: profileData.profilePicture || profileData.avatar || user?.profilePicture,
+        };
+        Cookies.set('user', JSON.stringify(updatedUser), { expires: 7 });
+        dispatch(setUser(updatedUser));
       }
     } catch (error) {
-      console.error("Failed to fetch user profile", error);
+      console.error('Failed to fetch user profile', error);
     }
   };
 
   useEffect(() => {
     const initAuth = async () => {
-      const savedUser = Cookies.get('user');
-      const token = Cookies.get('token');
-      
-      if (savedUser && token) {
-        setUser(JSON.parse(savedUser));
+      dispatch(setAuthLoading(true));
+      const savedUser    = Cookies.get('user');
+      const accessToken  = Cookies.get('accessToken');
+      const refreshToken = Cookies.get('refreshToken');
+
+      if (savedUser && accessToken) {
+        const parsedUser = JSON.parse(savedUser) as User;
+        dispatch(
+          setCredentials({
+            accessToken,
+            refreshToken: refreshToken ?? '',
+            expiresIn: 900,
+            user: parsedUser,
+          }),
+        );
       }
-      
+
       await refreshProfile();
-      setLoading(false);
+      dispatch(setAuthLoading(false));
     };
 
     initAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = async (credentials: any): Promise<User> => {
     const response = await authApi.login(credentials);
     const data = response.data as any;
 
-    // Support both `token` and `access_token` just in case
-    const token: string | undefined = data.token ?? data.access_token;
+    // New response shape: { message, _id, role, accessToken, refreshToken, expiresIn }
+    const accessToken: string  = data.accessToken;
+    const refreshToken: string = data.refreshToken ?? '';
+    const expiresIn: number    = data.expiresIn ?? 900;
 
-    // Backend sample response:
-    // { message: string, _id: string, role: 'SysAdmin' | 'OrgAdmin' | 'DeptAdmin', token: string }
+    // The profile endpoint fills fullname/email later via refreshProfile;
+    // seed from credentials so the nav role check works immediately.
     const user: User = {
-      fullname: data.fullname ?? '',
+      fullname: data.fullName ?? data.fullname ?? '',
       email: data.email ?? credentials.email ?? '',
       role: (data.role as Role) ?? null,
     };
 
-    if (token) {
-      // Store token in cookie (Expires in 7 days, Secure, SameSite)
-      Cookies.set('token', token, { expires: 7, secure: true, sameSite: 'strict' });
-    }
+    const isSecureContext =
+      typeof window !== 'undefined' && window.location.protocol === 'https:';
+    const cookieOpts = { expires: 7, secure: isSecureContext, sameSite: 'strict' as const };
 
-    Cookies.set('user', JSON.stringify(user), { expires: 7 });
-    setUser(user);
+    Cookies.set('accessToken',  accessToken,  cookieOpts);
+    Cookies.set('refreshToken', refreshToken, cookieOpts);
+    Cookies.set('user', JSON.stringify(user), cookieOpts);
+
+    dispatch(setCredentials({ accessToken, refreshToken, expiresIn, user }));
 
     return user;
   };
 
-  const logout = () => {
-    Cookies.remove('token');
+  const logout = async () => {
+    Cookies.remove('accessToken');
+    Cookies.remove('refreshToken');
     Cookies.remove('user');
-    setUser(null);
+    dispatch(clearAuth());
+
+    // Fire and forget — don't block the UI on the API response
+    authApi.logout().catch((error) => {
+      console.error('Failed to notify backend about logout', error);
+    });
   };
 
   return (
