@@ -75,14 +75,14 @@ src/api/api.ts                     →  tests/api/auth.test.ts
 ```
  RUN  v4.1.5
 
- ✓ tests/api/auth.test.ts                          ( 9 tests)  ~180ms
+ ✓ tests/api/auth.test.ts                          ( 10 tests)  ~180ms
  ✓ tests/store/slices/notificationSlice.test.ts   (10 tests)  ~210ms
  ✓ tests/store/slices/orgHeadSlice.test.ts        (12 tests)  ~200ms
  ✓ tests/store/slices/authSlice.test.ts           (22 tests)  ~200ms
  ✓ tests/components/Settings.test.tsx              ( 8 tests) ~2300ms
 
  Test Files  5 passed (5)
-      Tests  61 passed (61)
+      Tests  62 passed (62)
    Duration  ~6 s
 ```
 

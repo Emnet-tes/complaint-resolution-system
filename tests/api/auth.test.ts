@@ -24,7 +24,7 @@ describe('authApi', () => {
       expect(res.data).toMatchObject({
         _id: 'user-1',
         email: 'test@example.com',
-        role: 'org_head',
+        role: 'OrgHead',
       });
     });
 
@@ -104,6 +104,17 @@ describe('authApi', () => {
     it('resolves with logout confirmation', async () => {
       const res = await authApi.logout();
       expect(res.data).toMatchObject({ message: 'Logged out' });
+    });
+  });
+
+  describe('refreshToken', () => {
+    it('returns new accessToken and refreshToken', async () => {
+      const res = await authApi.refreshToken('mock-refresh-token');
+      expect(res.data).toMatchObject({
+        accessToken: 'mock-access-token-refreshed',
+        refreshToken: 'mock-refresh-token-refreshed',
+        expiresIn: 900,
+      });
     });
   });
 });

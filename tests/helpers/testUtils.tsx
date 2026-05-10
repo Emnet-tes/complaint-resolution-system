@@ -66,6 +66,8 @@ export const mockUser = {
 
 export const mockAuthState = {
   token: 'mock-jwt-token',
+  refreshToken: 'mock-refresh-token',
+  expiresIn: 900,
   user: mockUser,
   role: 'OrgHead' as const,
   isAuthenticated: true,

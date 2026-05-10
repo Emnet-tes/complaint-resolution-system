@@ -5,7 +5,9 @@ import type { Role, User } from '../../types';
 import { authApi } from '../../api/api';
 
 interface AuthState {
-  token: string | null;
+  token: string | null;        // accessToken (kept as 'token' for selector compatibility)
+  refreshToken: string | null;
+  expiresIn: number | null;
   user: User | null;
   role: Role;
   isAuthenticated: boolean;
@@ -16,6 +18,8 @@ interface AuthState {
 
 const initialState: AuthState = {
   token: null,
+  refreshToken: null,
+  expiresIn: null,
   user: null,
   role: null,
   isAuthenticated: false,
@@ -106,10 +110,27 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setCredentials: (state, action: PayloadAction<{ token: string; user: User }>) => {
-      state.token = action.payload.token;
-      state.user = action.payload.user;
-      state.role = action.payload.user.role;
+    // Accepts the flat login response: { _id, role, accessToken, refreshToken, expiresIn }
+    // plus an optional pre-fetched user object for profile-driven updates.
+    setCredentials: (
+      state,
+      action: PayloadAction<{
+        accessToken: string;
+        refreshToken: string;
+        expiresIn: number;
+        user?: User;
+        role?: Role;
+      }>,
+    ) => {
+      state.token = action.payload.accessToken;
+      state.refreshToken = action.payload.refreshToken;
+      state.expiresIn = action.payload.expiresIn;
+      if (action.payload.user) {
+        state.user = action.payload.user;
+        state.role = action.payload.user.role;
+      } else if (action.payload.role) {
+        state.role = action.payload.role as Role;
+      }
       state.isAuthenticated = true;
       state.loading = false;
     },
@@ -123,6 +144,8 @@ const authSlice = createSlice({
     },
     clearAuth: (state) => {
       state.token = null;
+      state.refreshToken = null;
+      state.expiresIn = null;
       state.user = null;
       state.role = null;
       state.isAuthenticated = false;

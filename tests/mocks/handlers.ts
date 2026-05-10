@@ -6,14 +6,20 @@ export const handlers = [
   // ── Auth ─────────────────────────────────────────────────────────────────
   http.post(`${BASE}/auth/login`, () =>
     HttpResponse.json({
-      token: 'mock-jwt-token',
-      user: {
-        _id: 'user-1',
-        fullname: 'Test User',
-        email: 'test@example.com',
-        role: 'org_head',
-        profilePicture: null,
-      },
+      message: 'Login successful',
+      _id: 'user-1',
+      role: 'OrgHead',
+      accessToken: 'mock-access-token',
+      refreshToken: 'mock-refresh-token',
+      expiresIn: 900,
+    }),
+  ),
+
+  http.post(`${BASE}/auth/refresh`, () =>
+    HttpResponse.json({
+      accessToken: 'mock-access-token-refreshed',
+      refreshToken: 'mock-refresh-token-refreshed',
+      expiresIn: 900,
     }),
   ),
 
@@ -22,8 +28,7 @@ export const handlers = [
       _id: 'user-1',
       fullname: 'Test User',
       email: 'test@example.com',
-      role: 'org_head',
-      profilePicture: null,
+      role: 'OrgHead',
     }),
   ),
 

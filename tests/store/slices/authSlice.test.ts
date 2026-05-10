@@ -27,6 +27,8 @@ const mockUser = {
 
 const initialState = {
   token: null,
+  refreshToken: null,
+  expiresIn: null,
   user: null,
   role: null,
   isAuthenticated: false,
@@ -42,13 +44,20 @@ describe('authSlice reducer', () => {
   });
 
   describe('setCredentials', () => {
-    it('stores token, user, role, isAuthenticated=true and loading=false', () => {
+    it('stores accessToken, role, isAuthenticated=true and loading=false', () => {
       const state = authReducer(
         undefined,
-        setCredentials({ token: 'abc', user: mockUser }),
+        setCredentials({
+          accessToken: 'mock-access-token',
+          refreshToken: 'mock-refresh-token',
+          expiresIn: 900,
+          user: mockUser,
+        }),
       );
 
-      expect(state.token).toBe('abc');
+      expect(state.token).toBe('mock-access-token');
+      expect(state.refreshToken).toBe('mock-refresh-token');
+      expect(state.expiresIn).toBe(900);
       expect(state.user).toEqual(mockUser);
       expect(state.role).toBe('OrgHead');
       expect(state.isAuthenticated).toBe(true);
@@ -89,6 +98,8 @@ describe('authSlice reducer', () => {
     it('resets all auth fields to their cleared values', () => {
       const populated = {
         token: 'abc',
+        refreshToken: 'ref-tok',
+        expiresIn: 900,
         user: mockUser,
         role: 'OrgHead' as const,
         isAuthenticated: true,
@@ -99,6 +110,8 @@ describe('authSlice reducer', () => {
       const state = authReducer(populated, clearAuth());
 
       expect(state.token).toBeNull();
+      expect(state.refreshToken).toBeNull();
+      expect(state.expiresIn).toBeNull();
       expect(state.user).toBeNull();
       expect(state.role).toBeNull();
       expect(state.isAuthenticated).toBe(false);
@@ -114,6 +127,8 @@ describe('authSlice selectors', () => {
   const store = createTestStore({
     auth: {
       token: 'tok',
+      refreshToken: 'ref-tok',
+      expiresIn: 900,
       user: mockUser,
       role: 'OrgHead',
       isAuthenticated: true,
