@@ -21,13 +21,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { user, loading } = useAppSelector((state) => state.auth);
 
   const refreshProfile = async () => {
-    const token = Cookies.get('token');
+    // Read the new cookie key
+    const token = Cookies.get('accessToken');
     if (!token) return;
     try {
       const response = await authApi.getProfile();
       const data = response.data;
       const profileData = data.user || data;
-      
+
       if (profileData) {
         const updatedUser: User = {
           firstName: profileData.firstName || user?.firstName,
@@ -46,21 +47,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         dispatch(setUser(updatedUser));
       }
     } catch (error) {
-      console.error("Failed to fetch user profile", error);
+      console.error('Failed to fetch user profile', error);
     }
   };
 
   useEffect(() => {
     const initAuth = async () => {
       dispatch(setAuthLoading(true));
-      const savedUser = Cookies.get('user');
-      const token = Cookies.get('token');
-      
-      if (savedUser && token) {
+      const savedUser    = Cookies.get('user');
+      const accessToken  = Cookies.get('accessToken');
+      const refreshToken = Cookies.get('refreshToken');
+
+      if (savedUser && accessToken) {
         const parsedUser = JSON.parse(savedUser) as User;
-        dispatch(setCredentials({ token, user: parsedUser }));
+        dispatch(
+          setCredentials({
+            accessToken,
+            refreshToken: refreshToken ?? '',
+            expiresIn: 900,
+            user: parsedUser,
+          }),
+        );
       }
-      
+
       await refreshProfile();
       dispatch(setAuthLoading(false));
     };
@@ -73,41 +82,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const response = await authApi.login(credentials);
     const data = response.data as any;
 
-    // Support both `token` and `access_token` just in case
-    const token: string | undefined = data.token ?? data.access_token;
+    // New response shape: { message, _id, role, accessToken, refreshToken, expiresIn }
+    const accessToken: string  = data.accessToken;
+    const refreshToken: string = data.refreshToken ?? '';
+    const expiresIn: number    = data.expiresIn ?? 900;
 
-    // Backend sample response:
-    // { message: string, _id: string, role: 'SysAdmin' | 'OrgAdmin' | 'DeptAdmin', token: string }
+    // The profile endpoint fills fullname/email later via refreshProfile;
+    // seed from credentials so the nav role check works immediately.
     const user: User = {
       fullname: data.fullName ?? data.fullname ?? '',
       email: data.email ?? credentials.email ?? '',
       role: (data.role as Role) ?? null,
     };
 
-    if (token) {
-      const isSecureContext = typeof window !== 'undefined' && window.location.protocol === 'https:';
-      // Store token in a cookie that works on local HTTP and production HTTPS.
-      Cookies.set('token', token, { expires: 7, secure: isSecureContext, sameSite: 'strict' });
-    }
+    const isSecureContext =
+      typeof window !== 'undefined' && window.location.protocol === 'https:';
+    const cookieOpts = { expires: 7, secure: isSecureContext, sameSite: 'strict' as const };
 
-    Cookies.set('user', JSON.stringify(user), { expires: 7 });
-    if (token) {
-      dispatch(setCredentials({ token, user }));
-    } else {
-      dispatch(setUser(user));
-      dispatch(setAuthLoading(false));
-    }
+    Cookies.set('accessToken',  accessToken,  cookieOpts);
+    Cookies.set('refreshToken', refreshToken, cookieOpts);
+    Cookies.set('user', JSON.stringify(user), cookieOpts);
+
+    dispatch(setCredentials({ accessToken, refreshToken, expiresIn, user }));
 
     return user;
   };
 
   const logout = async () => {
-    Cookies.remove('token');
+    Cookies.remove('accessToken');
+    Cookies.remove('refreshToken');
     Cookies.remove('user');
     dispatch(clearAuth());
-    
-    // Fire and forget API
-    authApi.logout().catch(error => {
+
+    // Fire and forget — don't block the UI on the API response
+    authApi.logout().catch((error) => {
       console.error('Failed to notify backend about logout', error);
     });
   };
