@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
@@ -36,6 +36,25 @@ export default defineConfig({
           return "vendor";
         },
       },
+    },
+  },
+  test: {
+    globals: true,
+    environment: 'happy-dom',
+    setupFiles: ['./tests/setup.ts'],
+    include: ['tests/**/*.{test,spec}.{ts,tsx}'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/main.tsx',
+        'src/App.tsx',
+        'src/i18n.ts',
+        'src/**/*.d.ts',
+        'src/locales/**',
+        'src/assets/**',
+      ],
     },
   },
 });

@@ -1,73 +1,96 @@
-# React + TypeScript + Vite
+# Complaint Resolution System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack complaint management platform built with **React 19 · TypeScript · Redux Toolkit · Vite · Tailwind CSS v4**.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Table of Contents
 
-## React Compiler
+- [Getting Started](#getting-started)
+- [Project Structure](#project-structure)
+- [Environment Variables](#environment-variables)
+- [Available Scripts](#available-scripts)
+- [Testing](#testing)
+  - [Tooling](#tooling)
+  - [Folder Structure](#folder-structure)
+  - [Test Report](#test-report)
+  - [Running Tests](#running-tests)
+  - [Coverage](#coverage)
+  - [Writing New Tests](#writing-new-tests)
+  - [MSW – API Mocking](#msw--api-mocking)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+```bash
+# Install dependencies
+npm install
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Start the development server
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Project Structure
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+src/
+├── api/          # Axios clients and API helper functions
+├── components/   # Reusable UI components
+├── context/      # React context providers (Auth, Theme)
+├── layout/       # Shell layout (Sidebar, Navbar)
+├── pages/        # Route-level page components
+├── router/       # AppRouter and ProtectedRoute
+├── services/     # WebSocket / real-time service
+├── store/        # Redux store, slices, and typed hooks
+├── types/        # Shared TypeScript types (Role, User, …)
+└── locales/      # i18n translation files (en / am)
+
+tests/            # Mirror of src/ — all unit & integration tests
+```
+
+---
+
+## Environment Variables
+
+Create a `.env` file at the project root (never commit it):
+
+```env
+VITE_API_URL=https://your-backend.example.com/api
+```
+
+The application and all MSW mock handlers fall back to the production render URL when `VITE_API_URL` is not set.
+
+---
+
+## Available Scripts
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start the Vite dev server with HMR |
+| `npm run build` | Type-check and produce a production bundle |
+| `npm run lint` | Run ESLint across the whole project |
+| `npm run preview` | Preview the production build locally |
+| `npm test` | Run the full test suite once |
+| `npm run test:watch` | Run tests in interactive watch mode |
+| `npm run test:coverage` | Run tests and generate a V8 coverage report |
+
+---
+
+## Testing
+
+Full testing documentation — tooling, folder structure, live test report, authoring guide, MSW patterns, and coverage — is in **[tests/README.md](./tests/README.md)**.
+
+Quick reference:
+
+```bash
+npm test                  # single run
+npm run test:watch        # interactive watch mode
+npm run test:coverage     # generate HTML coverage report
+```
+
+> **Current status: 61 tests · 5 files · all passing**
+
+
