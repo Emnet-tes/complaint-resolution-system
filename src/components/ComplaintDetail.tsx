@@ -161,6 +161,23 @@ const isOrganizationComplaint = (
   complaint: AssignedComplaint | OrgHeadComplaint,
 ): complaint is OrgHeadComplaint => 'submittedBy' in complaint && 'attachments' in complaint;
 
+const getDisplayName = (value: unknown, fallback = '-') => {
+  if (!value) {
+    return fallback;
+  }
+
+  if (typeof value === 'string') {
+    return normalizeText(value) || fallback;
+  }
+
+  if (typeof value === 'object') {
+    const record = value as { fullName?: unknown; name?: unknown; email?: unknown };
+    return normalizeText(record.fullName) || normalizeText(record.name) || normalizeText(record.email) || fallback;
+  }
+
+  return fallback;
+};
+
 const getComplaintId = (complaint: AssignedComplaint | OrgHeadComplaint) => {
   const record = complaint as AssignedComplaint & { id?: string };
   return record._id || record.id || '';
@@ -527,8 +544,8 @@ const ComplaintDetail = () => {
 
   const complaintAssigneeName = complaint
     ? isOrganizationComplaint(complaint)
-      ? complaint.assignedTo || '-'
-      : complaint.assignedTo?.fullName || '-'
+      ? getDisplayName(complaint.assignedTo)
+      : getDisplayName(complaint.assignedTo?.fullName)
     : '-';
 
   useEffect(() => {
