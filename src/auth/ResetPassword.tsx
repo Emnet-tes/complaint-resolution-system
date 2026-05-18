@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import { ArrowLeft, Lock, Languages } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -75,8 +76,8 @@ const ResetPassword = () => {
         ).unwrap();
       }
 
-      setSuccess(t('auth.reset_success', 'Password reset successful. Please login.'));
-      setTimeout(() => navigate('/login'), 2000);
+      toast.success(t('auth.reset_success', 'Password reset successful. Please login.'));
+      navigate('/login');
     } catch (err: any) {
       const msg = err?.message || authError || t('dept_mgmt.toasts.fetch_error');
       setError(msg);

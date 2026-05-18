@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Building2, Users as UsersIcon, BarChart3, Loader2, Download, FileDown } from 'lucide-react';
+import { Building2, BarChart3, Loader2, Download, FileDown, ClipboardList, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { StatCard } from '../components/OrgComponents';
 import jsPDF from 'jspdf';
@@ -53,10 +53,10 @@ const OrgDashboard = () => {
   const summary = stats?.summary || EMPTY_SUMMARY;
   const departments = stats?.departments || [];
   const totalAssignedComplaints = departments.reduce((total, department) => {
-    return total + department.metrics.totalComplaintsAssigned;
+    return total + (department.metrics?.totalComplaintsAssigned || 0);
   }, 0);
   const totalNewComplaints = departments.reduce((total, department) => {
-    return total + department.metrics.newComplaintsLast30Days;
+    return total + (department.metrics?.newComplaintsLast30Days || 0);
   }, 0);
   const chartData = departments.map((department) => ({
     name: department.name,
@@ -198,22 +198,22 @@ const OrgDashboard = () => {
           <StatCard
             title={t('org_dashboard.stats.total_depts_heads')}
             value={summary.totalDepartments}
-            subValue={t('org_dashboard.stats.total_heads', { count: summary.totalDepartmentHeads })}
+            subValue={t('org_dashboard.stats.sub_active')}
             icon={Building2}
             color="bg-indigo-500"
           />
           <StatCard
-            title={t('org_dashboard.stats.active_inactive_heads')}
-            value={summary.activeDepartmentHeads}
-            subValue={t('org_dashboard.stats.inactive_heads', { count: summary.inactiveDepartmentHeads })}
-            icon={UsersIcon}
-            color="bg-[#006B5D]"
+            title={t('org_dashboard.stats.total_complaints', 'Total Complaints')}
+            value={totalAssignedComplaints}
+            subValue={`${totalNewComplaints} ${t('org_dashboard.stats.sub_new', 'new this month')}`}
+            icon={ClipboardList}
+            color="bg-emerald-500"
           />
           <StatCard
             title={t('org_dashboard.stats.covered_uncovered')}
             value={summary.departmentsWithHeads}
-            subValue={t('org_dashboard.stats.not_covered', { count: summary.departmentsWithoutHeads })}
-            icon={BarChart3}
+            subValue={t('org_dashboard.stats.sub_assigned')}
+            icon={Shield}
             color="bg-amber-500"
           />
           <StatCard

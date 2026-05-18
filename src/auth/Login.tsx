@@ -79,7 +79,19 @@ const Login = () => {
         navigate('/login', { replace: true });
       }
     } catch (err: any) {
-      const msg = err.response?.data?.message || t('dept_mgmt.toasts.fetch_error');
+      const body = err.response?.data;
+      let apiMsg = '';
+      if (typeof body === 'string') apiMsg = body;
+      else if (body && typeof body === 'object') {
+        const m = body.message ?? body.error;
+        apiMsg = typeof m === 'string' ? m : '';
+      }
+      const msg =
+        apiMsg ||
+        err.message ||
+        (err.code === 'ERR_NETWORK'
+          ? t('auth.network_error')
+          : t('auth.login_failed'));
       setError(msg);
       try { sessionStorage.setItem('loginError', msg); } catch (_e) {}
     } finally {

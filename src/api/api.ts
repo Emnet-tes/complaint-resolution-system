@@ -1,10 +1,48 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-const API_URL = import.meta.env.VITE_API_URL;
+/** Base URL must include `/api` if your server mounts routes there (e.g. `http://localhost:5000/api`). */
+const rawBase =
+  (import.meta.env.VITE_API_URL as string | undefined)?.trim() ||
+  "https://ai-complaint-backend-7xc5.onrender.com/api";
+const API_URL = rawBase.replace(/\/+$/, "");
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** No HTTP response yet — browser/transport closed the connection (Render cold start, sleep, overload, etc.). */
+function isTransientNetworkError(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) return false;
+  const e = error as { response?: unknown; code?: string; message?: string };
+  if (e.response !== undefined) return false;
+  const code = e.code || "";
+  const msg = (e.message || "").toLowerCase();
+  return (
+    code === "ERR_NETWORK" ||
+    code === "ECONNABORTED" ||
+    code === "ETIMEDOUT" ||
+    msg.includes("network error") ||
+    msg.includes("connection closed") ||
+    msg.includes("failed to fetch")
+  );
+}
+
+async function withNetworkRetries<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
+  let last: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      last = error;
+      if (!isTransientNetworkError(error) || i === attempts - 1) throw error;
+      await sleep(900 * (i + 1));
+    }
+  }
+  throw last;
+}
 
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 90_000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -38,7 +76,8 @@ api.interceptors.response.use(
 );
 
 export const authApi = {
-  login: (data: any) => api.post('/auth/login', data),
+  /** Retries help when the host (e.g. Render free tier) closes the first connection during wake-up. */
+  login: (data: any) => withNetworkRetries(() => api.post("/auth/login", data)),
   register: (data: any) => api.post('/auth/register', data), // Used by Org Admin to add employees
   getProfile: () => api.get('/auth/profile'),
   logout: () => api.post('/auth/logout'),

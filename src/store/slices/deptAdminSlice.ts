@@ -40,7 +40,7 @@ export const fetchDeptAdminComplaints = createAsyncThunk('deptAdmin/fetchComplai
 export const fetchDeptAdminAnalytics = createAsyncThunk('deptAdmin/fetchAnalytics', async (_, { rejectWithValue }) => {
   try {
     const res = await deptAdminApi.getAnalytics();
-    return res.data;
+    return 'data' in res.data ? (res.data as any).data : res.data;
   } catch (error) {
     return rejectWithValue(getErrorMessage(error, 'Failed to fetch dept admin analytics'));
   }

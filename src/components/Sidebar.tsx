@@ -23,13 +23,13 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user, logout } = useAuth();
-  const { t } = useTranslation(); // 2. Initialize translation
+  const { t } = useTranslation();
 
-  // 3. Labels are now localized using t()
   const allItems: SidebarItem[] = [
     { id: 'dashboard', label: t('sidebar.sys_overview'), path: '/dashboard', roles: ['SysAdmin'], icon: LayoutDashboard },
     { id: 'organizations', label: t('sidebar.organizations'), path: '/organizations', roles: ['SysAdmin'], icon: Building2 },
-    { id: 'audit-logs', label: t('sidebar.audit_logs', 'Audit Logs'), path: '/audit-logs', roles: ['SysAdmin'], icon: ScrollText },{ id: 'org-dashboard', label: t('sidebar.dashboard'), path: '/org-dashboard', roles: ['OrgAdmin'], icon: LayoutDashboard },
+    { id: 'audit-logs', label: t('sidebar.audit_logs', 'Audit Logs'), path: '/audit-logs', roles: ['SysAdmin'], icon: ScrollText },
+    { id: 'org-dashboard', label: t('sidebar.dashboard'), path: '/org-dashboard', roles: ['OrgAdmin'], icon: LayoutDashboard },
     { id: 'org-head-dashboard', label: t('sidebar.dashboard'), path: '/org-head/dashboard', roles: ['OrgHead'], icon: LayoutDashboard },
     { id: 'org-head-departments', label: t('sidebar.departments'), path: '/org-head/departments', roles: ['OrgHead'], icon: ShieldCheck },
     { id: 'dept-dashboard', label: t('sidebar.dashboard'), path: '/dept-dashboard', roles: ['DeptHead'], icon: LayoutDashboard },
@@ -76,7 +76,6 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
             </div>
             <div className={`ml-3 transition-all duration-300 ${isCollapsed ? 'md:opacity-0 md:w-0' : 'opacity-100'}`}>
               <h2 className="text-[14px] font-black text-slate-800 whitespace-nowrap uppercase tracking-tight">
-                {/* 4. Localized Portal Titles */}
                 {user?.role === 'SysAdmin' ? t('sidebar.sys_portal') : 
                  user?.role === 'OrgAdmin' || user?.role === 'OrgHead' ? t('sidebar.org_portal') : 
                  t('sidebar.dept_portal')}
@@ -102,7 +101,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
                   if (window.innerWidth < 768) setIsMobileOpen(false);
                 }}
                 className={`w-full flex items-center py-3 transition-all rounded-xl group mb-1 cursor-pointer ${
-                  isActive ? 'bg-[#006B5D] text-slate-300' : 'text-[#006B5D] hover:bg-gray-50 dark:text-slate-500 dark:hover:bg-[#006B5D]/10 dark:hover:text-slate-5 00'
+                  isActive ? 'bg-[#006B5D] text-slate-300' : 'text-[#006B5D] hover:bg-gray-50 dark:text-slate-500 dark:hover:bg-[#006B5D]/10 dark:hover:text-slate-500'
                 } ${isCollapsed ? 'md:justify-center' : 'px-4'}`}
               >
                 <div className={`shrink-0 flex items-center justify-center ${!isActive ? 'text-[#006B5D]' : 'text-slate-300'} ${!isCollapsed && 'mr-3'}`}>
@@ -120,12 +119,11 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: SidebarProps) => {
         {user && (
           <div className="p-4 mt-auto border-t border-gray-100">
             <button
-              onClick={() => { void logout(); }}
-              className={`w-full flex items-center py-3 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer ${isCollapsed ? 'md:justify-center' : 'px-4'}`}
+              onClick={logout}
+              className={`w-full flex items-center py-3 px-4 text-red-600 hover:bg-red-50 transition-all rounded-xl cursor-pointer ${isCollapsed ? 'md:justify-center md:px-0' : ''}`}
             >
               <LogOut size={20} className={!isCollapsed ? "mr-3" : ""} />
               <span className={`text-[13px] font-bold uppercase tracking-wider ${isCollapsed ? 'md:hidden' : 'block'}`}>
-                {/* 5. Localized Logout */}
                 {t('sidebar.logout')}
               </span>
             </button>

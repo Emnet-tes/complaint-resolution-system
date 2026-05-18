@@ -7,9 +7,21 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { changePasswordThunk, selectAuthError, selectAuthSubmitting } from '../store/slices/authSlice';
 
 const Settings = () => {
-   const { t } = useTranslation();
-   const dispatch = useAppDispatch();
-   const { user, refreshProfile } = useAuth();
+    console.log('Rendering Settings component');
+    const { t } = useTranslation();
+    const dispatch = useAppDispatch();
+    const { user, refreshProfile } = useAuth();
+    
+    if (!user) {
+        console.log('Settings: User is null, showing loading');
+        return (
+            <div className="flex items-center justify-center h-[60vh]">
+                <div className="text-slate-400 font-bold uppercase tracking-widest animate-pulse">Loading Profile...</div>
+            </div>
+        );
+    }
+
+    console.log('Settings: User role is', user.role);
   const loading = useAppSelector(selectAuthSubmitting);
   const authError = useAppSelector(selectAuthError);
   const [showPwd, setShowPwd] = useState(false);
@@ -54,13 +66,13 @@ const Settings = () => {
   }, []);
 
   return (
-    <div className="mx-auto space-y-8 p-4 md:p-8">
+    <div className="mx-auto space-y-8 p-4 md:p-8" id="settings-page">
       <div>
-         <h1 className="text-2xl font-black text-slate-800 tracking-tight">
-            {t('settings.title')}
+         <h1 className="text-2xl font-black text-slate-800 tracking-tight" data-testid="settings-title">
+            {t('settings.title', 'Account Settings')}
          </h1>
          <p className="text-sm text-slate-500 font-medium">
-            {t('settings.subtitle')}
+            {t('settings.subtitle', 'Manage your account settings and security.')}
          </p>
       </div>
 

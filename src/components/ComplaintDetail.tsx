@@ -636,8 +636,9 @@ const ComplaintDetail = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <Loader2 className="animate-spin text-slate-400" size={40} />
+      <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+        <Loader2 className="animate-spin text-[#006B5D]" size={40} />
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest animate-pulse">{t('sys_dashboard.loading', 'Loading details...')}</p>
       </div>
     );
   }

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { ArrowLeft, Mail, Loader2, Languages, Link as LinkIcon, KeyRound, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -56,10 +57,10 @@ const ForgotPassword = () => {
     try {
       await dispatch(forgotPasswordThunk({ email, mode: method })).unwrap();
       if (method === 'otp') {
-        setSuccessMessage(t('auth.otp_sent', 'OTP has been sent to your email.'));
-        setTimeout(() => navigate('/verify-code', { state: { email } }), 800);
+        toast.success(t('auth.otp_sent', 'OTP has been sent to your email.'));
+        navigate('/verify-code', { state: { email } });
       } else {
-        setSuccessMessage(t('auth.link_sent', 'Reset link has been sent to your email.'));
+        toast.success(t('auth.link_sent', 'Reset link has been sent to your email.'));
       }
     } catch (err: any) {
       const errorMessage = err?.message || authError || t('dept_mgmt.toasts.fetch_error');
