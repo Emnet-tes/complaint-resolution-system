@@ -97,19 +97,39 @@ const OrgHeadComplaints = () => {
   const mapPoints = useMemo(() => {
     return filteredComplaints
       .map((complaint) => {
-        const coords = complaint.location?.coordinates;
-        if (!coords || coords.length < 2) return null;
+        let lat: number | null = null;
+        let lng: number | null = null;
 
-        const [lng, lat] = coords;
-        if (typeof lat !== 'number' || typeof lng !== 'number') return null;
+        // 1. Try location.coordinates [longitude, latitude]
+        if (complaint.location?.coordinates && Array.isArray(complaint.location.coordinates) && complaint.location.coordinates.length >= 2) {
+          lng = Number(complaint.location.coordinates[0]);
+          lat = Number(complaint.location.coordinates[1]);
+        }
+        // 2. Try location.latitude and location.longitude
+        else if (complaint.location && typeof (complaint.location as any).latitude === 'number' && typeof (complaint.location as any).longitude === 'number') {
+          lat = (complaint.location as any).latitude;
+          lng = (complaint.location as any).longitude;
+        }
+        // 3. Try root-level latitude and longitude
+        else if (typeof (complaint as any).latitude === 'number' && typeof (complaint as any).longitude === 'number') {
+          lat = (complaint as any).latitude;
+          lng = (complaint as any).longitude;
+        }
 
-        return {
-          complaint,
-          lat,
-          lng,
-        };
+        if (lat === null || lng === null || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+          return null;
+        }
+
+        // Bounding box auto-swap for safety
+        if (lat >= 33 && lat <= 48 && lng >= 3 && lng <= 15) {
+          const temp = lat;
+          lat = lng;
+          lng = temp;
+        }
+
+        return { lat, lng, complaint };
       })
-      .filter((point): point is { complaint: OrgHeadComplaint; lat: number; lng: number } => !!point);
+      .filter((p): p is { lat: number; lng: number; complaint: OrgHeadComplaint } => p !== null);
   }, [filteredComplaints]);
 
   const mapCenter = useMemo<[number, number]>(() => {

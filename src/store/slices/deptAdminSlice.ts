@@ -48,9 +48,9 @@ export const fetchDeptAdminAnalytics = createAsyncThunk('deptAdmin/fetchAnalytic
 
 export const updateDeptAdminComplaintStatusThunk = createAsyncThunk(
   'deptAdmin/updateStatus',
-  async (payload: { id: string; status: ComplaintStatus; comment?: string }, { rejectWithValue }) => {
+  async (payload: { id: string; status: ComplaintStatus }, { rejectWithValue }) => {
     try {
-      await deptAdminApi.updateComplaintStatus(payload.id, { status: payload.status, comment: payload.comment });
+      await deptAdminApi.updateComplaintStatus(payload.id, { status: payload.status });
       return payload;
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, 'Failed to update complaint status'));
@@ -109,9 +109,10 @@ const deptAdminSlice = createSlice({
       })
       .addCase(updateDeptAdminComplaintStatusThunk.fulfilled, (state, action) => {
         state.submitting = false;
-        state.complaints = state.complaints.map((complaint) =>
-          complaint._id === action.payload.id ? { ...complaint, status: action.payload.status } : complaint,
-        );
+        state.complaints = state.complaints.map((complaint) => {
+          const compId = complaint._id || (complaint as any).id;
+          return compId === action.payload.id ? { ...complaint, status: action.payload.status } : complaint;
+        });
       })
       .addCase(updateDeptAdminComplaintStatusThunk.rejected, (state, action) => {
         state.submitting = false;

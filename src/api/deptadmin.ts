@@ -44,9 +44,16 @@ export interface AssignedComplaint {
   category: string;
   location?: ComplaintLocation;
   images?: { path: string; uploadedAt: string }[];
+  attachments?: {
+    _id?: string;
+    filename: string;
+    path?: string;
+    url?: string;
+    uploadedAt: string;
+  }[];
   submittedBy?: { _id: string; fullName: string; email: string };
   department?: { _id: string; name: string; code: string };
-  assignedTo?: { _id: string; fullName: string; email: string };
+  assignedTo?: { _id: string; fullName: string; email: string } | string | null;
   status: ComplaintStatus;
   priority?: "Low" | "Medium" | "High" | "Critical" | string;
   history?: ComplaintHistoryItem[];
@@ -73,7 +80,7 @@ export const deptAdminApi = {
 
   updateComplaintStatus: (
     id: string,
-    data: { status: ComplaintStatus; comment?: string },
+    data: { status: ComplaintStatus },
   ) => api.put<{ message: string }>(`/complaints/${id}/status`, data),
 
   getAnalytics: () => api.get<DeptAdminAnalytics>("/analytics/dept-admin"),

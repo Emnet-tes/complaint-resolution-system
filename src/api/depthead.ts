@@ -73,6 +73,18 @@ export interface DeptHeadAnalytics {
     category: string;
     count: number;
   }[];
+  statusStats?: {
+    status: string;
+    count: number;
+  }[];
+  priorityStats?: {
+    priority: string;
+    count: number;
+  }[];
+  assigneeStats?: {
+    assignee: string;
+    count: number;
+  }[];
 }
 
 export const deptHeadApi = {

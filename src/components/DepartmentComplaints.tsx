@@ -32,12 +32,40 @@ const DepartmentComplaints = () => {
   
   const mapPoints = useMemo(() => {
     return complaints
-      .filter((c) => c.location?.coordinates && c.location.coordinates.length === 2)
-      .map((c) => ({
-        lat: c.location!.coordinates[1],
-        lng: c.location!.coordinates[0],
-        complaint: c,
-      }));
+      .map((c) => {
+        let lat: number | null = null;
+        let lng: number | null = null;
+
+        // 1. Try location.coordinates [longitude, latitude]
+        if (c.location?.coordinates && Array.isArray(c.location.coordinates) && c.location.coordinates.length >= 2) {
+          lng = Number(c.location.coordinates[0]);
+          lat = Number(c.location.coordinates[1]);
+        }
+        // 2. Try location.latitude and location.longitude
+        else if (c.location && typeof (c.location as any).latitude === 'number' && typeof (c.location as any).longitude === 'number') {
+          lat = (c.location as any).latitude;
+          lng = (c.location as any).longitude;
+        }
+        // 3. Try root-level latitude and longitude
+        else if (typeof (c as any).latitude === 'number' && typeof (c as any).longitude === 'number') {
+          lat = (c as any).latitude;
+          lng = (c as any).longitude;
+        }
+
+        if (lat === null || lng === null || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+          return null;
+        }
+
+        // Bounding box auto-swap for safety
+        if (lat >= 33 && lat <= 48 && lng >= 3 && lng <= 15) {
+          const temp = lat;
+          lat = lng;
+          lng = temp;
+        }
+
+        return { lat, lng, complaint: c };
+      })
+      .filter((p): p is { lat: number; lng: number; complaint: AssignedComplaint } => p !== null);
   }, [complaints]);
 
   const mapCenter: [number, number] = useMemo(() => {
@@ -105,9 +133,7 @@ const DepartmentComplaints = () => {
   }, [allComplaints, statusFilter, storeError]);
 
   useEffect(() => {
-    if (allComplaints.length === 0) {
-      void fetchAssigned();
-    }
+    void fetchAssigned();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
