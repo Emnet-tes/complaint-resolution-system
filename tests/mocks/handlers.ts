@@ -116,11 +116,79 @@ export const handlers = [
     ]),
   ),
 
+  http.put(`${BASE}/complaints/:id/override`, () =>
+    HttpResponse.json({ message: 'Complaint overridden successfully' }),
+  ),
+
   http.get(`${BASE}/departments`, () =>
     HttpResponse.json([{ _id: 'd1', name: 'IT', code: 'IT' }]),
   ),
 
+  // ── SysAdmin ──────────────────────────────────────────────────────────────
+  http.get(/\/audit-logs\/activities/, ({ request }) => {
+    const url = new URL(request.url);
+    const page = url.searchParams.get('page') || '1';
+    
+    return HttpResponse.json({
+      data: [
+        {
+          _id: `act1-page${page}`,
+          action: 'LOGIN',
+          description: `User login on page ${page}`,
+          user: { fullName: 'Admin User', email: 'admin@example.com' },
+          targetType: 'Auth',
+          status: 'SUCCESS',
+          createdAt: new Date().toISOString(),
+        }
+      ],
+      pagination: {
+        page: Number(page),
+        limit: 20,
+        pages: 2,
+        total: 40
+      }
+    });
+  }),
+
+  http.get(/\/audit-logs\/summary/, () =>
+    HttpResponse.json({
+      summary: {
+        totalActiveAdmins: 5,
+        last30Days: {
+          userManagementActions: 10,
+          organizationChanges: 2,
+          departmentChanges: 3,
+        },
+        recentActivities: []
+      }
+    }),
+  ),
+
   http.get(`${BASE}/users/dept-heads`, () =>
     HttpResponse.json([{ _id: 'dh1', fullname: 'Head Person', email: 'head@example.com' }]),
+  ),
+
+  // ── DeptAdmin ─────────────────────────────────────────────────────────────
+  http.get(`${BASE}/complaints/assigned`, () =>
+    HttpResponse.json([
+      {
+        _id: 'c1',
+        title: 'Network Issue',
+        description: 'Cannot connect to Wi-Fi',
+        status: 'Submitted',
+        priority: 'High',
+        department: { _id: 'd1', name: 'IT' },
+        createdAt: new Date().toISOString(),
+      },
+      {
+        _id: 'c2',
+        title: 'Printer broken',
+        description: 'Paper jam in room 101',
+        status: 'Resolved',
+        priority: 'Low',
+        department: { _id: 'd1', name: 'IT' },
+        createdAt: new Date().toISOString(),
+      }
+    ]),
   ),
 ];
