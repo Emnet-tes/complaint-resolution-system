@@ -16,6 +16,13 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/** Backend may return DeptAdmin while the app uses DeptHead for department operators. */
+function mapBackendRole(raw: string | undefined | null): Role {
+  if (!raw) return null;
+  if (raw === 'DeptAdmin' || raw === 'DepartmentAdmin') return 'DeptHead';
+  return raw as Role;
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const dispatch = useAppDispatch();
   const { user, loading } = useAppSelector((state) => state.auth);
@@ -40,7 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               ? `${profileData.firstName} ${profileData.lastName || ''}`.trim()
               : user?.fullname || ''),
           email: profileData.email || user?.email || '',
-          role: (profileData.role as Role) || user?.role || null,
+          role: mapBackendRole(profileData.role) || user?.role || null,
           profilePicture: profileData.profilePicture || profileData.avatar || user?.profilePicture,
         };
         Cookies.set('user', JSON.stringify(updatedUser), { expires: 7 });
@@ -82,17 +89,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const response = await authApi.login(credentials);
     const data = response.data as any;
 
-    // New response shape: { message, _id, role, accessToken, refreshToken, expiresIn }
-    const accessToken: string  = data.accessToken;
-    const refreshToken: string = data.refreshToken ?? '';
-    const expiresIn: number    = data.expiresIn ?? 900;
+    // Support both shapes: { token, role, ... } (Swagger) and { accessToken, refreshToken, ... }
+    const accessToken: string | undefined =
+      data.accessToken ?? data.token ?? data.access_token;
+    const refreshToken: string =
+      data.refreshToken ?? data.refresh_token ?? '';
+    const expiresIn: number =
+      data.expiresIn ?? data.expires_in ?? 900;
+
+    if (!accessToken) {
+      throw new Error(
+        data?.message ||
+          'Login succeeded but no access token was returned. Expected `token` or `accessToken` in the response body.',
+      );
+    }
 
     // The profile endpoint fills fullname/email later via refreshProfile;
     // seed from credentials so the nav role check works immediately.
     const user: User = {
       fullname: data.fullName ?? data.fullname ?? '',
       email: data.email ?? credentials.email ?? '',
-      role: (data.role as Role) ?? null,
+      role: mapBackendRole(data.role),
     };
 
     const isSecureContext =
@@ -104,6 +121,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     Cookies.set('user', JSON.stringify(user), cookieOpts);
 
     dispatch(setCredentials({ accessToken, refreshToken, expiresIn, user }));
+
+    // Profile fetch can 401 on some setups; don't block login or risk interceptor clearing cookies.
+    void refreshProfile();
 
     return user;
   };

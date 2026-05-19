@@ -30,6 +30,7 @@ import {
   fetchOrgHeadCommentsThunk,
   fetchOrgHeadComplaints,
 } from '../store/slices/orgHeadSlice';
+import { fetchDeptHeadAnalytics } from '../store/slices/deptHeadSlice';
 
 type ComplaintDetailState = {
   complaint?: AssignedComplaint | OrgHeadComplaint;
@@ -159,24 +160,7 @@ const getFeatureWoredaName = (
 
 const isOrganizationComplaint = (
   complaint: AssignedComplaint | OrgHeadComplaint,
-): complaint is OrgHeadComplaint => 'submittedBy' in complaint && 'attachments' in complaint;
-
-const getDisplayName = (value: unknown, fallback = '-') => {
-  if (!value) {
-    return fallback;
-  }
-
-  if (typeof value === 'string') {
-    return normalizeText(value) || fallback;
-  }
-
-  if (typeof value === 'object') {
-    const record = value as { fullName?: unknown; name?: unknown; email?: unknown };
-    return normalizeText(record.fullName) || normalizeText(record.name) || normalizeText(record.email) || fallback;
-  }
-
-  return fallback;
-};
+): complaint is OrgHeadComplaint => !!complaint && 'aiConfidence' in complaint;
 
 const getComplaintId = (complaint: AssignedComplaint | OrgHeadComplaint) => {
   const record = complaint as AssignedComplaint & { id?: string };
@@ -339,28 +323,86 @@ const ComplaintDetail = () => {
       : complaint.department?.code || 'DP'
     : 'DP';
 
-  const complaintLocationName = complaint
-    ? isOrganizationComplaint(complaint)
-      ? complaint.location?.locationName || '-'
-      : complaint.location?.locationName || '-'
-    : '-';
+  const complaintLocationName = useMemo(() => {
+    if (!complaint) return '-';
+    // 1. Try location.locationName
+    if (complaint.location?.locationName) {
+      return complaint.location.locationName;
+    }
+    // 2. Try location.address or location.displayName or location.name
+    const locObj = complaint.location as any;
+    if (locObj && typeof locObj === 'object') {
+      if (locObj.address) return locObj.address;
+      if (locObj.displayName) return locObj.displayName;
+      if (locObj.name) return locObj.name;
+    }
+    // 3. Try root level fields
+    const raw = complaint as any;
+    if (raw.locationName) return raw.locationName;
+    if (raw.address) return raw.address;
+    // 4. Try location if it is a string
+    if (typeof raw.location === 'string') {
+      return raw.location;
+    }
+    return '-';
+  }, [complaint]);
 
-  const complaintCoordinates = complaint
-    ? isOrganizationComplaint(complaint)
-      ? complaint.location?.coordinates || []
-      : complaint.location?.coordinates || []
-    : [];
+  const complaintCoordinates = useMemo(() => {
+    if (!complaint) return [];
+
+    // 1. Try location.coordinates [longitude, latitude] (GeoJSON Point)
+    if (
+      complaint.location?.coordinates &&
+      Array.isArray(complaint.location.coordinates) &&
+      complaint.location.coordinates.length >= 2
+    ) {
+      return complaint.location.coordinates;
+    }
+
+    // 2. Try location.latitude and location.longitude
+    const loc = complaint.location as any;
+    if (
+      loc &&
+      typeof loc === 'object' &&
+      typeof loc.latitude === 'number' &&
+      typeof loc.longitude === 'number'
+    ) {
+      return [loc.longitude, loc.latitude];
+    }
+
+    // 3. Try root-level latitude and longitude
+    const raw = complaint as any;
+    if (typeof raw.latitude === 'number' && typeof raw.longitude === 'number') {
+      return [raw.longitude, raw.latitude];
+    }
+
+    return [];
+  }, [complaint]);
 
   const coordinateValues = useMemo(() => {
     if (complaintCoordinates.length < 2) {
       return { lat: null, lon: null };
     }
 
-    const lon = Number(complaintCoordinates[0]);
-    const lat = Number(complaintCoordinates[1]);
+    const val0 = Number(complaintCoordinates[0]);
+    const val1 = Number(complaintCoordinates[1]);
 
-    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    if (!Number.isFinite(val0) || !Number.isFinite(val1)) {
       return { lat: null, lon: null };
+    }
+
+    // Ethiopia bounding box check to auto-detect lat/lon order
+    let lat = val1;
+    let lon = val0;
+
+    if (val0 >= 3 && val0 <= 15 && val1 >= 33 && val1 <= 48) {
+      // val0 is lat, val1 is lon
+      lat = val0;
+      lon = val1;
+    } else if (val1 >= 3 && val1 <= 15 && val0 >= 33 && val0 <= 48) {
+      // val1 is lat, val0 is lon
+      lat = val1;
+      lon = val0;
     }
 
     return { lat, lon };
@@ -507,9 +549,7 @@ const ComplaintDetail = () => {
     : null;
 
   const complaintAttachments = complaint
-    ? isOrganizationComplaint(complaint)
-      ? complaint.attachments
-      : complaint.images || []
+    ? complaint.attachments || (complaint as AssignedComplaint).images || []
     : [];
 
   const getAttachmentUrl = (attachment: { url?: string; path?: string }) =>
@@ -542,11 +582,27 @@ const ComplaintDetail = () => {
     };
   }, [selectedAttachment]);
 
-  const complaintAssigneeName = complaint
-    ? isOrganizationComplaint(complaint)
-      ? getDisplayName(complaint.assignedTo)
-      : getDisplayName(complaint.assignedTo?.fullName)
-    : '-';
+  const currentUserFullName = user ? (user as any).fullName || user.fullname || '-' : '-';
+
+  const complaintAssigneeName = useMemo(() => {
+    if (!complaint) return '-';
+
+    const assigned = complaint.assignedTo;
+    if (assigned && typeof assigned === 'object') {
+      return (assigned as any).fullName || (assigned as any).fullname || '-';
+    }
+
+    if (typeof assigned === 'string' && assigned.trim()) {
+      return assigned;
+    }
+
+    // Fallback for DeptHead viewing their own department's complaints
+    if (isDeptHead) {
+      return currentUserFullName;
+    }
+
+    return '-';
+  }, [complaint, isDeptHead, currentUserFullName]);
 
   useEffect(() => {
     if (!complaint || !showComments) {
@@ -628,22 +684,29 @@ const ComplaintDetail = () => {
     if (!id || id === 'undefined') return;
     if (!isDeptHead) return;
     if (isOrgComplaint) return;
-    if (newStatus === 'Rejected' && !comment.trim()) {
-      toast.error(t('dept_complaints.detail.comment_required'));
-      return;
-    }
     try {
       setSaving(true);
       await dispatch(
         updateDeptAdminComplaintStatusThunk({
           id,
           status: newStatus,
-          comment: comment || undefined,
         }),
       ).unwrap();
+
+      if (comment.trim()) {
+        const commentPayload = await dispatch(
+          addDeptAdminCommentThunk({ complaintId: id, commentText: comment.trim() }),
+        ).unwrap();
+        setComments(commentPayload.comments || []);
+      }
+
       toast.success(t('dept_complaints.toasts.status_updated'));
       setComplaint((prev) => (prev ? { ...prev, status: newStatus } : prev));
       setComment('');
+
+      // Auto-refresh list and dashboard analytics in Redux store
+      void dispatch(fetchDeptAdminComplaints());
+      void dispatch(fetchDeptHeadAnalytics());
     } catch (err: any) {
       toast.error(err.response?.data?.message || t('dept_mgmt.toasts.fetch_error'));
     } finally {
@@ -653,8 +716,9 @@ const ComplaintDetail = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <Loader2 className="animate-spin text-slate-400" size={40} />
+      <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+        <Loader2 className="animate-spin text-[#006B5D]" size={40} />
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest animate-pulse">{t('sys_dashboard.loading', 'Loading details...')}</p>
       </div>
     );
   }
@@ -710,10 +774,11 @@ const ComplaintDetail = () => {
                        onChange={(e) => setNewStatus(e.target.value as ComplaintStatus)}
                        className="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 outline-none"
                      >
-                       <option value="Submitted">{t('dept_complaints.status.Submitted')}</option>
+                       {complaint.status !== 'In Progress' && complaint.status !== 'Resolved' && (
+                         <option value={complaint.status}>{t(`dept_complaints.status.${complaint.status}`)}</option>
+                       )}
                        <option value="In Progress">{t('dept_complaints.status.In Progress')}</option>
                        <option value="Resolved">{t('dept_complaints.status.Resolved')}</option>
-                       <option value="Rejected">{t('dept_complaints.status.Rejected')}</option>
                      </select>
                      <button
                        onClick={handleUpdateStatus}

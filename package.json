@@ -10,7 +10,10 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "cy:open": "cypress open",
+    "cy:run": "cypress run",
+    "cy:run:doc": "cypress run --config screenshotsFolder=cypress/documentation/screenshots"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",
@@ -46,6 +49,7 @@
     "@vitejs/plugin-react": "^5.1.1",
     "@vitest/coverage-v8": "^4.1.5",
     "autoprefixer": "^10.4.24",
+    "cypress": "^15.14.2",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",

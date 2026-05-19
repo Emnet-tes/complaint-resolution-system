@@ -44,7 +44,7 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 export const fetchOrgHeadAnalytics = createAsyncThunk('orgHead/fetchAnalytics', async (_, { rejectWithValue }) => {
   try {
     const res = await orgHeadApi.getAnalytics();
-    return res.data;
+    return 'data' in res.data ? (res.data as any).data : res.data;
   } catch (error) {
     return rejectWithValue(getErrorMessage(error, 'Failed to fetch org head analytics'));
   }

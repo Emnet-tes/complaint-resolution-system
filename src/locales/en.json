@@ -491,7 +491,8 @@
       "new_password": "New Password",
       "confirm_password": "Confirm New Password",
       "placeholder_new": "Enter new password",
-      "placeholder_confirm": "Confirm new password"
+      "placeholder_confirm": "Confirm new password",
+      "password_mismatch": "Passwords do not match"
     },
     "actions": {
       "discard": "Discard Changes",
@@ -511,21 +512,24 @@
     "light": "Light",
     "dark": "Dark"
   },
-
   "auth": {
-  "forgot_password_title": "Forgot Password?",
-  "forgot_password_subtitle": "Recover your password if you have forgotten it!",
-  "otp_sent": "OTP has been sent to your email.",
-  "missing_email": "Missing email. Please restart the reset flow.",
-  "missing_otp": "Missing OTP. Please restart the reset flow.",
-  "reset_success": "Password reset successful. Please login.",
-  "submit": "Submit",
-  "login": "Login",
-  "reset_password_title": "Reset Password",
-  "reset_password_subtitle": "Set your new password to login into your account!",
-  "verify_code_title": "Verify Code",
-  "verify_code_subtitle": "We have sent an email to your email account with a verification code!",
-  "verify_code_label": "Verification Code",
-  "not_allowed": "You are not allowed to access the system."
-}
+    "forgot_password_title": "Forgot Password?",
+    "forgot_password_subtitle": "Recover your password if you have forgotten it!",
+    "otp_sent": "OTP has been sent to your email.",
+    "missing_email": "Missing email. Please restart the reset flow.",
+    "missing_otp": "Missing OTP. Please restart the reset flow.",
+    "reset_success": "Password reset successful. Please login.",
+    "submit": "Submit",
+    "login": "Login",
+    "reset_password_title": "Reset Password",
+    "reset_password_subtitle": "Set your new password to login into your account!",
+    "verify_code_title": "Verify Code",
+    "verify_code_subtitle": "We have sent an email to your email account with a verification code!",
+    "verify_code_label": "Verification Code",
+    "not_allowed": "You are not allowed to access the system.",
+    "login_failed": "Invalid email or password.",
+    "network_error": "Cannot reach the server. Hosted APIs (for example Render) may need a moment to wake up—the app will retry automatically. Check your connection and set VITE_API_URL in .env to your API root (include /api if your server uses it)."
+  }
+  
+ 
 }

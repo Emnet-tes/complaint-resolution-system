@@ -27,7 +27,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const { user } = useAuth();
   const dispatch = useAppDispatch();
   const { notifications } = useAppSelector(selectNotifications);
-  const token = Cookies.get('token');
+  const token = Cookies.get('accessToken');
 
   const unreadCount = Array.isArray(notifications) ? notifications.filter((n) => !n.read).length : 0;
 
@@ -61,17 +61,27 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (token && user) {
       fetchNotifications();
 
-      // Initialize WebSocket
-      const newSocket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
-        auth: { token }
-      });
+      // Initialize WebSocket (skip in Cypress tests to prevent polling loops)
+      let newSocket: any = null;
+      // @ts-ignore
+      if (!window.Cypress) {
+        const rawUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const socketUrl = rawUrl.replace(/\/api\/?$/, '');
+        newSocket = io(socketUrl, {
+          auth: { token },
+          transports: ['polling', 'websocket'],
+          reconnection: true,
+          reconnectionAttempts: 5,
+          reconnectionDelay: 2000,
+        });
 
-      newSocket.on('new-notification', (notification: Notification) => {
-        dispatch(prependNotification(notification));
-        toast(notification.title, { icon: '🔔', position: 'bottom-right' });
-      });
+        newSocket.on('new-notification', (notification: Notification) => {
+          dispatch(prependNotification(notification));
+          toast(notification.title, { icon: '🔔', position: 'bottom-right' });
+        });
+      }
 
-      return () => { newSocket.close(); };
+      return () => { if (newSocket) newSocket.close(); };
     }
   }, [token, user]);
 

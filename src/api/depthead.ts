@@ -64,6 +64,27 @@ export interface DeptHeadAnalytics {
   resolved: number;
   pending: number;
   resolvedPercentage: number;
+  monthlyTrends?: {
+    month: string;
+    year: number;
+    count: number;
+  }[];
+  categoryStats?: {
+    category: string;
+    count: number;
+  }[];
+  statusStats?: {
+    status: string;
+    count: number;
+  }[];
+  priorityStats?: {
+    priority: string;
+    count: number;
+  }[];
+  assigneeStats?: {
+    assignee: string;
+    count: number;
+  }[];
 }
 
 export const deptHeadApi = {
