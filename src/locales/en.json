@@ -65,6 +65,7 @@
       "total_pending": "Pending Complaints",
       "avg_time": "Avg Resolution Time",
       "sub_active": "Departments in scope",
+      "sub_assigned": "assigned heads",
       "sub_stale": "stale complaints",
       "covered_uncovered": "Departments with Heads",
       "not_covered": "{{count}} without heads",
