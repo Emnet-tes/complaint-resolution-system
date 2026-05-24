@@ -10,6 +10,10 @@ vi.mock('react-leaflet', () => ({
   TileLayer: () => <div data-testid="tile-layer" />,
   CircleMarker: ({ children }: any) => <div data-testid="circle-marker">{children}</div>,
   Popup: ({ children }: any) => <div data-testid="popup">{children}</div>,
+  useMap: () => ({
+    fitBounds: vi.fn(),
+    setView: vi.fn(),
+  }),
 }));
 
 vi.mock('react-i18next', () => ({
@@ -143,7 +147,7 @@ describe('OrgHeadComplaints component', () => {
     // selects[0] is main filter, selects[1] is department in modal, selects[2] is priority, selects[3] is status in modal
     const modalStatusSelect = selects[3];
     
-    await user.selectOptions(modalStatusSelect, 'Resolved');
+    await user.selectOptions(modalStatusSelect, 'Rejected');
 
     const submitBtn = screen.getByRole('button', { name: /org_head_complaints.apply_override/i });
     await user.click(submitBtn);

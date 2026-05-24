@@ -8,6 +8,7 @@ import orgHeadReducer, {
   addOrgHeadCommentThunk,
   selectOrgHead,
 } from '../../../src/store/slices/orgHeadSlice';
+import { orgHeadApi } from '../../../src/api/orghead';
 import { createTestStore } from '../../helpers/testUtils';
 
 const initialState = {
@@ -175,6 +176,22 @@ describe('orgHeadSlice async thunks', () => {
       expect(state.complaints.length).toBeGreaterThan(0);
       expect(state.departments.length).toBeGreaterThan(0);
       expect(state.deptHeads.length).toBeGreaterThan(0);
+    });
+
+    it('still populates complaints when departments or dept heads fail', async () => {
+      const complaint = { ...mockComplaint, _id: 'c-directory-fallback' };
+
+      vi.spyOn(orgHeadApi, 'getOrganizationComplaints').mockResolvedValueOnce({ data: [complaint] } as any);
+      vi.spyOn(orgHeadApi, 'listDepartments').mockRejectedValueOnce(new Error('Departments failed'));
+      vi.spyOn(orgHeadApi, 'listDeptHeads').mockRejectedValueOnce(new Error('Dept heads failed'));
+
+      const store = createTestStore();
+      await store.dispatch(fetchOrgHeadDirectory());
+
+      const state = store.getState().orgHead;
+      expect(state.complaints).toEqual([complaint]);
+      expect(state.departments).toEqual([]);
+      expect(state.deptHeads).toEqual([]);
     });
   });
 

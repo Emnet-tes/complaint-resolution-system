@@ -52,16 +52,16 @@ export const fetchOrgHeadAnalytics = createAsyncThunk('orgHead/fetchAnalytics', 
 
 export const fetchOrgHeadDirectory = createAsyncThunk('orgHead/fetchDirectory', async (_, { rejectWithValue }) => {
   try {
-    const [complaintsRes, departmentsRes, headsRes] = await Promise.all([
-      orgHeadApi.getOrganizationComplaints(),
+    const complaintsRes = await orgHeadApi.getOrganizationComplaints();
+    const [departmentsRes, headsRes] = await Promise.allSettled([
       orgHeadApi.listDepartments(),
       orgHeadApi.listDeptHeads(),
     ]);
 
     return {
       complaints: complaintsRes.data,
-      departments: departmentsRes.data,
-      deptHeads: headsRes.data,
+      departments: departmentsRes.status === 'fulfilled' ? departmentsRes.value.data : [],
+      deptHeads: headsRes.status === 'fulfilled' ? headsRes.value.data : [],
     };
   } catch (error) {
     return rejectWithValue(getErrorMessage(error, 'Failed to fetch org head data'));

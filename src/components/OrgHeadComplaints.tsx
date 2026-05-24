@@ -11,7 +11,7 @@ import {
   Edit3,
   AlertTriangle,
 } from 'lucide-react';
-import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Table, type Column } from './Table';
 import Modal from './Modal';
@@ -31,7 +31,28 @@ const ORGHEAD_STATUS_OPTIONS: OrgHeadComplaintStatus[] = [
   'Rejected',
 ];
 
+const ORGHEAD_OVERRIDE_STATUS_OPTIONS: OrgHeadComplaintStatus[] = ['Submitted', 'Rejected'];
+
 const ORGHEAD_PRIORITY_OPTIONS: OrgHeadComplaintPriority[] = ['Low', 'Medium', 'High', 'Critical'];
+
+const MapBoundsController = ({ points }: { points: Array<{ lat: number; lng: number }> }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!points.length) return;
+
+    const bounds = points.map(({ lat, lng }) => [lat, lng] as [number, number]);
+
+    if (bounds.length === 1) {
+      map.setView(bounds[0], 14);
+      return;
+    }
+
+    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+  }, [map, points]);
+
+  return null;
+};
 
 const OrgHeadComplaints = () => {
   const { t } = useTranslation();
@@ -316,6 +337,7 @@ const OrgHeadComplaints = () => {
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden h-[560px]">
           <MapContainer center={mapCenter} zoom={12} className="h-full w-full" scrollWheelZoom>
+            <MapBoundsController points={mapPoints} />
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -398,7 +420,7 @@ const OrgHeadComplaints = () => {
                 value={overrideForm.status}
                 onChange={(e) => setOverrideForm({ ...overrideForm, status: e.target.value as OrgHeadComplaintStatus })}
               >
-                {ORGHEAD_STATUS_OPTIONS.map((status) => (
+                {ORGHEAD_OVERRIDE_STATUS_OPTIONS.map((status) => (
                   <option key={status} value={status}>
                     {status}
                   </option>
