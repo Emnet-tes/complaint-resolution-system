@@ -114,11 +114,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const isSecureContext =
       typeof window !== 'undefined' && window.location.protocol === 'https:';
-    const cookieOpts = { expires: 7, secure: isSecureContext, sameSite: 'strict' as const };
+    const accessCookieOpts = {
+      expires: expiresIn ? Math.max(expiresIn / 86400, 1 / 48) : 1 / 96,
+      secure: isSecureContext,
+      sameSite: 'strict' as const,
+    };
+    const refreshCookieOpts = {
+      expires: 30,
+      secure: isSecureContext,
+      sameSite: 'strict' as const,
+    };
 
-    Cookies.set('accessToken',  accessToken,  cookieOpts);
-    Cookies.set('refreshToken', refreshToken, cookieOpts);
-    Cookies.set('user', JSON.stringify(user), cookieOpts);
+    Cookies.set('accessToken', accessToken, accessCookieOpts);
+    if (refreshToken) {
+      Cookies.set('refreshToken', refreshToken, refreshCookieOpts);
+    }
+    Cookies.set('user', JSON.stringify(user), refreshCookieOpts);
 
     dispatch(setCredentials({ accessToken, refreshToken, expiresIn, user }));
 

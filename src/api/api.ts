@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { type AxiosRequestConfig } from "axios";
 import Cookies from "js-cookie";
 
 /** Base URL must include `/api` if your server mounts routes there (e.g. `http://localhost:5000/api`). */
@@ -48,6 +48,56 @@ const api = axios.create({
   },
 });
 
+type RetriableRequestConfig = AxiosRequestConfig & {
+  _retry?: boolean;
+};
+
+let refreshInFlight: Promise<string | null> | null = null;
+
+const clearAuthCookies = () => {
+  Cookies.remove('accessToken');
+  Cookies.remove('refreshToken');
+  Cookies.remove('user');
+};
+
+const refreshAccessToken = async () => {
+  const refreshToken = Cookies.get('refreshToken');
+  if (!refreshToken) return null;
+
+  if (!refreshInFlight) {
+    refreshInFlight = authApi
+      .refreshToken(refreshToken)
+      .then((response) => {
+        const data = response.data as any;
+        const newAccessToken: string | undefined = data.accessToken ?? data.token ?? data.access_token;
+        const newRefreshToken: string | undefined = data.refreshToken ?? data.refresh_token;
+        const expiresIn: number | undefined = data.expiresIn ?? data.expires_in;
+
+        if (!newAccessToken) return null;
+
+        const isSecureContext = typeof window !== 'undefined' && window.location.protocol === 'https:';
+        const cookieOpts = {
+          expires: expiresIn ? Math.max(expiresIn / 86400, 1 / 48) : 1,
+          secure: isSecureContext,
+          sameSite: 'strict' as const,
+        };
+
+        Cookies.set('accessToken', newAccessToken, cookieOpts);
+        if (newRefreshToken) {
+          Cookies.set('refreshToken', newRefreshToken, { ...cookieOpts, expires: 30 });
+        }
+
+        return newAccessToken;
+      })
+      .catch(() => null)
+      .finally(() => {
+        refreshInFlight = null;
+      });
+  }
+
+  return refreshInFlight;
+};
+
 // Request Interceptor: Attach access token to headers
 api.interceptors.request.use((config) => {
   const token = Cookies.get('accessToken');
@@ -60,17 +110,32 @@ api.interceptors.request.use((config) => {
 // Response Interceptor: Handle Unauthorized (401)
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      Cookies.remove('accessToken');
-      Cookies.remove('refreshToken');
-      Cookies.remove('user');
-      const requestUrl = error.config?.url || '';
-      // Avoid forcing a navigation when the login request itself failed
-      if (!requestUrl.includes('/auth/login')) {
+  async (error) => {
+    const originalRequest = error.config as RetriableRequestConfig | undefined;
+    const requestUrl = originalRequest?.url || '';
+
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !requestUrl.includes('/auth/login') &&
+      !requestUrl.includes('/auth/refresh')
+    ) {
+      originalRequest._retry = true;
+
+      const newAccessToken = await refreshAccessToken();
+      if (newAccessToken) {
+        originalRequest.headers = originalRequest.headers || {};
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        return api.request(originalRequest);
+      }
+
+      clearAuthCookies();
+      if (typeof window !== 'undefined') {
         window.location.href = '/login';
       }
     }
+
     return Promise.reject(error);
   },
 );
