@@ -40,6 +40,33 @@ describe('authApi', () => {
       // At minimum the promise should reject.
       await expect(authApi.getProfile()).rejects.toBeTruthy();
     });
+
+    it('refreshes the access token and retries when the profile request returns 401 once', async () => {
+      let profileCalls = 0;
+
+      server.use(
+        http.get(`${import.meta.env.VITE_API_URL}/auth/profile`, () => {
+          profileCalls += 1;
+          if (profileCalls === 1) {
+            return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+          }
+
+          return HttpResponse.json({
+            _id: 'user-1',
+            email: 'test@example.com',
+            role: 'OrgHead',
+          });
+        }),
+      );
+
+      const res = await authApi.getProfile();
+      expect(res.data).toMatchObject({
+        _id: 'user-1',
+        email: 'test@example.com',
+        role: 'OrgHead',
+      });
+      expect(profileCalls).toBe(2);
+    });
   });
 
   describe('forgotPassword', () => {
