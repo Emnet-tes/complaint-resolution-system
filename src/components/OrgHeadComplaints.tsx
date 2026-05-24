@@ -35,6 +35,11 @@ const ORGHEAD_OVERRIDE_STATUS_OPTIONS: OrgHeadComplaintStatus[] = ['Submitted', 
 
 const ORGHEAD_PRIORITY_OPTIONS: OrgHeadComplaintPriority[] = ['Low', 'Medium', 'High', 'Critical'];
 
+const getValidOverrideStatus = (status?: OrgHeadComplaintStatus) =>
+  ORGHEAD_OVERRIDE_STATUS_OPTIONS.includes(status as OrgHeadComplaintStatus)
+    ? (status as OrgHeadComplaintStatus)
+    : ORGHEAD_OVERRIDE_STATUS_OPTIONS[0];
+
 const MapBoundsController = ({ points }: { points: Array<{ lat: number; lng: number }> }) => {
   const map = useMap();
 
@@ -163,7 +168,7 @@ const OrgHeadComplaints = () => {
     setOverrideForm({
       department: complaint.department?._id || '',
       priority: (complaint.priority as OrgHeadComplaintPriority) || 'Medium',
-      status: complaint.status || 'Submitted',
+      status: getValidOverrideStatus(complaint.status),
       isSpam: complaint.isSpam,
     });
     setIsOverrideModalOpen(true);
