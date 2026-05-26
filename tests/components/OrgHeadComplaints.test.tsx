@@ -3,6 +3,8 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '../helpers/testUtils';
 import OrgHeadComplaints from '../../src/components/OrgHeadComplaints';
+import { server } from '../mocks/server';
+import { http, HttpResponse } from 'msw';
 
 // Mock Leaflet components because they require an actual DOM with size dimensions
 vi.mock('react-leaflet', () => ({
@@ -10,6 +12,10 @@ vi.mock('react-leaflet', () => ({
   TileLayer: () => <div data-testid="tile-layer" />,
   CircleMarker: ({ children }: any) => <div data-testid="circle-marker">{children}</div>,
   Popup: ({ children }: any) => <div data-testid="popup">{children}</div>,
+  useMap: () => ({
+    fitBounds: vi.fn(),
+    setView: vi.fn(),
+  }),
 }));
 
 vi.mock('react-i18next', () => ({
@@ -143,7 +149,7 @@ describe('OrgHeadComplaints component', () => {
     // selects[0] is main filter, selects[1] is department in modal, selects[2] is priority, selects[3] is status in modal
     const modalStatusSelect = selects[3];
     
-    await user.selectOptions(modalStatusSelect, 'Resolved');
+    await user.selectOptions(modalStatusSelect, 'Rejected');
 
     const submitBtn = screen.getByRole('button', { name: /org_head_complaints.apply_override/i });
     await user.click(submitBtn);
@@ -151,6 +157,65 @@ describe('OrgHeadComplaints component', () => {
     // We rely on toast or modal close to verify success
     await waitFor(() => {
       expect(screen.queryByText('org_head_complaints.override_title')).not.toBeInTheDocument();
+    });
+  });
+
+  it('normalizes invalid override status before submitting manual review complaints', async () => {
+    server.use(
+      http.get(`${import.meta.env.VITE_API_URL}/complaints/organization`, () =>
+        HttpResponse.json([
+          {
+            _id: 'c-manual-review',
+            title: 'Manual Review Complaint',
+            description: 'A complaint awaiting manual review override',
+            category: null,
+            location: null,
+            submittedBy: { _id: 'u1', fullName: 'Alice', email: 'alice@example.com' },
+            department: { _id: 'd1', name: 'IT', code: 'IT' },
+            organization: 'org1',
+            isSpam: false,
+            aiConfidence: 0.9,
+            duplicateOf: null,
+            assignedTo: null,
+            status: 'Manual Review',
+            priority: 'Medium',
+            overriddenFields: {},
+            history: [],
+            syncStatus: 'synced',
+            attachments: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            __v: 0,
+          },
+        ]),
+      ),
+    );
+
+    let submittedStatus = '';
+    server.use(
+      http.put(`${import.meta.env.VITE_API_URL}/complaints/:id/override`, async ({ request }) => {
+        const body = (await request.json()) as { status?: string };
+        submittedStatus = body.status ?? '';
+        return HttpResponse.json({ message: 'Complaint overridden successfully' });
+      }),
+    );
+
+    const user = userEvent.setup();
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('Manual Review Complaint')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: /org_head_complaints.override/i }));
+
+    const modalStatusSelect = screen.getAllByRole('combobox')[3];
+    expect(modalStatusSelect).toHaveValue('Submitted');
+
+    await user.click(screen.getByRole('button', { name: /org_head_complaints.apply_override/i }));
+
+    await waitFor(() => {
+      expect(submittedStatus).toBe('Submitted');
     });
   });
 

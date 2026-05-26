@@ -285,7 +285,12 @@
       "resolved": "ተፈትተዋል",
       "sub_assigned": "የስራ ዝርዝር",
       "sub_rate": "{{rate}}% የመፍትሄ ፍጥነት",
-      "sub_cases": "የተጠናቀቁ"
+      "sub_cases": "የተጠናቀቁ",
+      "category_distribution": "የምድብ ስርጭት"
+    },
+    "trends": {
+      "title": "ወርሃዊ አዝማሚያ",
+      "count": "ቅሬታዎች"
     }
   },
   "dept_complaints": {

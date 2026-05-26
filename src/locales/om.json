@@ -285,7 +285,12 @@
       "resolved": "Furaman",
       "sub_assigned": "Tartiiba Hojii",
       "sub_rate": "Hamma Furmaataa {{rate}}%",
-      "sub_cases": "Dhimmoota Xumuran"
+      "sub_cases": "Dhimmoota Xumuran",
+      "category_distribution": "Raabsa Gosaa"
+    },
+    "trends": {
+      "title": "Tarkaanfii Ji'a Ji'aan",
+      "count": "Komii"
     }
   },
   "dept_complaints": {
