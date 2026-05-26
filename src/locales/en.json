@@ -285,7 +285,12 @@
       "resolved": "Resolved",
       "sub_assigned": "Work Queue",
       "sub_rate": "{{rate}}% Resolution Rate",
-      "sub_cases": "Completed Cases"
+      "sub_cases": "Completed Cases",
+      "category_distribution": "Category Distribution"
+    },
+    "trends": {
+      "title": "Monthly Trends",
+      "count": "Complaints"
     }
   },
   "dept_complaints": {

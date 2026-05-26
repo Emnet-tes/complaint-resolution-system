@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Mail, Loader2, Languages, Link as LinkIcon, KeyRound, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Mail, Loader2, Languages, KeyRound, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ThemeToggle from '../components/ThemeToggle';
@@ -174,25 +174,16 @@ const ForgotPassword = () => {
             </div>
           </div>
 
-          {/* Submit Buttons */}
-          <div className="flex gap-4">
+          {/* Submit Button */}
+          <div>
             <button
               type="button"
               onClick={() => handleRequest('otp')}
               disabled={loading || !!successMessage}
-              className="flex-1 bg-white border-2 border-[#005a43] text-[#005a43] font-black py-4 rounded-2xl hover:bg-gray-50 transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-70"
+              className="w-full bg-[#005a43] text-white font-black py-4 rounded-2xl hover:bg-[#004835] transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-70"
             >
               {loading ? <Loader2 className="animate-spin" size={20} /> : <KeyRound size={18} />}
               {t('auth.send_otp', 'OTP')}
-            </button>
-            <button
-              type="button"
-              onClick={() => handleRequest('link')}
-              disabled={loading || !!successMessage}
-              className="flex-1 bg-[#005a43] text-white font-black py-4 rounded-2xl hover:bg-[#004835] transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-70"
-            >
-              {loading ? <Loader2 className="animate-spin" size={20} /> : <LinkIcon size={18} />}
-              {t('auth.send_link', 'Link')}
             </button>
           </div>
         </form>
