@@ -130,7 +130,7 @@ const ForgotPassword = () => {
           className="mb-8 w-fit p-1 hover:bg-gray-100 rounded-full transition-colors"
           type="button"
         >
-          <ArrowLeft size={28} className="text-black" />
+          <ArrowLeft size={28} className="text-slate-400" />
         </button>
 
         {/* Header Section */}

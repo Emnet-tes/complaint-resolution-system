@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Settings, Menu, Languages, Clock, ChevronDown } from 'lucide-react';
+import { Bell, Menu, Languages, Clock, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNotifications } from '../context/NotificationContext';
 
@@ -220,10 +220,6 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
               </div>
             )}
           </div>
-          
-          <button className="hidden sm:block p-2.5 bg-white border border-gray-100 rounded-full shadow-sm hover:bg-gray-50 cursor-pointer" onClick={() => navigate('/settings')}>
-            <Settings className="w-5 h-5 text-slate-600" />
-          </button>
         </div>
       </div>
     </nav>
